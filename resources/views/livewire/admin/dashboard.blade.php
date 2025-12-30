@@ -14,11 +14,11 @@
                 <div>
                     <h1
                         class="text-xl font-black tracking-tighter uppercase leading-none dark:text-white text-slate-800">
-                        Executive <span class="text-blue-500">Dashboard</span>
+                        Dashboard <span class="text-blue-500">Eksekutif</span>
                     </h1>
                     <p
                         class="text-[9px] font-bold uppercase tracking-[0.3em] opacity-50 mt-1 dark:text-slate-400 text-slate-500">
-                        Mulia Distribution System</p>
+                        Sistem Distribusi Mulia</p>
                 </div>
 
                 <div
@@ -26,17 +26,17 @@
                     <button @click="activeTab = 'overview'"
                         :class="activeTab === 'overview' ? 'dark:bg-blue-600 bg-white dark:text-white text-blue-600 shadow-lg' : 'text-slate-500 hover:text-blue-400'"
                         class="px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2">
-                        <i class="fas fa-chart-pie text-xs"></i> Overview
+                        <i class="fas fa-chart-pie text-xs"></i> Ringkasan
                     </button>
                     <button @click="activeTab = 'ranking'"
                         :class="activeTab === 'ranking' ? 'dark:bg-blue-600 bg-white dark:text-white text-blue-600 shadow-lg' : 'text-slate-500 hover:text-blue-400'"
                         class="px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2">
-                        <i class="fas fa-trophy text-xs"></i> Ranking
+                        <i class="fas fa-trophy text-xs"></i> Peringkat
                     </button>
                     <button @click="activeTab = 'salesman'"
                         :class="activeTab === 'salesman' ? 'dark:bg-blue-600 bg-white dark:text-white text-blue-600 shadow-lg' : 'text-slate-500 hover:text-blue-400'"
                         class="px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2">
-                        <i class="fas fa-user-tie text-xs"></i> Sales
+                        <i class="fas fa-user-tie text-xs"></i> Kinerja Sales
                     </button>
                 </div>
             </div>
@@ -56,7 +56,7 @@
                         class="w-full flex items-center justify-between border px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm h-[38px]
                         dark:bg-neutral-900 dark:border-white/10 dark:text-slate-300 bg-white border-slate-200 text-slate-700">
                         <span
-                            class="truncate">{{ empty($filterCabang) ? 'Regional' : count($filterCabang).' Selected' }}</span>
+                            class="truncate">{{ empty($filterCabang) ? 'Semua Cabang' : count($filterCabang).' Dipilih' }}</span>
                         <i class="fas fa-chevron-down opacity-40 transition-transform"
                             :class="open ? 'rotate-180' : ''"></i>
                     </button>
@@ -85,7 +85,7 @@
     <div wire:loading.class="opacity-50 pointer-events-none"
         class="transition-opacity duration-300 px-4 sm:px-6 lg:px-8">
 
-        {{-- 1. OVERVIEW TAB --}}
+        {{-- 1. TAB RINGKASAN --}}
         <div x-show="activeTab === 'overview'" x-transition.opacity class="space-y-8">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                 <div
@@ -96,8 +96,9 @@
                         <div class="flex items-center gap-3 mb-2">
                             <div
                                 class="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/20">
-                                <i class="fas fa-wallet text-xs"></i></div>
-                            <p class="text-[10px] font-black uppercase tracking-widest opacity-80">Gross Revenue</p>
+                                <i class="fas fa-wallet text-xs"></i>
+                            </div>
+                            <p class="text-[10px] font-black uppercase tracking-widest opacity-80">Total Penjualan</p>
                         </div>
                         <h3 class="text-3xl font-black tracking-tighter drop-shadow-sm">Rp
                             {{ $this->formatCompact($salesSum) }}</h3>
@@ -117,14 +118,15 @@
                         <div class="flex items-center gap-3 mb-2">
                             <div
                                 class="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/20">
-                                <i class="fas fa-exchange-alt text-xs"></i></div>
-                            <p class="text-[10px] font-black uppercase tracking-widest opacity-80">Total Return</p>
+                                <i class="fas fa-exchange-alt text-xs"></i>
+                            </div>
+                            <p class="text-[10px] font-black uppercase tracking-widest opacity-80">Total Retur</p>
                         </div>
                         <h3 class="text-3xl font-black tracking-tighter drop-shadow-sm">Rp
                             {{ $this->formatCompact($returSum) }}</h3>
                         <div class="mt-4 flex items-center gap-2">
                             <span
-                                class="px-2 py-1 rounded-md bg-white/20 text-[9px] font-bold backdrop-blur-sm border border-white/10">Ratio:
+                                class="px-2 py-1 rounded-md bg-white/20 text-[9px] font-bold backdrop-blur-sm border border-white/10">Rasio:
                                 {{ number_format($persenRetur, 2) }}%</span>
                         </div>
                     </div>
@@ -137,11 +139,13 @@
                         <div class="flex items-center gap-3 mb-2">
                             <div
                                 class="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/20">
-                                <i class="fas fa-shop text-xs"></i></div>
-                            <p class="text-[10px] font-black uppercase tracking-widest opacity-80">Outlet Active</p>
+                                <i class="fas fa-shop text-xs"></i>
+                            </div>
+                            <p class="text-[10px] font-black uppercase tracking-widest opacity-80">Toko Aktif (OA)</p>
                         </div>
                         <h3 class="text-3xl font-black tracking-tighter drop-shadow-sm">{{ number_format($totalOa) }}
-                            <span class="text-sm font-bold opacity-60">Toko</span></h3>
+                            <span class="text-sm font-bold opacity-60">Toko</span>
+                        </h3>
                     </div>
                 </div>
                 <div
@@ -152,11 +156,14 @@
                         <div class="flex items-center gap-3 mb-2">
                             <div
                                 class="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/20">
-                                <i class="fas fa-check-double text-xs"></i></div>
-                            <p class="text-[10px] font-black uppercase tracking-widest opacity-80">Effective Call</p>
+                                <i class="fas fa-check-double text-xs"></i>
+                            </div>
+                            <p class="text-[10px] font-black uppercase tracking-widest opacity-80">Nota Terbentuk (EC)
+                            </p>
                         </div>
                         <h3 class="text-3xl font-black tracking-tighter drop-shadow-sm">{{ number_format($totalEc) }}
-                            <span class="text-sm font-bold opacity-60">Nota</span></h3>
+                            <span class="text-sm font-bold opacity-60">Nota</span>
+                        </h3>
                     </div>
                 </div>
             </div>
@@ -168,10 +175,11 @@
                         class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-6 border-b border-blue-100 dark:border-white/5 flex justify-between items-center">
                         <h4
                             class="font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3 dark:text-blue-300 text-blue-900">
-                            <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span> Daily Sales Trend</h4>
+                            <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span> Tren Penjualan Harian
+                        </h4>
                         <div
                             class="px-4 py-2 rounded-xl bg-white dark:bg-white/10 border border-blue-100 dark:border-white/5 text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider shadow-sm">
-                            Last 30 Days</div>
+                            30 Hari Terakhir</div>
                     </div>
                     <div class="p-6">
                         <div id="chart-sales-retur" style="min-height: 350px;"></div>
@@ -183,11 +191,11 @@
                         class="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 p-6 border-b border-orange-100 dark:border-white/5 flex justify-between items-center">
                         <h4
                             class="font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3 dark:text-orange-300 text-orange-900">
-                            <span class="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span> Tagihan vs Pembayaran
+                            <span class="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span> Tagihan vs Pelunasan
                         </h4>
                         <div
                             class="px-4 py-2 rounded-xl bg-white dark:bg-white/10 border border-orange-100 dark:border-white/5 text-[10px] font-black text-orange-600 dark:text-orange-400 uppercase tracking-wider shadow-sm">
-                            Finance Flow</div>
+                            Arus Keuangan</div>
                     </div>
                     <div class="p-6">
                         <div id="chart-ar-coll" style="min-height: 350px;"></div>
@@ -196,7 +204,7 @@
             </div>
         </div>
 
-        {{-- 2. RANKING TAB --}}
+        {{-- 2. TAB PERINGKAT --}}
         <div x-show="activeTab === 'ranking'" x-transition.opacity class="grid grid-cols-1 gap-8" wire:ignore>
             <div
                 class="rounded-[2.5rem] border overflow-hidden transition-all dark:bg-neutral-900/40 dark:border-white/5 bg-white border-blue-100 shadow-sm">
@@ -205,10 +213,12 @@
                     <div class="flex items-center gap-4">
                         <div
                             class="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white shadow-inner">
-                            <i class="fas fa-box text-xl"></i></div>
+                            <i class="fas fa-box text-xl"></i>
+                        </div>
                         <div>
-                            <h4 class="font-black text-sm uppercase tracking-wider text-white">Top Products (Qty)</h4>
-                            <p class="text-[10px] text-blue-100 font-bold uppercase tracking-widest">Ranking by Quantity
+                            <h4 class="font-black text-sm uppercase tracking-wider text-white">Produk Terlaris</h4>
+                            <p class="text-[10px] text-blue-100 font-bold uppercase tracking-widest">Berdasarkan Jumlah
+                                (Qty)
                             </p>
                         </div>
                     </div>
@@ -253,10 +263,12 @@
                     <div class="flex items-center gap-4">
                         <div
                             class="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white shadow-inner">
-                            <i class="fas fa-users text-xl"></i></div>
+                            <i class="fas fa-users text-xl"></i>
+                        </div>
                         <div>
-                            <h4 class="font-black text-sm uppercase tracking-wider text-white">Top Customers</h4>
-                            <p class="text-[10px] text-purple-100 font-bold uppercase tracking-widest">By Revenue</p>
+                            <h4 class="font-black text-sm uppercase tracking-wider text-white">Pelanggan Utama</h4>
+                            <p class="text-[10px] text-purple-100 font-bold uppercase tracking-widest">Berdasarkan Omzet
+                            </p>
                         </div>
                     </div>
                     <div class="relative w-full md:w-72"
@@ -264,7 +276,7 @@
                         <button @click="open = !open" @click.outside="open = false" type="button"
                             class="w-full pl-4 pr-10 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider border-none bg-white text-purple-600 shadow-lg flex items-center justify-between transition-transform active:scale-95">
                             <span
-                                x-text="selected.length > 0 ? selected.length + ' Sales Dipilih' : 'Filter Salesman...'"></span><i
+                                x-text="selected.length > 0 ? selected.length + ' Sales Dipilih' : 'Filter Sales...'"></span><i
                                 class="fas fa-chevron-down text-xs opacity-50"></i>
                         </button>
                         <div x-show="open" x-transition
@@ -300,10 +312,12 @@
                     <div class="flex items-center gap-4">
                         <div
                             class="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white shadow-inner">
-                            <i class="fas fa-truck text-xl"></i></div>
+                            <i class="fas fa-truck text-xl"></i>
+                        </div>
                         <div>
-                            <h4 class="font-black text-sm uppercase tracking-wider text-white">Top Suppliers</h4>
-                            <p class="text-[10px] text-pink-100 font-bold uppercase tracking-widest">By Revenue</p>
+                            <h4 class="font-black text-sm uppercase tracking-wider text-white">Supplier Utama</h4>
+                            <p class="text-[10px] text-pink-100 font-bold uppercase tracking-widest">Berdasarkan Omzet
+                            </p>
                         </div>
                     </div>
                     <div class="relative w-full md:w-72"
@@ -341,7 +355,7 @@
             </div>
         </div>
 
-        {{-- 3. SALESMAN TAB (REDESIGNED SCORECARD) --}}
+        {{-- 3. TAB KINERJA SALES --}}
         <div x-show="activeTab === 'salesman'" x-transition.opacity class="space-y-8" wire:ignore>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -349,7 +363,7 @@
                     class="relative p-6 rounded-[2.5rem] bg-gradient-to-r from-blue-600 to-blue-500 shadow-xl shadow-blue-500/20 overflow-hidden text-white group">
                     <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:scale-110 transition-transform"><i
                             class="fas fa-bullseye text-7xl"></i></div>
-                    <p class="text-[10px] font-black uppercase tracking-widest opacity-80">Global Target</p>
+                    <p class="text-[10px] font-black uppercase tracking-widest opacity-80">Target Global</p>
                     <h3 class="text-2xl font-black mt-1">Rp {{ $this->formatCompact($chartData['total_target'] ?? 0) }}
                     </h3>
                 </div>
@@ -370,7 +384,7 @@
                     class="relative p-6 rounded-[2.5rem] bg-gradient-to-r from-violet-600 to-purple-500 shadow-xl shadow-violet-500/20 overflow-hidden text-white group">
                     <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:scale-110 transition-transform"><i
                             class="fas fa-percent text-7xl"></i></div>
-                    <p class="text-[10px] font-black uppercase tracking-widest opacity-80">Achievement Rate</p>
+                    <p class="text-[10px] font-black uppercase tracking-widest opacity-80">Tingkat Pencapaian</p>
                     <h3 class="text-2xl font-black mt-1">{{ number_format($globalPersen, 2) }}%</h3>
                     <div class="w-full bg-black/20 h-1.5 rounded-full mt-3 overflow-hidden">
                         <div class="bg-white h-full rounded-full" style="width: {{ min($globalPersen, 100) }}%"></div>
@@ -383,9 +397,10 @@
                 <div class="bg-gradient-to-r from-indigo-500 to-blue-600 p-6 flex items-center gap-3">
                     <div
                         class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white backdrop-blur-sm">
-                        <i class="fas fa-chart-bar text-lg"></i></div>
+                        <i class="fas fa-chart-bar text-lg"></i>
+                    </div>
                     <div>
-                        <h4 class="font-black text-sm uppercase tracking-wider text-white">Top 10 Sales Performance</h4>
+                        <h4 class="font-black text-sm uppercase tracking-wider text-white">10 Kinerja Sales Terbaik</h4>
                         <p class="text-[10px] text-indigo-100 font-bold uppercase tracking-widest">Realisasi vs Target
                         </p>
                     </div>
@@ -401,7 +416,8 @@
                     class="bg-slate-50 dark:bg-white/5 p-6 border-b border-slate-100 dark:border-white/5 flex justify-between items-center">
                     <h4
                         class="font-black text-xs uppercase tracking-widest text-slate-600 dark:text-slate-300 flex items-center gap-2">
-                        <i class="fas fa-list-ol text-blue-500"></i> Full Sales Leaderboard</h4>
+                        <i class="fas fa-list-ol text-blue-500"></i> Klasemen Sales Lengkap
+                    </h4>
                     <span
                         class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400 text-[10px] font-bold uppercase">{{ count($chartData['sales_details'] ?? []) }}
                         Personil</span>
@@ -412,11 +428,11 @@
                             class="bg-slate-50 dark:bg-black/20 text-slate-500 dark:text-slate-400 uppercase font-black tracking-wider">
                             <tr>
                                 <th class="px-6 py-4 w-10 text-center">#</th>
-                                <th class="px-6 py-4">Salesman Name</th>
+                                <th class="px-6 py-4">Nama Sales</th>
                                 <th class="px-6 py-4 text-right">Target</th>
                                 <th class="px-6 py-4 text-right">Realisasi</th>
-                                <th class="px-6 py-4 text-center w-48">Achievement</th>
-                                <th class="px-6 py-4 text-center">Gap (Rp)</th>
+                                <th class="px-6 py-4 text-center w-48">Pencapaian</th>
+                                <th class="px-6 py-4 text-center">Selisih (Rp)</th>
                                 <th class="px-6 py-4 text-center">Status</th>
                             </tr>
                         </thead>
@@ -457,9 +473,10 @@
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     @if($s['persen'] >= 100) <span
-                                        class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 text-[9px] font-black uppercase tracking-wider">Achieved</span>
+                                        class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 text-[9px] font-black uppercase tracking-wider">Tercapai</span>
                                     @else <span
-                                        class="px-3 py-1 rounded-full bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400 text-[9px] font-black uppercase tracking-wider">Missed</span>
+                                        class="px-3 py-1 rounded-full bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400 text-[9px] font-black uppercase tracking-wider">Belum
+                                        Tercapai</span>
                                     @endif
                                 </td>
                             </tr>

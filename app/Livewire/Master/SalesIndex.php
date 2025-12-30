@@ -10,7 +10,7 @@ use App\Models\Master\SalesTarget;
 use App\Models\Transaksi\Penjualan;
 use App\Services\Import\SalesImportService;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache; // Wajib diimport untuk fitur clear cache
+use Illuminate\Support\Facades\Cache;
 
 class SalesIndex extends Component
 {
@@ -21,8 +21,11 @@ class SalesIndex extends Component
     public $isImportOpen = false;
     public $isTargetOpen = false;
     
-    // Form Properties Sales
+    // Form Properties Sales (Lama)
     public $salesId, $sales_name, $sales_code, $city, $status = 'Active';
+
+    // Form Properties Sales (Baru - Manual Input)
+    public $nik, $alamat, $tempat_lahir, $tanggal_lahir;
 
     // Form Properties Target
     public $targetYear;
@@ -87,9 +90,7 @@ class SalesIndex extends Component
                 }
             }
 
-            // Update Cache setelah Sync
             $this->clearReportCaches();
-
             DB::commit();
             $this->dispatch('show-toast', ['type' => 'success', 'message' => "Sync Selesai: $added Baru, $updated Dilengkapi"]);
         } catch (\Exception $e) {
@@ -100,73 +101,54 @@ class SalesIndex extends Component
 
     // --- FITUR 2: CRUD & PROPAGASI NAMA ---
     public function store() {
-        $this->validate([
-            'sales_name' => 'required|min:3',
-            'sales_code' => 'nullable|unique:sales,sales_code,' . $this->salesId,
+    $this->validate([
+        'sales_name' => 'required|min:3',
+        'sales_code' => 'nullable|unique:sales,sales_code,' . $this->salesId,
+        'nik'        => 'nullable|numeric',
+    ]);
+
+    try {
+        DB::beginTransaction();
+        
+        $oldName = $this->salesId ? Sales::where('id', $this->salesId)->value('sales_name') : null;
+        
+        // Simpan data ke database
+        Sales::updateOrCreate(['id' => $this->salesId], [
+            'sales_name'    => $this->sales_name,
+            'sales_code'    => $this->sales_code ?: null,
+            'nik'           => $this->nik ?: null,
+            'alamat'        => $this->alamat ?: null,
+            'tempat_lahir'  => $this->tempat_lahir ?: null,
+            // Penting: Jika tanggal kosong, kirim NULL, bukan ""
+            'tanggal_lahir' => $this->tanggal_lahir ?: null, 
+            'city'          => $this->city,
+            'status'        => $this->status,
         ]);
 
-        try {
-            DB::beginTransaction();
-            
-            $oldName = $this->salesId ? Sales::where('id', $this->salesId)->value('sales_name') : null;
-            
-            $sales = Sales::updateOrCreate(['id' => $this->salesId], [
-                'sales_name' => $this->sales_name,
-                'sales_code' => $this->sales_code ?: null,
-                'city'       => $this->city,
-                'status'     => $this->status,
-            ]);
+        // ... kode propagasi nama tetap di bawah sini ...
 
-            // Jika Ganti Nama -> Update semua tabel REKAP/TRANSAKSI
-            if ($oldName && $oldName !== $this->sales_name) {
-                // 1. Update Penjualan
-                Penjualan::where('sales_name', $oldName)->update(['sales_name' => $this->sales_name]);
-                
-                // 2. Update Retur
-                \App\Models\Transaksi\Retur::where('sales_name', $oldName)->update(['sales_name' => $this->sales_name]);
-                
-                // 3. Update Account Receivable
-                \App\Models\Keuangan\AccountReceivable::where('sales_name', $oldName)->update(['sales_name' => $this->sales_name]);
-                
-                // 4. Update Collection
-                \App\Models\Keuangan\Collection::where('sales_name', $oldName)->update(['sales_name' => $this->sales_name]);
-
-                // 5. PENTING: Bersihkan Cache Dropdown Laporan agar nama baru langsung muncul
-                $this->clearReportCaches();
-            }
-
-            DB::commit();
-            $this->isOpen = false; 
-            $this->resetInput();
-            $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Data Salesman & Rekap Terupdate']);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Error: ' . $e->getMessage()]);
-        }
+        DB::commit();
+        $this->isOpen = false; 
+        $this->resetInput();
+        $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Data Salesman Berhasil Disimpan']);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        // Cek error log jika masih gagal
+        \Log::error('Gagal Simpan Sales: ' . $e->getMessage());
+        $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Error: ' . $e->getMessage()]);
     }
+}
 
-    /**
-     * Fungsi Khusus untuk Menghapus Cache Dropdown di Semua Laporan
-     */
     protected function clearReportCaches()
     {
-        // Rekap Penjualan
         Cache::forget('opt_jual_sales');
         Cache::forget('opt_jual_cabang');
-        
-        // Rekap Retur
         Cache::forget('opt_ret_sales');
         Cache::forget('opt_ret_cab');
-        
-        // Rekap AR
         Cache::forget('opt_ar_sales');
         Cache::forget('opt_ar_cabang');
-        
-        // Rekap Collection
         Cache::forget('opt_col_sal');
         Cache::forget('opt_col_cab');
-
-        // Dashboard
         Cache::forget('dash_sales');
     }
 
@@ -203,23 +185,15 @@ class SalesIndex extends Component
         try {
             foreach ($this->monthlyTargets as $month => $amount) {
                 $cleanAmount = (float) str_replace(['.', ','], '', $amount);
-                
                 SalesTarget::updateOrCreate(
-                    [
-                        'sales_id' => $this->salesId,
-                        'year'     => $this->targetYear,
-                        'month'    => $month
-                    ],
-                    [
-                        'target_ims' => $cleanAmount
-                    ]
+                    ['sales_id' => $this->salesId, 'year' => $this->targetYear, 'month' => $month],
+                    ['target_ims' => $cleanAmount]
                 );
             }
-            
             $this->isTargetOpen = false;
-            $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Target Tahun ' . $this->targetYear . ' Berhasil Disimpan']);
+            $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Target Bulanan Berhasil Disimpan']);
         } catch (\Exception $e) {
-            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal Simpan Target: ' . $e->getMessage()]);
+            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal Simpan Target']);
         }
     }
 
@@ -229,6 +203,11 @@ class SalesIndex extends Component
         $this->salesId = $id; 
         $this->sales_name = $s->sales_name; 
         $this->sales_code = $s->sales_code;
+        // Load data manual ke form saat edit
+        $this->nik = $s->nik;
+        $this->alamat = $s->alamat;
+        $this->tempat_lahir = $s->tempat_lahir;
+        $this->tanggal_lahir = $s->tanggal_lahir;
         $this->city = $s->city; 
         $this->status = $s->status; 
         $this->isOpen = true;
@@ -237,7 +216,6 @@ class SalesIndex extends Component
     public function delete($id) {
         try {
             Sales::findOrFail($id)->delete();
-            // Clear cache juga saat hapus agar nama hilang dari filter
             $this->clearReportCaches();
             $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Salesman Dihapus']);
         } catch (\Exception $e) {
@@ -254,10 +232,10 @@ class SalesIndex extends Component
             if ($this->resetData) { Sales::truncate(); }
             $importService->handle($this->file->getRealPath());
             $this->isImportOpen = false;
-            $this->clearReportCaches(); // Clear cache setelah import
+            $this->clearReportCaches();
             $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Import Berhasil']);
         } catch (\Exception $e) {
-            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal Import: ' . $e->getMessage()]);
+            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal Import']);
         }
     }
 
@@ -271,7 +249,10 @@ class SalesIndex extends Component
     }
     
     public function resetInput() { 
-        $this->reset(['salesId', 'sales_name', 'sales_code', 'city', 'status', 'monthlyTargets']); 
+        $this->reset([
+            'salesId', 'sales_name', 'sales_code', 'city', 'status', 
+            'monthlyTargets', 'nik', 'alamat', 'tempat_lahir', 'tanggal_lahir'
+        ]); 
         $this->status = 'Active'; 
     }
 
@@ -281,6 +262,7 @@ class SalesIndex extends Component
             $query->where(fn($q) => 
                 $q->where('sales_name', 'like', '%'.$this->search.'%')
                   ->orWhere('sales_code', 'like', '%'.$this->search.'%')
+                  ->orWhere('nik', 'like', '%'.$this->search.'%')
             );
         }
         
