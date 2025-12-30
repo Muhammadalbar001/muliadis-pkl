@@ -56,7 +56,7 @@
         ['route' => 'master.produk', 'icon' => 'fa-box', 'label' => 'Produk'],
         ['route' => 'master.supplier', 'icon' => 'fa-truck', 'label' => 'Supplier'],
         ['route' => 'master.sales', 'icon' => 'fa-user-tie', 'label' => 'Salesman'],
-        ['route' => 'master.user', 'icon' => 'fa-users-cog', 'label' => 'User (Config)'],
+        ['route' => 'master.user', 'icon' => 'fa-users-cog', 'label' => 'Pengguna'],
         ] as $menu)
         <a href="{{ route($menu['route']) }}"
             class="flex items-center py-2.5 rounded-xl transition-all duration-200 group text-[11px] font-bold mb-1 relative uppercase tracking-wider
@@ -80,8 +80,8 @@
         @foreach([
         ['route' => 'transaksi.penjualan', 'icon' => 'fa-shopping-cart', 'label' => 'Penjualan'],
         ['route' => 'transaksi.retur', 'icon' => 'fa-undo', 'label' => 'Retur'],
-        ['route' => 'transaksi.ar', 'icon' => 'fa-file-invoice-dollar', 'label' => 'Piutang (AR)'],
-        ['route' => 'transaksi.collection', 'icon' => 'fa-hand-holding-dollar', 'label' => 'Collection'],
+        ['route' => 'transaksi.ar', 'icon' => 'fa-file-invoice-dollar', 'label' => 'Piutang'],
+        ['route' => 'transaksi.collection', 'icon' => 'fa-hand-holding-dollar', 'label' => 'Pelunasan'],
         ] as $menu)
         <a href="{{ route($menu['route']) }}"
             class="flex items-center py-2.5 rounded-xl transition-all duration-200 group text-[11px] font-bold mb-1 relative uppercase tracking-wider
@@ -160,7 +160,7 @@
                 ['route' => 'laporan.rekap-penjualan', 'label' => 'Penjualan'],
                 ['route' => 'laporan.rekap-retur', 'label' => 'Retur'],
                 ['route' => 'laporan.rekap-ar', 'label' => 'Piutang'],
-                ['route' => 'laporan.rekap-collection', 'label' => 'Collection'],
+                ['route' => 'laporan.rekap-collection', 'label' => 'Pelunasan'],
                 ] as $sub)
                 <a href="{{ route($sub['route']) }}"
                     class="flex items-center px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all {{ request()->routeIs($sub['route']) ? 'text-blue-400 bg-blue-500/10' : 'text-neutral-500 hover:text-white hover:bg-neutral-800' }}">
