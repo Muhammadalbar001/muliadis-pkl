@@ -1,6 +1,7 @@
 <div class="min-h-screen space-y-6 pb-20 transition-colors duration-300 font-jakarta"
     x-data="{ activeTab: @entangle('activeTab').live }">
 
+    {{-- HEADER & NAVIGASI --}}
     <div class="sticky top-0 z-40 backdrop-blur-xl border-b transition-all duration-300 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-4 mb-6
         dark:bg-[#0a0a0a]/80 dark:border-white/5 bg-white/80 border-slate-200 shadow-sm">
 
@@ -17,12 +18,13 @@
                     </h1>
                     <p
                         class="text-[9px] font-bold uppercase tracking-[0.3em] opacity-50 mt-1.5 dark:text-slate-400 text-slate-500">
-                        KPI & Sales Code Monitoring
+                        Monitoring KPI & Pencapaian Target
                     </p>
                 </div>
             </div>
 
             <div class="flex flex-wrap sm:flex-nowrap gap-3 items-center w-full xl:w-auto justify-end">
+                {{-- PENCARIAN --}}
                 <div class="relative w-full sm:w-48 group">
                     <i
                         class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-amber-500 transition-colors text-xs"></i>
@@ -32,6 +34,7 @@
                         placeholder="Cari Kode/Nama...">
                 </div>
 
+                {{-- FILTER MINIMAL NOTA (Hanya muncul di tab Produktivitas) --}}
                 <div x-show="activeTab === 'produktifitas'" x-transition
                     class="flex items-center dark:bg-black/40 bg-white border dark:border-white/10 border-slate-200 rounded-xl px-3 shadow-inner h-[38px]">
                     <span
@@ -42,6 +45,7 @@
                         placeholder="Rp">
                 </div>
 
+                {{-- FILTER CABANG --}}
                 <div class="relative w-full sm:w-40" x-data="{ open: false }">
                     <button @click="open = !open" @click.outside="open = false"
                         class="w-full flex items-center justify-between border px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm h-[38px]
@@ -50,7 +54,7 @@
                             @if(count($filterCabang) > 0)
                             {{ count($filterCabang) }} Regional
                             @else
-                            CABANG
+                            Pilih Cabang
                             @endif
                         </span>
                         <i class="fas fa-chevron-down opacity-40 text-[10px] transition-transform"
@@ -73,34 +77,37 @@
                     </div>
                 </div>
 
+                {{-- FILTER BULAN --}}
                 <input type="month" wire:model.live="bulan"
                     class="w-full sm:w-36 border px-4 py-2 rounded-xl text-[11px] font-black uppercase h-[38px]
                     dark:bg-black/40 bg-white dark:border-white/10 border-slate-200 dark:text-white transition-all shadow-sm">
 
                 <div class="flex items-center gap-2">
                     <button wire:click="resetFilter"
-                        class="px-4 py-2 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 rounded-xl text-[10px] hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 transition-all shadow-sm h-[38px]"><i
-                            class="fas fa-undo"></i></button>
+                        class="px-4 py-2 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 rounded-xl text-[10px] hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 transition-all shadow-sm h-[38px]"
+                        title="Reset Filter"><i class="fas fa-undo"></i></button>
                     <button wire:click="export"
                         class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-amber-600/20 h-[38px] flex items-center gap-2 transition-transform active:scale-95">
-                        <i class="fas fa-file-excel"></i> Export
+                        <i class="fas fa-file-excel"></i> Ekspor
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
+    {{-- KARTU RINGKASAN GLOBAL --}}
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 px-4 sm:px-6 lg:px-8">
         <div
             class="p-5 rounded-[2rem] border transition-all dark:bg-slate-900/40 bg-white border-slate-100 dark:border-white/5 shadow-xl flex flex-col justify-center">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 opacity-60">Revenue Target
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 opacity-60">Target Omzet
             </p>
             <h3 class="text-xl font-black dark:text-white text-slate-800 tracking-tighter">Rp
                 {{ $this->formatCompact($globalSummary['total_target']) }}</h3>
         </div>
         <div
             class="relative p-5 rounded-[2rem] border transition-all overflow-hidden dark:bg-emerald-500/10 dark:border-emerald-500/20 bg-emerald-600 text-white shadow-xl shadow-emerald-600/20">
-            <p class="text-emerald-100 text-[10px] font-black uppercase tracking-widest mb-1 opacity-80">Net Achievement
+            <p class="text-emerald-100 text-[10px] font-black uppercase tracking-widest mb-1 opacity-80">Realisasi
+                Bersih
             </p>
             <h3 class="text-2xl font-black tracking-tighter">Rp {{ $this->formatCompact($globalSummary['total_real']) }}
             </h3>
@@ -108,55 +115,58 @@
         </div>
         <div
             class="p-5 rounded-[2rem] border transition-all dark:bg-slate-900/40 bg-white border-slate-100 dark:border-white/5 shadow-xl flex flex-col justify-center">
-            <p class="text-[10px] font-black text-orange-400 uppercase tracking-widest mb-1">Accounts Receivable</p>
+            <p class="text-[10px] font-black text-orange-400 uppercase tracking-widest mb-1">Total Piutang</p>
             <h3 class="text-xl font-black dark:text-white text-slate-800 tracking-tighter">Rp
                 {{ $this->formatCompact($globalSummary['total_ar']) }}</h3>
         </div>
         <div
             class="p-5 rounded-[2rem] border transition-all dark:bg-rose-500/10 dark:border-rose-500/20 bg-white border-rose-100 shadow-xl flex flex-col justify-center">
-            <p class="text-[10px] font-black text-rose-500 dark:text-rose-400 uppercase tracking-widest mb-1">Bad Debt
-                Risk</p>
+            <p class="text-[10px] font-black text-rose-500 dark:text-rose-400 uppercase tracking-widest mb-1">Risiko
+                Piutang Macet</p>
             <h3 class="text-xl font-black dark:text-rose-400 text-rose-600 tracking-tighter">Rp
                 {{ $this->formatCompact($globalSummary['total_macet']) }}</h3>
         </div>
     </div>
 
+    {{-- NAVIGASI TAB --}}
     <div class="px-4 sm:px-6 lg:px-8">
         <div
             class="flex space-x-2 dark:bg-white/5 bg-slate-100 p-1.5 rounded-2xl w-fit overflow-x-auto border dark:border-white/5 border-slate-200">
             <button @click="activeTab = 'penjualan'"
                 :class="activeTab === 'penjualan' ? 'bg-white dark:bg-emerald-600 text-emerald-600 dark:text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
                 class="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-2">
-                <i class="fas fa-chart-line"></i> Sales Performance
+                <i class="fas fa-chart-line"></i> Kinerja Penjualan
             </button>
             <button @click="activeTab = 'ar'"
                 :class="activeTab === 'ar' ? 'bg-white dark:bg-orange-600 text-orange-600 dark:text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
                 class="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-2">
-                <i class="fas fa-money-bill-wave"></i> Credit Monitor
+                <i class="fas fa-money-bill-wave"></i> Monitoring Kredit
             </button>
             <button @click="activeTab = 'supplier'"
                 :class="activeTab === 'supplier' ? 'bg-white dark:bg-purple-600 text-purple-600 dark:text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
                 class="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-2">
-                <i class="fas fa-boxes-stacked"></i> Supplier Mix
+                <i class="fas fa-boxes-stacked"></i> Penjualan By Supplier
             </button>
             <button @click="activeTab = 'produktifitas'"
                 :class="activeTab === 'produktifitas' ? 'bg-white dark:bg-blue-600 text-blue-600 dark:text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
                 class="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-2">
-                <i class="fas fa-users-viewfinder"></i> Productivity
+                <i class="fas fa-users-viewfinder"></i> Analisa Produktivitas
             </button>
         </div>
     </div>
 
+    {{-- KONTEN TAB --}}
     <div class="px-4 sm:px-6 lg:px-8">
         <div class="rounded-[2.5rem] border overflow-hidden transition-all duration-300 flex flex-col min-h-[80vh] mb-10
             dark:bg-slate-900/40 dark:border-white/5 bg-white border-slate-200 shadow-2xl"
             wire:loading.class="opacity-50">
 
+            {{-- 1. TAB KINERJA PENJUALAN --}}
             <div x-show="activeTab === 'penjualan'" x-transition>
                 <div class="p-6 border-b dark:border-white/5 border-slate-100 bg-emerald-50/20 dark:bg-emerald-500/10">
                     <span
-                        class="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">Sales
-                        Achievement Matrix</span>
+                        class="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">Matriks
+                        Pencapaian Sales</span>
                 </div>
                 <div class="overflow-x-auto custom-scrollbar">
                     <table class="w-full text-sm text-left border-collapse uppercase font-jakarta">
@@ -164,15 +174,15 @@
                             <tr
                                 class="dark:bg-white/5 bg-slate-50 text-slate-500 dark:text-slate-400 font-black text-[10px] tracking-[0.15em] border-b border-slate-100 dark:border-white/5">
                                 <th class="px-6 py-5 border-r border-slate-100 dark:border-white/5 w-24">Kode</th>
-                                <th class="px-6 py-5 border-r border-slate-100 dark:border-white/5">Sales Name</th>
+                                <th class="px-6 py-5 border-r border-slate-100 dark:border-white/5">Nama Sales</th>
                                 <th class="px-6 py-5 text-right border-r border-slate-100 dark:border-white/5">Target
                                     (Rp)</th>
                                 <th
                                     class="px-6 py-5 text-right border-r border-slate-100 dark:border-white/5 text-emerald-600 dark:text-emerald-400">
                                     Realisasi (Rp)</th>
-                                <th class="px-6 py-5 text-center border-r border-slate-100 dark:border-white/5">Achieve
+                                <th class="px-6 py-5 text-center border-r border-slate-100 dark:border-white/5">Capaian
                                     %</th>
-                                <th class="px-6 py-5 text-right">Gap (Rp)</th>
+                                <th class="px-6 py-5 text-right">Selisih (Gap)</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y dark:divide-white/5 divide-slate-100">
@@ -217,11 +227,12 @@
                 </div>
             </div>
 
+            {{-- 2. TAB MONITORING KREDIT --}}
             <div x-show="activeTab === 'ar'" x-transition style="display: none;">
                 <div class="p-6 border-b dark:border-white/5 border-slate-100 bg-orange-50/20 dark:bg-orange-500/10">
                     <span
-                        class="text-[11px] font-black uppercase tracking-[0.2em] text-orange-600 dark:text-orange-400">Credit
-                        Risk Monitor</span>
+                        class="text-[11px] font-black uppercase tracking-[0.2em] text-orange-600 dark:text-orange-400">Monitor
+                        Risiko Kredit Sales</span>
                 </div>
                 <div class="overflow-x-auto custom-scrollbar">
                     <table class="w-full text-sm text-left border-collapse uppercase font-jakarta">
@@ -229,13 +240,13 @@
                             <tr
                                 class="dark:bg-white/5 bg-slate-50 text-slate-500 dark:text-slate-400 font-black text-[10px] tracking-[0.15em] border-b border-slate-100 dark:border-white/5">
                                 <th class="px-6 py-5 border-r border-slate-100 dark:border-white/5 w-24">Kode</th>
-                                <th class="px-6 py-5 border-r border-slate-100 dark:border-white/5">Sales Name</th>
+                                <th class="px-6 py-5 border-r border-slate-100 dark:border-white/5">Nama Sales</th>
                                 <th class="px-6 py-5 text-right border-r border-slate-100 dark:border-white/5">Total
-                                    Piutang</th>
+                                    Tagihan</th>
                                 <th
                                     class="px-6 py-5 text-right border-r border-slate-100 dark:border-white/5 text-rose-600 dark:text-rose-400">
                                     Macet (>30 Hari)</th>
-                                <th class="px-6 py-5 text-center">% Macet</th>
+                                <th class="px-6 py-5 text-center">Rasio Macet</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y dark:divide-white/5 divide-slate-100">
@@ -267,11 +278,12 @@
                 </div>
             </div>
 
+            {{-- 3. TAB MIX SUPPLIER --}}
             <div x-show="activeTab === 'supplier'" x-transition style="display: none;">
                 <div class="p-6 border-b dark:border-white/5 border-slate-100 bg-purple-50/20 dark:bg-purple-500/10">
                     <span
-                        class="text-[11px] font-black uppercase tracking-[0.2em] text-purple-600 dark:text-purple-400">Supplier
-                        Penetration Matrix</span>
+                        class="text-[11px] font-black uppercase tracking-[0.2em] text-purple-600 dark:text-purple-400">Matriks
+                        Penetrasi Supplier</span>
                 </div>
                 <div class="overflow-x-auto custom-scrollbar">
                     <table
@@ -281,7 +293,7 @@
                                 class="dark:bg-white/5 bg-slate-50 text-slate-500 dark:text-slate-400 font-black tracking-[0.1em] border-b border-slate-100 dark:border-white/5">
                                 <th
                                     class="px-6 py-5 sticky left-0 dark:bg-[#0a0a0a] bg-slate-50 border-r border-slate-100 dark:border-white/5 z-30">
-                                    Sales Personnel</th>
+                                    Personel Sales</th>
                                 @foreach($topSuppliers as $supp)
                                 <th class="px-6 py-5 text-right border-r border-slate-100 dark:border-white/5 w-32 truncate"
                                     title="{{ $supp }}">
@@ -290,7 +302,7 @@
                                 @endforeach
                                 <th
                                     class="px-6 py-5 text-center bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border-l dark:border-white/5 sticky right-32 z-30">
-                                    Brand Count</th>
+                                    Jumlah Brand</th>
                                 <th
                                     class="px-6 py-5 text-right bg-purple-100 dark:bg-purple-800/40 text-purple-900 dark:text-purple-200 sticky right-0 z-30">
                                     Total Omzet</th>
@@ -329,12 +341,13 @@
                 </div>
             </div>
 
+            {{-- 4. TAB ANALISA PRODUKTIVITAS --}}
             <div x-show="activeTab === 'produktifitas'" x-transition style="display: none;">
                 <div
                     class="p-6 border-b dark:border-white/5 border-slate-100 bg-blue-50/20 dark:bg-blue-500/10 flex justify-between items-center">
                     <span
-                        class="text-[11px] font-black uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400">Productivity
-                        Analysis</span>
+                        class="text-[11px] font-black uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400">Analisa
+                        Efektivitas Kunjungan</span>
                     <span
                         class="text-[9px] font-bold bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 px-3 py-1 rounded-full">Min.
                         Nota: Rp {{ number_format($minNominal,0,',','.') }}</span>
@@ -345,13 +358,13 @@
                             <tr
                                 class="dark:bg-white/5 bg-slate-50 text-slate-500 dark:text-slate-400 font-black text-[10px] tracking-[0.15em] border-b border-slate-100 dark:border-white/5">
                                 <th class="px-6 py-5 border-r border-slate-100 dark:border-white/5 w-24">Kode</th>
-                                <th class="px-6 py-5 border-r border-slate-100 dark:border-white/5">Sales Name</th>
+                                <th class="px-6 py-5 border-r border-slate-100 dark:border-white/5">Nama Sales</th>
                                 <th
                                     class="px-6 py-5 text-center border-r border-slate-100 dark:border-white/5 text-blue-500 dark:text-blue-400">
                                     Outlet Aktif (OA)</th>
-                                <th class="px-6 py-5 text-center text-emerald-600 dark:text-emerald-400">Effective Call
+                                <th class="px-6 py-5 text-center text-emerald-600 dark:text-emerald-400">Nota Efektif
                                     (EC)</th>
-                                <th class="px-6 py-5 text-center border-l border-slate-100 dark:border-white/5">Ratio
+                                <th class="px-6 py-5 text-center border-l border-slate-100 dark:border-white/5">Rasio
                                     EC/OA</th>
                             </tr>
                         </thead>
@@ -386,6 +399,7 @@
                 </div>
             </div>
 
+            {{-- PAGINASI --}}
             <div
                 class="mt-auto px-6 py-6 border-t dark:border-white/5 border-slate-100 dark:bg-white/[0.02] bg-slate-50/50 uppercase font-black text-[10px]">
                 {{ $laporan->links() }}

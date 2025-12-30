@@ -1,5 +1,6 @@
 <div class="min-h-screen space-y-6 pb-10 transition-colors duration-300 font-jakarta" x-data="{ filterOpen: false }">
 
+    {{-- HEADER & NAVIGASI --}}
     <div class="sticky top-0 z-40 backdrop-blur-xl border-b transition-all duration-300 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-4 mb-6
         dark:bg-[#0a0a0a]/80 dark:border-white/5 bg-white/80 border-slate-200 shadow-sm">
 
@@ -15,26 +16,28 @@
                     </h1>
                     <p
                         class="text-[9px] font-bold uppercase tracking-[0.3em] opacity-50 mt-1.5 dark:text-slate-400 text-slate-500">
-                        Return & Refund Management</p>
+                        Manajemen Pengembalian & Dana Batal</p>
                 </div>
             </div>
 
             <div class="flex flex-wrap sm:flex-nowrap gap-3 items-center w-full xl:w-auto justify-end">
 
+                {{-- PENCARIAN --}}
                 <div class="relative w-full sm:w-48 group">
                     <i
                         class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-rose-500 transition-colors text-xs"></i>
                     <input wire:model.live.debounce.300ms="search" type="text"
-                        class="w-full pl-9 pr-4 py-2 rounded-xl border text-[11px] font-bold uppercase tracking-widest focus:ring-2 focus:ring-rose-500/20 transition-all
+                        class="w-full pl-9 pr-4 py-2.5 rounded-xl border text-[11px] font-bold uppercase tracking-widest focus:ring-2 focus:ring-rose-500/20 transition-all
                         dark:bg-black/40 dark:border-white/10 dark:text-white bg-slate-100 border-slate-200 shadow-inner" placeholder="No Retur / Pelanggan...">
                 </div>
 
+                {{-- FILTER REGIONAL --}}
                 <div class="relative w-full sm:w-40" x-data="{ open: false, selected: @entangle('filterCabang').live }">
                     <button @click="open = !open" @click.outside="open = false"
                         class="w-full flex items-center justify-between border px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm
                         dark:bg-black/40 dark:border-white/5 dark:text-slate-300 bg-white border-slate-200 text-slate-700 hover:border-rose-400">
                         <span class="truncate"
-                            x-text="selected.length > 0 ? selected.length + ' Regional' : 'Regional Hub'"></span>
+                            x-text="selected.length > 0 ? selected.length + ' Regional' : 'Pilih Cabang'"></span>
                         <i class="fas fa-chevron-down opacity-40 text-[10px] transition-transform"
                             :class="open ? 'rotate-180' : ''"></i>
                     </button>
@@ -42,7 +45,7 @@
                         dark:bg-slate-900 border-slate-800 bg-white border-slate-200" style="display: none;">
                         <div @click="selected = []"
                             class="px-3 py-2 text-[10px] text-rose-500 font-black uppercase tracking-widest cursor-pointer hover:bg-rose-500/10 rounded-xl mb-1 flex items-center gap-2">
-                            <i class="fas fa-times-circle"></i> Reset Filter
+                            <i class="fas fa-times-circle"></i> Bersihkan Filter
                         </div>
                         @foreach($optCabang as $c)
                         <label
@@ -56,24 +59,26 @@
                     </div>
                 </div>
 
+                {{-- HAPUS PER PERIODE --}}
                 <div
                     class="flex items-center gap-1.5 p-1.5 dark:bg-rose-500/10 bg-rose-50 border dark:border-rose-500/20 border-rose-100 rounded-2xl shadow-sm">
                     <input type="date" wire:model="deleteStartDate"
                         class="text-[9px] rounded-lg border-none py-1.5 px-2 bg-white dark:bg-black/40 font-black uppercase text-slate-700 dark:text-slate-200 focus:ring-rose-500">
-                    <span class="text-rose-300 text-[9px] font-black uppercase">To</span>
+                    <span class="text-rose-300 text-[9px] font-black uppercase">S/D</span>
                     <input type="date" wire:model="deleteEndDate"
                         class="text-[9px] rounded-lg border-none py-1.5 px-2 bg-white dark:bg-black/40 font-black uppercase text-slate-700 dark:text-slate-200 focus:ring-rose-500">
-                    <button onclick="confirm('Hapus PERIODE retur ini?') || event.stopImmediatePropagation()"
+                    <button onclick="confirm('Hapus data retur pada PERIODE ini?') || event.stopImmediatePropagation()"
                         wire:click="deleteByPeriod"
                         class="p-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-all shadow-lg shadow-rose-600/20">
                         <i class="fas fa-trash-alt text-[10px]"></i>
                     </button>
                 </div>
 
+                {{-- IMPORT --}}
                 <button wire:click="openImportModal"
                     class="flex items-center gap-2 px-6 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-600/20 transition-all transform active:scale-95">
                     <i class="fas fa-file-import"></i>
-                    <span class="hidden sm:inline">Import</span>
+                    <span class="hidden sm:inline">Unggah Data</span>
                 </button>
 
                 <div wire:loading
@@ -84,14 +89,16 @@
         </div>
     </div>
 
+    {{-- KONTEN UTAMA --}}
     <div wire:loading.class="opacity-50 pointer-events-none"
         class="transition-opacity duration-300 px-4 sm:px-6 lg:px-8">
 
         @if(isset($summary))
+        {{-- KARTU RINGKASAN --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div
                 class="relative p-6 rounded-[2.5rem] border transition-all duration-500 group overflow-hidden dark:bg-rose-500/10 dark:border-rose-500/20 bg-rose-600 text-white shadow-xl shadow-rose-600/20">
-                <p class="text-[10px] font-black uppercase tracking-widest opacity-70">Loss of Revenue (Returns)</p>
+                <p class="text-[10px] font-black uppercase tracking-widest opacity-70">Potensi Kerugian (Retur)</p>
                 <h3 class="text-3xl font-black mt-2 tracking-tighter">Rp
                     {{ number_format($summary['total_nilai'], 0, ',', '.') }}</h3>
                 <i
@@ -102,7 +109,7 @@
                 class="p-6 rounded-[2.5rem] border transition-all dark:bg-slate-900/40 dark:border-white/5 bg-white border-slate-200 shadow-xl flex items-center justify-between">
                 <div>
                     <p class="text-[10px] font-black uppercase tracking-widest dark:text-slate-400 text-slate-400">
-                        Return Slips</p>
+                        Slip Retur</p>
                     <h3 class="text-2xl font-black mt-1 tracking-tighter dark:text-white text-slate-800">
                         {{ number_format($summary['total_faktur'], 0, ',', '.') }}</h3>
                 </div>
@@ -116,7 +123,7 @@
                 class="p-6 rounded-[2.5rem] border transition-all dark:bg-slate-900/40 dark:border-white/5 bg-white border-slate-200 shadow-xl flex items-center justify-between">
                 <div>
                     <p class="text-[10px] font-black uppercase tracking-widest dark:text-slate-400 text-slate-400">Total
-                        Items Returned</p>
+                        Barang Diretur</p>
                     <h3 class="text-2xl font-black mt-1 tracking-tighter dark:text-white text-slate-800">
                         {{ number_format($summary['total_items'], 0, ',', '.') }}</h3>
                 </div>
@@ -128,6 +135,7 @@
         </div>
         @endif
 
+        {{-- TABEL DATA --}}
         <div class="rounded-[2.5rem] border overflow-hidden transition-all duration-300 flex flex-col h-[70vh]
             dark:bg-slate-900/40 dark:border-white/5 bg-white border-slate-200 shadow-2xl dark:shadow-black/60">
 
@@ -136,19 +144,21 @@
                     <thead>
                         <tr
                             class="dark:bg-white/5 bg-slate-50 text-slate-500 dark:text-slate-400 font-black text-[10px] tracking-[0.15em] border-b dark:border-white/5 border-slate-100">
-                            <th class="px-6 py-5 border-r dark:border-white/5 border-slate-100">Date Log</th>
-                            <th class="px-6 py-5 border-r dark:border-white/5 border-slate-100">Return ID</th>
-                            <th class="px-6 py-5 border-r dark:border-white/5 border-slate-100 min-w-[150px]">Customer
+                            <th class="px-6 py-5 border-r dark:border-white/5 border-slate-100">Tgl Retur</th>
+                            <th class="px-6 py-5 border-r dark:border-white/5 border-slate-100">No. Retur</th>
+                            <th class="px-6 py-5 border-r dark:border-white/5 border-slate-100 min-w-[150px]">Pelanggan
                             </th>
-                            <th class="px-6 py-5 border-r dark:border-white/5 border-slate-100 min-w-[200px]">Product
-                                Details</th>
-                            <th class="px-6 py-5 border-r dark:border-white/5 border-slate-100 text-right">Qty</th>
-                            <th class="px-6 py-5 border-r dark:border-white/5 border-slate-100 text-center">Hub</th>
+                            <th class="px-6 py-5 border-r dark:border-white/5 border-slate-100 min-w-[200px]">Detail
+                                Produk</th>
+                            <th class="px-6 py-5 border-r dark:border-white/5 border-slate-100 text-right">Jumlah (Qty)
+                            </th>
+                            <th class="px-6 py-5 border-r dark:border-white/5 border-slate-100 text-center">Regional
+                            </th>
                             <th
                                 class="px-6 py-5 border-r dark:border-white/5 border-slate-100 text-right dark:bg-rose-600/10 bg-rose-50/50 text-rose-600">
-                                Grand Total</th>
+                                Total Nilai</th>
                             <th
-                                class="px-6 py-5 text-center bg-slate-50/50 dark:bg-white/5 border-l dark:border-white/5 border-slate-100 sticky right-0 z-20">
+                                class="px-6 py-5 text-center bg-slate-50/30 dark:bg-[#0a0a0a] border-l dark:border-white/5 border-slate-100 sticky right-0 z-20">
                                 Aksi</th>
                         </tr>
                     </thead>
@@ -202,7 +212,7 @@
                         <tr>
                             <td colspan="8" class="px-6 py-24 text-center opacity-20">
                                 <i class="fas fa-undo-alt text-6xl mb-4"></i>
-                                <p class="text-xs font-black tracking-[0.4em]">No Return Records Found</p>
+                                <p class="text-xs font-black tracking-[0.4em]">Belum Ada Data Retur</p>
                             </td>
                         </tr>
                         @endforelse
@@ -210,6 +220,7 @@
                 </table>
             </div>
 
+            {{-- PAGINASI --}}
             <div
                 class="px-6 py-5 border-t dark:border-white/5 border-slate-100 dark:bg-white/[0.02] bg-slate-50/50 uppercase font-black text-[10px]">
                 {{ $returs->links() }}
@@ -217,39 +228,8 @@
         </div>
     </div>
 
+    {{-- MODAL UNGGAH --}}
     @if($isImportOpen)
-    @include('livewire.partials.import-modal', ['title' => 'Sync Return Ledger', 'color' => 'rose'])
+    @include('livewire.partials.import-modal', ['title' => 'Sinkronisasi Data Retur', 'color' => 'rose'])
     @endif
 </div>
-
-<style>
-.custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
-    height: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(244, 63, 94, 0.2);
-    border-radius: 10px;
-}
-
-tbody tr {
-    animation: fadeIn 0.3s ease-out forwards;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(4px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-</style>
