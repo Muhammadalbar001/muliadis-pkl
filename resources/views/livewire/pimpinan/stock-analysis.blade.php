@@ -8,10 +8,10 @@
                 <div>
                     <h1
                         class="text-2xl font-black tracking-tighter uppercase leading-none text-slate-800 dark:text-white">
-                        Stock Analysis
+                        Analisa Stok
                     </h1>
                     <p class="text-[10px] font-bold tracking-[0.3em] uppercase mt-1 text-slate-400 dark:text-slate-500">
-                        Multi-Branch & Supplier Intelligence
+                        Kecerdasan Multi-Cabang & Pemasok
                     </p>
                 </div>
             </div>
@@ -41,13 +41,12 @@
             <div class="md:col-span-4" x-data="{ 
                     open: false, 
                     search: '', 
-                    // PENTING: .live agar langsung update ke controller
                     selected: @entangle('selectedSuppliers').live,
                     items: {{ json_encode($suppliersList) }}
                  }">
                 <label
                     class="text-[9px] font-black uppercase tracking-widest mb-1.5 block text-slate-500 dark:text-slate-400 ml-1">
-                    Filter Supplier (Wajib Pilih)
+                    Filter Pemasok (Wajib Pilih)
                 </label>
 
                 <div class="relative" @click.outside="open = false">
@@ -55,9 +54,9 @@
                         {{ count($selectedSuppliers) > 0 ? 'border-blue-500 ring-1 ring-blue-500 bg-blue-50/50 dark:bg-blue-900/20' : 'bg-slate-50 border-slate-200 dark:bg-[#0a0a0a] dark:border-white/10' }}
                         text-slate-700 dark:text-white">
 
-                        <span x-show="selected.length === 0" class="text-slate-400">-- Klik untuk Pilih Supplier
+                        <span x-show="selected.length === 0" class="text-slate-400">-- Klik untuk Pilih Pemasok
                             --</span>
-                        <span x-show="selected.length > 0" x-text="selected.length + ' Supplier Dipilih'"
+                        <span x-show="selected.length > 0" x-text="selected.length + ' Pemasok Dipilih'"
                             class="text-blue-600 dark:text-blue-400"></span>
 
                         <div
@@ -74,7 +73,7 @@
                             class="p-3 border-b border-slate-100 dark:border-white/5 sticky top-0 bg-white dark:bg-[#1a1a1a]">
                             <input x-model="search" type="text"
                                 class="w-full px-3 py-2 rounded-lg text-xs border bg-slate-50 border-slate-200 focus:ring-blue-500 focus:border-blue-500 dark:bg-black dark:border-white/10 dark:text-white uppercase"
-                                placeholder="CARI NAMA SUPPLIER...">
+                                placeholder="CARI NAMA PEMASOK...">
                         </div>
 
                         <div class="overflow-y-auto p-2 space-y-1 custom-scrollbar flex-1">
@@ -98,7 +97,7 @@
                             class="p-2 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-black/20 flex justify-between items-center">
                             <span class="text-[10px] text-slate-400" x-text="selected.length + ' dipilih'"></span>
                             <button @click="selected = []"
-                                class="text-[10px] text-red-500 font-bold hover:underline">Reset</button>
+                                class="text-[10px] text-red-500 font-bold hover:underline">Atur Ulang</button>
                         </div>
                     </div>
                 </div>
@@ -108,7 +107,7 @@
                 :class="{'opacity-100': selected.length > 0}">
                 <label
                     class="text-[9px] font-black uppercase tracking-widest mb-1.5 block text-slate-500 dark:text-slate-400 ml-1">
-                    Cari Produk (Dalam Supplier Terpilih)
+                    Cari Produk (Dalam Pemasok Terpilih)
                 </label>
                 <div class="relative group">
                     <i
@@ -139,7 +138,7 @@
                     <span class="text-xs text-slate-400 px-1">+</span>
                     <span
                         class="px-2 py-1 rounded bg-emerald-100 text-emerald-700 text-xs font-black dark:bg-emerald-900/30 dark:text-emerald-400">
-                        {{ count($selectedSuppliers) }} Supplier
+                        {{ count($selectedSuppliers) }} Pemasok
                     </span>
                 </div>
                 <div class="text-[10px] font-bold text-slate-400 uppercase">
@@ -148,7 +147,7 @@
             </div>
 
             <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-[11px] text-left whitespace-nowrap font-jakarta">
+                <table class="w-full text-[11px] text-left border-collapse whitespace-nowrap font-jakarta">
                     <thead class="uppercase tracking-wider font-extrabold sticky top-0 z-20
                             bg-slate-100 text-slate-500 border-b border-slate-200 
                             dark:bg-[#0a0a0a] dark:text-slate-400 dark:border-white/10">
@@ -156,18 +155,18 @@
                             <th class="px-4 py-4 sticky left-0 z-30 w-64 border-r transition-colors shadow-[4px_0_10px_rgba(0,0,0,0.02)]
                                     bg-slate-100 border-slate-200 dark:bg-[#0a0a0a] dark:border-white/10">Nama Item
                             </th>
-                            <th class="px-4 py-4 text-center w-24">Good Konv</th>
+                            <th class="px-4 py-4 text-center w-24">Konv. Baik</th>
                             <th class="px-4 py-4 text-center w-24 text-blue-600 dark:text-blue-400">KTN</th>
-                            <th class="px-4 py-4 text-center w-24 text-purple-600 dark:text-purple-400">Sell/Week</th>
-                            <th class="px-4 py-4 text-center w-20 text-red-600 dark:text-red-400">EMPTY</th>
-                            <th class="px-4 py-4 text-right w-28">BUY</th>
-                            <th class="px-4 py-4 text-right w-28 text-emerald-600 dark:text-emerald-400">BUY-DISC</th>
+                            <th class="px-4 py-4 text-center w-24 text-purple-600 dark:text-purple-400">Jual/Minggu</th>
+                            <th class="px-4 py-4 text-center w-20 text-red-600 dark:text-red-400">KOSONG</th>
+                            <th class="px-4 py-4 text-right w-28">BELI</th>
+                            <th class="px-4 py-4 text-right w-28 text-emerald-600 dark:text-emerald-400">DISK-BELI</th>
                             <th
                                 class="px-4 py-4 text-right w-28 text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-500/10 border-l border-r border-amber-100 dark:border-white/5">
-                                AVG (On PPN)</th>
-                            <th class="px-4 py-4 text-center w-20">FIX</th>
+                                RATA2 (PPN)</th>
+                            <th class="px-4 py-4 text-center w-20">TETAP</th>
                             <th class="px-4 py-4 text-center w-16">PPN</th>
-                            <th class="px-4 py-4 w-40 text-slate-400">Supplier</th>
+                            <th class="px-4 py-4 w-40 text-slate-400">Pemasok</th>
                         </tr>
                     </thead>
 
@@ -245,10 +244,10 @@
                 <i class="fas fa-hand-pointer text-4xl text-blue-500 dark:text-blue-400 animate-bounce"></i>
             </div>
             <h2 class="text-xl font-black uppercase tracking-tight text-slate-700 dark:text-white">
-                Pilih Supplier Terlebih Dahulu
+                Pilih Pemasok Terlebih Dahulu
             </h2>
             <p class="text-sm mt-2 max-w-md text-center text-slate-400 dark:text-slate-500">
-                Data produk sengaja disembunyikan. Silakan pilih satu atau lebih <strong>Supplier</strong> pada kolom di
+                Data produk sengaja disembunyikan. Silakan pilih satu atau lebih <strong>Pemasok</strong> pada kolom di
                 atas untuk menampilkan analisa stok.
             </p>
         </div>

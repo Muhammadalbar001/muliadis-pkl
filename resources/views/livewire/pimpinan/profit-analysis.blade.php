@@ -6,15 +6,15 @@
         <div class="max-w-8xl mx-auto flex justify-between items-end">
             <div>
                 <h1 class="text-2xl font-black tracking-tighter uppercase leading-none text-slate-800 dark:text-white">
-                    Profit & Loss Analysis
+                    ANALISA LABA & RUGI
                 </h1>
                 <p class="text-[10px] font-bold tracking-[0.3em] uppercase mt-1 text-slate-400 dark:text-slate-500">
-                    Multi-Branch Independent Control
+                    SISTEM KONTROL INDEPENDEN MULTI-CABANG
                 </p>
             </div>
 
             <div class="hidden md:block">
-                <span class="text-[10px] uppercase font-bold text-slate-400">Mode Urutan:</span>
+                <span class="text-[10px] uppercase font-bold text-slate-400">URUTAN BERDASARKAN:</span>
                 <span class="text-xs font-black text-emerald-500 uppercase">
                     {{ $sortDirection === 'desc' ? 'Margin Tertinggi' : 'Margin Terendah' }}
                 </span>
@@ -107,8 +107,7 @@
                             <span class="text-2xl font-black text-white">{{ substr($cabang, 0, 1) }}</span>
                         </div>
                         <div>
-                            <p class="text-[10px] font-bold text-white/80 uppercase tracking-[0.2em] mb-1">Branch
-                                Location</p>
+                            <p class="text-[10px] font-bold text-white/80 uppercase tracking-[0.2em] mb-1">WILAYAH</p>
                             <h2
                                 class="text-3xl font-black uppercase text-white tracking-tight leading-none shadow-black drop-shadow-sm">
                                 {{ $cabang }}
