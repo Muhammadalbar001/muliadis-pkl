@@ -11,16 +11,22 @@ return new class extends Migration
         Schema::create('suppliers', function (Blueprint $table) {
             $table->id();
             
-            // Kombinasi Cabang + Nama harus unik (Boleh nama sama asal beda cabang)
+            // Informasi Utama (Sinkronisasi)
             $table->string('cabang')->nullable()->index();
-            $table->string('supplier_name')->index();
+            $table->string('nama_supplier')->index();
             
-            $table->string('contact_person')->nullable();
-            $table->string('phone')->nullable();
-            $table->text('address')->nullable();
+            // Informasi Tambahan (Input Manual)
+            $table->string('kategori')->nullable()->index(); 
+            $table->string('nama_kontak')->nullable();      
+            $table->string('telepon')->nullable();          
+            $table->string('email')->nullable();
+            $table->text('alamat')->nullable();
             
-            // Aturan Unik
-            $table->unique(['cabang', 'supplier_name']);
+            // Kolom Status (True = Aktif, False = Non-Aktif)
+            $table->boolean('is_active')->default(true);
+            
+            // Aturan Unik: Nama supplier yang sama boleh ada jika cabang berbeda
+            $table->unique(['cabang', 'nama_supplier']);
             
             $table->timestamps();
         });

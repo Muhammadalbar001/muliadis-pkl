@@ -10,8 +10,21 @@ class Supplier extends Model
     use HasFactory;
     
     protected $table = 'suppliers';
-    protected $guarded = ['id']; 
-    
-    // Default casting (tidak ada tanggal yang perlu di-cast)
-    protected $casts = [];
+
+    // Mendefinisikan kolom yang boleh diisi 
+    protected $fillable = [
+        'cabang',
+        'nama_supplier',
+        'kategori',
+        'nama_kontak',
+        'telepon',
+        'email',
+        'alamat',
+        'is_active',
+    ];
+
+    // Mengonversi status is_active menjadi boolean secara otomatis
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
 }
