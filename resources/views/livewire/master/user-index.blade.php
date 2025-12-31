@@ -1,5 +1,6 @@
 <div class="min-h-screen space-y-6 pb-10 transition-colors duration-300 font-jakarta bg-slate-50 dark:bg-[#050505]">
 
+    {{-- HEADER --}}
     <div class="sticky top-0 z-40 backdrop-blur-xl border-b transition-all duration-300 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-4 mb-6
         dark:bg-[#0a0a0a]/80 dark:border-white/5 bg-white/95 border-slate-200 shadow-sm">
 
@@ -16,7 +17,7 @@
                     </h1>
                     <p
                         class="text-[9px] font-bold uppercase tracking-[0.3em] dark:text-slate-400 text-slate-600 mt-1.5 opacity-80">
-                        Security & User Control
+                        Keamanan & Kontrol Pengguna
                     </p>
                 </div>
             </div>
@@ -29,17 +30,18 @@
                         class="pl-10 pr-4 py-2.5 w-64 rounded-2xl border text-[11px] font-bold uppercase transition-all
                         dark:bg-white/5 dark:border-white/10 dark:text-white dark:focus:border-indigo-500/50
                         bg-white border-slate-300 text-slate-900 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 outline-none shadow-sm"
-                        placeholder="Cari User...">
+                        placeholder="Cari Nama / Username...">
                 </div>
 
                 <button wire:click="create"
                     class="px-6 py-2.5 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-indigo-600/20 hover:bg-indigo-700 hover:scale-105 transition-all active:scale-95 flex items-center gap-2">
-                    <i class="fas fa-plus"></i> Baru
+                    <i class="fas fa-user-plus"></i> Tambah User
                 </button>
             </div>
         </div>
     </div>
 
+    {{-- GRID USER --}}
     <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             @forelse($users as $user)
@@ -49,15 +51,25 @@
 
                 <div class="flex flex-col items-center text-center">
                     <div class="relative mb-6">
+                        @php
+                        // Mapping warna dan icon berdasarkan role baru
+                        $roleData = match($user->role) {
+                        'super_admin' => ['color' => 'bg-rose-600', 'icon' => 'fa-crown'],
+                        'pimpinan' => ['color' => 'bg-amber-500', 'icon' => 'fa-star'],
+                        'supervisor' => ['color' => 'bg-indigo-600', 'icon' => 'fa-user-tie'],
+                        'admin' => ['color' => 'bg-emerald-500', 'icon' => 'fa-pen-to-square'],
+                        default => ['color' => 'bg-slate-500', 'icon' => 'fa-user'],
+                        };
+                        @endphp
+
                         <div
-                            class="w-20 h-20 rounded-[2rem] dark:bg-indigo-500/10 bg-indigo-600 flex items-center justify-center text-white font-black text-2xl border-4 border-white dark:border-[#1a1a1a] shadow-xl group-hover:scale-110 transition-transform">
+                            class="w-20 h-20 rounded-[2rem] {{ $roleData['color'] }} flex items-center justify-center text-white font-black text-2xl border-4 border-white dark:border-[#1a1a1a] shadow-xl group-hover:scale-110 transition-transform">
                             {{ substr($user->name, 0, 1) }}
                         </div>
-                        <div class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full border-4 dark:border-[#0f0f0f] border-white flex items-center justify-center shadow-lg
-                            {{ $user->role == 'admin' ? 'bg-rose-500' : ($user->role == 'pimpinan' ? 'bg-amber-500' : 'bg-emerald-500') }}"
+
+                        <div class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full border-4 dark:border-[#0f0f0f] border-white flex items-center justify-center shadow-lg {{ $roleData['color'] }}"
                             title="{{ strtoupper($user->role) }}">
-                            <i
-                                class="fas {{ $user->role == 'admin' ? 'fa-shield-alt' : ($user->role == 'pimpinan' ? 'fa-star' : 'fa-user') }} text-[10px] text-white"></i>
+                            <i class="fas {{ $roleData['icon'] }} text-[10px] text-white"></i>
                         </div>
                     </div>
 
@@ -66,11 +78,12 @@
                         {{ $user->name }}
                     </h3>
                     <p class="text-[10px] font-black text-slate-500 dark:text-slate-400 mt-1 lowercase opacity-70">
-                        {{ $user->email }}</p>
+                        {{ $user->username }} | {{ $user->email }}
+                    </p>
 
                     <div
                         class="mt-5 px-5 py-1.5 rounded-full text-[9px] font-black tracking-[0.2em] border dark:bg-white/5 bg-slate-50 text-slate-700 dark:text-indigo-400 border-slate-200 dark:border-indigo-500/20 uppercase">
-                        {{ $user->role }}
+                        {{ str_replace('_', ' ', $user->role) }}
                     </div>
                 </div>
 
@@ -81,7 +94,6 @@
                     </button>
                     @if($user->id !== auth()->id())
                     <button wire:click="delete({{ $user->id }})"
-                        onclick="confirm('Hapus user ini?') || event.stopImmediatePropagation()"
                         class="flex-1 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white dark:hover:bg-rose-600 transition-all shadow-sm flex items-center justify-center gap-2">
                         <i class="fas fa-trash-alt"></i> Hapus
                     </button>
@@ -106,6 +118,7 @@
         @endif
     </div>
 
+    {{-- MODAL FORM --}}
     @if($isOpen)
     <div class="fixed inset-0 z-[160] overflow-y-auto px-4" role="dialog">
         <div class="flex items-center justify-center min-h-screen">
@@ -120,9 +133,10 @@
                         <i class="fas fa-user-shield text-7xl"></i>
                     </div>
                     <div class="relative z-10">
-                        <h3 class="font-black uppercase tracking-widest text-sm">Personnel Profile</h3>
+                        <h3 class="font-black uppercase tracking-widest text-sm">Profil Personel</h3>
                         <p class="text-[10px] font-bold opacity-70 mt-1 uppercase tracking-widest">
-                            {{ $userId ? 'Update Access Control' : 'Register New Access' }}</p>
+                            {{ $userId ? 'Update Kontrol Akses' : 'Registrasi Akses Baru' }}
+                        </p>
                     </div>
                     <button wire:click="closeModal"
                         class="relative z-10 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all">
@@ -130,7 +144,8 @@
                     </button>
                 </div>
 
-                <div class="p-10 space-y-6">
+                <div class="p-10 space-y-5">
+                    {{-- Nama --}}
                     <div class="group">
                         <label
                             class="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 group-focus-within:text-indigo-600 transition-colors block mb-2 ml-1 tracking-wider">Nama
@@ -142,33 +157,50 @@
                         @enderror
                     </div>
 
-                    <div class="group">
-                        <label
-                            class="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 group-focus-within:text-indigo-600 transition-colors block mb-2 ml-1 tracking-wider">Email
-                            Address</label>
-                        <input type="email" wire:model="email"
-                            class="w-full rounded-2xl border-slate-300 dark:bg-white/5 dark:border-white/10 dark:text-white text-xs font-black focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 transition-all p-3.5 bg-slate-50 shadow-inner lowercase">
-                        @error('email') <span
-                            class="text-rose-600 text-[9px] font-black mt-1.5 ml-1 uppercase block">{{ $message }}</span>
-                        @enderror
+                    {{-- Username & Email --}}
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="group">
+                            <label
+                                class="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 group-focus-within:text-indigo-600 transition-colors block mb-2 ml-1 tracking-wider">Username</label>
+                            <input type="text" wire:model="username"
+                                class="w-full rounded-2xl border-slate-300 dark:bg-white/5 dark:border-white/10 dark:text-white text-xs font-black focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 transition-all p-3.5 bg-slate-50 shadow-inner uppercase">
+                            @error('username') <span
+                                class="text-rose-600 text-[9px] font-black mt-1.5 ml-1 uppercase block">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="group">
+                            <label
+                                class="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 group-focus-within:text-indigo-600 transition-colors block mb-2 ml-1 tracking-wider">Email</label>
+                            <input type="email" wire:model="email"
+                                class="w-full rounded-2xl border-slate-300 dark:bg-white/5 dark:border-white/10 dark:text-white text-xs font-black focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 transition-all p-3.5 bg-slate-50 shadow-inner">
+                            @error('email') <span
+                                class="text-rose-600 text-[9px] font-black mt-1.5 ml-1 uppercase block">{{ $message }}</span>
+                            @enderror
+                        </div>
                     </div>
 
+                    {{-- Role / Level Otoritas --}}
                     <div class="group">
                         <label
                             class="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 group-focus-within:text-indigo-600 transition-colors block mb-2 ml-1 tracking-wider">Level
                             Otoritas</label>
                         <select wire:model="role"
                             class="w-full rounded-2xl border-slate-300 dark:bg-white/5 dark:border-white/10 dark:text-white text-xs font-black uppercase focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 transition-all p-3.5 bg-slate-50 shadow-inner appearance-none">
-                            <option value="staff">STAFF (Digital Ledger)</option>
-                            <option value="pimpinan">PIMPINAN (Executive Control)</option>
-                            <option value="admin">ADMINISTRATOR (Full Access)</option>
+                            <option value="super_admin">SUPER ADMIN (Owner)</option>
+                            <option value="pimpinan">PIMPINAN (Executive)</option>
+                            <option value="supervisor">SUPERVISOR (Control)</option>
+                            <option value="admin">ADMIN (Transaksi)</option>
                         </select>
+                        @error('role') <span
+                            class="text-rose-600 text-[9px] font-black mt-1.5 ml-1 uppercase block">{{ $message }}</span>
+                        @enderror
                     </div>
 
+                    {{-- Password --}}
                     <div class="group">
                         <label
                             class="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 group-focus-within:text-indigo-600 transition-colors block mb-2 ml-1 tracking-wider">
-                            {{ $userId ? 'Password Baru (Opsional)' : 'Set Password' }}
+                            {{ $userId ? 'Password Baru (Kosongkan jika tetap)' : 'Kata Sandi' }}
                         </label>
                         <input type="password" wire:model="password"
                             class="w-full rounded-2xl border-slate-300 dark:bg-white/5 dark:border-white/10 dark:text-white text-xs font-black focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 transition-all p-3.5 bg-slate-50 shadow-inner">

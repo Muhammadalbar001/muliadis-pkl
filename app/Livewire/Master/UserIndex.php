@@ -17,8 +17,8 @@ class UserIndex extends Component
     public $isOpen = false;
     public $isEdit = false;
 
-    // Form Fields
-    public $userId, $name, $username, $email, $role = 'staff', $password;
+    // Default role sekarang diset ke 'admin' (Input Transaksi)
+    public $userId, $name, $username, $email, $role = 'admin', $password;
 
     public function render()
     {
@@ -50,7 +50,7 @@ class UserIndex extends Component
         $this->name = $user->name;
         $this->username = $user->username;
         $this->email = $user->email;
-        $this->role = $user->role; // Memuat role dari database ke form
+        $this->role = $user->role; 
         $this->isEdit = true;
         $this->isOpen = true;
     }
@@ -61,7 +61,8 @@ class UserIndex extends Component
             'name' => 'required|min:3',
             'username' => ['required', Rule::unique('users', 'username')->ignore($this->userId)],
             'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($this->userId)],
-            'role' => 'required|in:admin,pimpinan,staff',
+            // Validasi diperbarui sesuai Role baru
+            'role' => 'required|in:super_admin,pimpinan,supervisor,admin',
             'password' => $this->isEdit ? 'nullable|min:6' : 'required|min:6',
         ]);
 
@@ -81,7 +82,7 @@ class UserIndex extends Component
 
             $this->isOpen = false;
             $this->resetFields();
-            $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Data User & Role berhasil disimpan.']);
+            $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Data User & Role berhasil diperbarui.']);
         } catch (\Exception $e) {
             $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal simpan: ' . $e->getMessage()]);
         }
@@ -99,7 +100,7 @@ class UserIndex extends Component
             $user->delete();
             $this->dispatch('show-toast', ['type' => 'success', 'message' => 'User berhasil dihapus.']);
         } catch (\Exception $e) {
-            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal menghapus: User ini mungkin memiliki keterkaitan data lain.']);
+            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal menghapus data.']);
         }
     }
 
@@ -112,7 +113,7 @@ class UserIndex extends Component
     private function resetFields()
     {
         $this->reset(['userId', 'name', 'username', 'email', 'role', 'password']);
-        $this->role = 'staff';
+        $this->role = 'admin';
         $this->resetErrorBag();
     }
 }

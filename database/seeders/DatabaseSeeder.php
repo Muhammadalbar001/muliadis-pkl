@@ -8,33 +8,49 @@ use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
+    /**
+     * Seed the application's database.
+     */
     public function run(): void
     {
-        // Buat 1 Akun Admin
+        // 1. Akun Super Admin (Pemegang Aplikasi / IT)
+        // Memiliki akses ke Manajemen User & Semua Laporan
         User::create([
-            'name' => 'Administrator',
-            'username' => 'admin',
-            'email' => 'admin@muliadis.com',
-            'password' => Hash::make('password'), // password default
-            'role' => 'admin',
+            'name' => 'IT Super Admin',
+            'username' => 'superadmin',
+            'email' => 'it.admin@muliadis.com',
+            'password' => Hash::make('password'),
+            'role' => 'super_admin',
         ]);
 
-        // Buat 1 Akun Pimpinan (Opsional)
+        // 2. Akun Pimpinan (Direktur / Owner)
+        // Memiliki akses ke Laporan Eksekutif & Dashboard
         User::create([
-            'name' => 'Bapak Pimpinan',
+            'name' => 'Bapak Direktur',
             'username' => 'pimpinan',
-            'email' => 'bos@muliadis.com',
+            'email' => 'direktur@muliadis.com',
             'password' => Hash::make('password'),
             'role' => 'pimpinan',
         ]);
 
-        // Buat 1 Akun Pengguna Biasa (Opsional)
+        // 3. Akun Supervisor (Kepala Operasional / Gudang)
+        // Memiliki akses ke Operasional & Laporan Analisa
         User::create([
-            'name' => 'Staff Gudang',
-            'username' => 'staff',
-            'email' => 'staff@muliadis.com',
+            'name' => 'Supervisor Ops',
+            'username' => 'supervisor',
+            'email' => 'spv@muliadis.com',
             'password' => Hash::make('password'),
-            'role' => 'pengguna',
+            'role' => 'supervisor',
+        ]);
+
+        // 4. Akun Admin (Staff Input / Kasir)
+        // Fokus pada Input Transaksi & Data Master Dasar
+        User::create([
+            'name' => 'Staff Admin Kasir',
+            'username' => 'admin',
+            'email' => 'admin.staff@muliadis.com',
+            'password' => Hash::make('password'),
+            'role' => 'admin',
         ]);
     }
 }
