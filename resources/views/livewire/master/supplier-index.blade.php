@@ -64,7 +64,7 @@
                     <button @click="open = !open" @click.outside="open = false"
                         class="flex items-center gap-3 border-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm
                         dark:bg-black/40 dark:text-slate-200 bg-white border-slate-200 text-slate-800 hover:border-cyan-500 whitespace-nowrap">
-                        <span x-text="selected.length > 0 ? selected.length + ' Regional' : 'Cabang'"></span>
+                        <span x-text="selected.length > 0 ? selected.length + ' Cabang' : 'Cabang'"></span>
                         <i class="fas fa-map-marker-alt opacity-60 text-[9px] transition-transform"
                             :class="open ? 'rotate-180' : ''"></i>
                     </button>
@@ -110,7 +110,7 @@
                     <button wire:click="create"
                         class="px-5 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-cyan-600/30 transition-all active:scale-95 flex items-center gap-2">
                         <i class="fas fa-plus"></i>
-                        <span class="hidden xl:inline">Baru</span>
+                        <span class=" xl:inline">Baru</span>
                     </button>
                 </div>
             </div>

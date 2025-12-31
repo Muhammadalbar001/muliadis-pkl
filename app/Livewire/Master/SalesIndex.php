@@ -7,9 +7,8 @@ use Livewire\WithPagination;
 use Livewire\WithFileUploads;
 use App\Models\Master\Sales;
 use App\Models\Master\SalesTarget;
-use App\Services\Import\SalesImportService;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class SalesIndex extends Component
 {
@@ -31,63 +30,61 @@ class SalesIndex extends Component
 
     // Properties Fitur Cepat
     public $bulkTarget; 
-    public $multiplier = 1000000; // Default Jutaan
-
-    public $file, $resetData = false;
+    public $multiplier = 1000000;
 
     public function mount() {
         $this->targetYear = date('Y');
         $this->resetInput();
     }
 
-    // --- FITUR 1: AUTO DISCOVERY (SYNC DATA CERDAS) ---
-    public function autoDiscover()
-    {
+    // --- FUNGSI SIMPAN (STORE & UPDATE) ---
+    public function store() {
+        // PERBAIKAN: Tambahkan pengecualian ID ($this->salesId) pada validasi unique agar tidak bentrok saat edit
+        $this->validate([
+            'sales_name' => 'required|min:3',
+            'sales_code' => 'nullable|unique:sales,sales_code,' . $this->salesId,
+            'nik'        => 'nullable|numeric|digits:16',
+            'phone'      => 'nullable|numeric',
+        ], [
+            'sales_name.required' => 'Nama Salesman wajib diisi.',
+            'sales_code.unique' => 'Kode Salesman sudah digunakan.',
+            'nik.digits' => 'NIK harus 16 digit.',
+            'nik.numeric' => 'NIK harus berupa angka.',
+        ]);
+
         try {
             DB::beginTransaction();
-            $transactions = DB::table('penjualans')
-                ->select('sales_name', 'kode_sales', 'cabang')
-                ->whereNotNull('sales_name')
-                ->distinct()
-                ->get();
+            
+            // Perbaikan format tanggal: Jika string kosong, jadikan null agar tidak error di database tipe date
+            $tanggalLahirValue = !empty($this->tanggal_lahir) ? $this->tanggal_lahir : null;
 
-            $added = 0; $updated = 0;
-            foreach ($transactions as $trx) {
-                $sales = null;
-                if (!empty($trx->kode_sales)) { $sales = Sales::where('sales_code', $trx->kode_sales)->first(); }
-                if (!$sales) { $sales = Sales::where('sales_name', $trx->sales_name)->first(); }
+            Sales::updateOrCreate(['id' => $this->salesId], [
+                'sales_name'    => $this->sales_name,
+                'sales_code'    => $this->sales_code ?: null,
+                'phone'         => $this->phone ?: null,
+                'nik'           => $this->nik ?: null,
+                'alamat'        => $this->alamat ?: null,
+                'tempat_lahir'  => $this->tempat_lahir ?: null,
+                'tanggal_lahir' => $tanggalLahirValue, 
+                'city'          => $this->city,
+                'status'        => $this->status,
+            ]);
 
-                if (!$sales) {
-                    Sales::create([
-                        'sales_name' => $trx->sales_name,
-                        'sales_code' => $trx->kode_sales, 
-                        'city'       => $trx->cabang,
-                        'status'     => 'Active'
-                    ]);
-                    $added++;
-                } else {
-                    $doSave = false;
-                    if (empty($sales->sales_code) && !empty($trx->kode_sales)) { $sales->sales_code = $trx->kode_sales; $doSave = true; }
-                    if (empty($sales->city) && !empty($trx->cabang)) { $sales->city = $trx->cabang; $doSave = true; }
-                    if ($doSave) { $sales->save(); $updated++; }
-                }
-            }
             DB::commit();
-            $this->dispatch('show-toast', ['type' => 'success', 'message' => "Sync Selesai: $added Baru, $updated Dilengkapi"]);
+            $this->closeModal();
+            $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Data Salesman Berhasil Disimpan']);
         } catch (\Exception $e) {
             DB::rollBack();
-            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal Sinkronisasi']);
+            Log::error('Error Simpan Sales: ' . $e->getMessage()); // Cek storage/logs/laravel.log
+            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal Simpan: ' . $e->getMessage()]);
         }
     }
 
-    // --- FITUR 2: MANAJEMEN TARGET ---
-    public function applyBulkTarget()
-    {
+    // --- MANAJEMEN TARGET ---
+    public function applyBulkTarget() {
         if ($this->bulkTarget !== null && $this->bulkTarget !== '') {
-            // Bersihkan input dari titik/koma
             $val = (float) str_replace(['.', ','], '', $this->bulkTarget);
             $finalValue = $val * (float)$this->multiplier;
-
             for ($i = 1; $i <= 12; $i++) {
                 $this->monthlyTargets[$i] = $finalValue;
             }
@@ -111,15 +108,12 @@ class SalesIndex extends Component
         }
     }
 
-    public function updatedTargetYear() {
-        if ($this->salesId) { $this->loadTargets(); }
-    }
-
     public function saveTargets() {
         try {
             DB::beginTransaction();
             foreach ($this->monthlyTargets as $month => $amount) {
-                $cleanAmount = is_numeric($amount) ? $amount : (float) str_replace(['.', ','], '', $amount);
+                // Pastikan input angka bersih
+                $cleanAmount = is_numeric($amount) ? (float)$amount : (float) str_replace(['.', ','], '', $amount);
                 SalesTarget::updateOrCreate(
                     ['sales_id' => $this->salesId, 'year' => $this->targetYear, 'month' => $month],
                     ['target_ims' => $cleanAmount]
@@ -127,42 +121,10 @@ class SalesIndex extends Component
             }
             DB::commit();
             $this->isTargetOpen = false;
-            $this->bulkTarget = null;
             $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Target Berhasil Disimpan']);
         } catch (\Exception $e) {
             DB::rollBack();
             $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal Simpan Target']);
-        }
-    }
-
-    // --- FITUR 3: CRUD ---
-    public function store() {
-        $this->validate([
-            'sales_name' => 'required|min:3',
-            'sales_code' => 'nullable|unique:sales,sales_code,' . $this->salesId,
-            'nik'        => 'nullable|numeric|digits:16',
-            'phone'      => 'nullable|numeric',
-        ]);
-
-        try {
-            DB::beginTransaction();
-            Sales::updateOrCreate(['id' => $this->salesId], [
-                'sales_name'    => $this->sales_name,
-                'sales_code'    => $this->sales_code ?: null,
-                'phone'         => $this->phone ?: null,
-                'nik'           => $this->nik ?: null,
-                'alamat'        => $this->alamat ?: null,
-                'tempat_lahir'  => $this->tempat_lahir ?: null,
-                'tanggal_lahir' => !empty($this->tanggal_lahir) ? $this->tanggal_lahir : null, 
-                'city'          => $this->city,
-                'status'        => $this->status,
-            ]);
-            DB::commit();
-            $this->closeModal();
-            $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Data Berhasil Diperbarui']);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal Simpan']);
         }
     }
 
@@ -175,7 +137,8 @@ class SalesIndex extends Component
         $this->nik = $s->nik;
         $this->alamat = $s->alamat;
         $this->tempat_lahir = $s->tempat_lahir;
-        $this->tanggal_lahir = $s->tanggal_lahir;
+        // Format tanggal untuk input date HTML (YYYY-MM-DD)
+        $this->tanggal_lahir = $s->tanggal_lahir ? ($s->tanggal_lahir instanceof \DateTime ? $s->tanggal_lahir->format('Y-m-d') : date('Y-m-d', strtotime($s->tanggal_lahir))) : null;
         $this->city = $s->city; 
         $this->status = $s->status; 
         $this->isOpen = true;

@@ -4,7 +4,7 @@
     <div class="sticky top-0 z-40 backdrop-blur-xl border-b transition-all duration-300 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-4 mb-6
         dark:bg-[#0a0a0a]/80 dark:border-white/10 bg-white/95 border-slate-300 shadow-md">
         <div class="flex flex-col xl:flex-row gap-4 items-center justify-between">
-            <div class="flex items-center gap-4 w-full xl:w-auto">
+            <div class="flex items-center gap-4 w-full xl:w-auto shrink-0">
                 <div
                     class="p-3 rounded-2xl shadow-xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white ring-4 ring-blue-500/20">
                     <i class="fas fa-user-tie text-xl"></i>
@@ -15,31 +15,32 @@
                         Master <span class="text-blue-600 dark:text-blue-400">Salesman</span>
                     </h1>
                     <p
-                        class="text-[9px] font-extrabold uppercase tracking-[0.3em] dark:text-slate-400 text-slate-600 mt-1.5 opacity-80">
+                        class="text-[9px] font-extrabold uppercase tracking-[0.3em] dark:text-slate-400 text-slate-600 mt-1.5 opacity-90">
                         Manajemen Personel & Performa
                     </p>
                 </div>
             </div>
 
-            <div class="flex flex-wrap gap-3 items-center justify-end w-full xl:w-auto">
-                <div class="relative group">
+            <div class="flex flex-wrap lg:flex-nowrap items-center gap-3 w-full xl:w-auto justify-end">
+                <div class="relative group min-w-[200px] lg:w-64">
                     <i
                         class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors text-xs"></i>
                     <input wire:model.live.debounce.300ms="search" type="text"
-                        class="pl-10 pr-4 py-2.5 w-64 rounded-2xl border-2 text-[11px] font-bold uppercase transition-all
+                        class="pl-10 pr-4 py-2.5 w-full rounded-2xl border-2 text-[11px] font-bold uppercase transition-all
                         dark:bg-white/5 dark:border-white/10 dark:text-white bg-white border-slate-200 text-slate-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 outline-none"
                         placeholder="Cari Sales / HP / NIK...">
                 </div>
 
-                <div class="flex gap-2">
+                <div class="flex gap-2 shrink-0">
                     <button wire:click="autoDiscover"
                         class="px-5 py-2.5 bg-slate-800 dark:bg-white dark:text-slate-900 text-white rounded-2xl text-[10px] font-black uppercase hover:scale-105 transition-all shadow-lg flex items-center gap-2">
-                        <i class="fas fa-sync-alt" wire:loading.class="fa-spin" wire:target="autoDiscover"></i> Sinkron
-                        Data
+                        <i class="fas fa-sync-alt" wire:loading.class="fa-spin" wire:target="autoDiscover"></i>
+                        <span class="hidden sm:inline">Sinkron Data</span>
                     </button>
                     <button wire:click="create"
                         class="px-6 py-2.5 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase shadow-xl shadow-blue-600/20 hover:bg-blue-700 hover:scale-105 transition-all active:scale-95 flex items-center gap-2">
-                        <i class="fas fa-plus"></i> Tambah Baru
+                        <i class="fas fa-plus"></i>
+                        <span>Tambah Baru</span>
                     </button>
                 </div>
             </div>
@@ -141,8 +142,8 @@
                         @empty
                         <tr>
                             <td colspan="10"
-                                class="px-6 py-24 text-center opacity-30 font-black tracking-widest text-xs">Database
-                                Salesman Kosong</td>
+                                class="px-6 py-24 text-center opacity-30 font-black tracking-widest text-xs uppercase">
+                                Database Salesman Kosong</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -155,7 +156,7 @@
         </div>
     </div>
 
-    {{-- MODAL FORM --}}
+    {{-- MODAL EDIT/TAMBAH --}}
     @if($isOpen)
     <div class="fixed inset-0 z-[160] overflow-y-auto px-4 py-10">
         <div class="flex items-center justify-center min-h-screen">
@@ -184,15 +185,19 @@
                                 class="block text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Kode
                                 Salesman</label>
                             <input type="text" wire:model="sales_code"
-                                class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-white/5 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-black uppercase focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 dark:text-white text-slate-900"
+                                class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-black/40 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-black uppercase focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 dark:text-white text-slate-900 shadow-inner"
                                 placeholder="CONTOH: SL001">
+                            @error('sales_code') <span
+                                class="text-rose-600 text-[10px] font-bold mt-1 ml-2">{{ $message }}</span> @enderror
                         </div>
                         <div class="group">
                             <label
                                 class="block text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Nama
                                 Lengkap</label>
                             <input type="text" wire:model="sales_name"
-                                class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-white/5 bg-slate-50 dark:border-white/10 border-slate-200 text-sm font-black uppercase focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 dark:text-white text-slate-900">
+                                class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-black/40 bg-slate-50 dark:border-white/10 border-slate-200 text-sm font-black uppercase focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 dark:text-white text-slate-900 shadow-inner">
+                            @error('sales_name') <span
+                                class="text-rose-600 text-[10px] font-bold mt-1 ml-2">{{ $message }}</span> @enderror
                         </div>
                     </div>
 
@@ -201,8 +206,10 @@
                             class="block text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Alamat
                             Domisili Lengkap</label>
                         <textarea wire:model="alamat" rows="2"
-                            class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-white/5 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-bold dark:text-white text-slate-800 focus:border-blue-600 transition-all outline-none"
+                            class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-black/40 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-bold dark:text-white text-slate-800 focus:border-blue-600 transition-all outline-none"
                             placeholder="ALAMAT LENGKAP SAAT INI..."></textarea>
+                        @error('alamat') <span
+                            class="text-rose-600 text-[10px] font-bold mt-1 ml-2">{{ $message }}</span> @enderror
                     </div>
 
                     <div class="grid grid-cols-2 gap-6">
@@ -211,14 +218,18 @@
                                 class="block text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Tempat
                                 Lahir</label>
                             <input type="text" wire:model="tempat_lahir"
-                                class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-white/5 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-black uppercase focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 dark:text-white text-slate-900">
+                                class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-black/40 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-black uppercase focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 dark:text-white text-slate-900 shadow-inner">
+                            @error('tempat_lahir') <span
+                                class="text-rose-600 text-[10px] font-bold mt-1 ml-2">{{ $message }}</span> @enderror
                         </div>
                         <div class="group">
                             <label
                                 class="block text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Tanggal
                                 Lahir</label>
                             <input type="date" wire:model="tanggal_lahir"
-                                class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-white/5 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-black focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 dark:text-white text-slate-900">
+                                class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-black/40 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-black focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 dark:text-white text-slate-900 shadow-inner">
+                            @error('tanggal_lahir') <span
+                                class="text-rose-600 text-[10px] font-bold mt-1 ml-2">{{ $message }}</span> @enderror
                         </div>
                     </div>
 
@@ -228,16 +239,20 @@
                                 class="block text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2.5 ml-1">No.
                                 HP / WhatsApp</label>
                             <input type="text" wire:model="phone"
-                                class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-white/5 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-black focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 dark:text-white text-slate-900"
+                                class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-black/40 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-black focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 dark:text-white text-slate-900 shadow-inner"
                                 placeholder="0812...">
+                            @error('phone') <span
+                                class="text-rose-600 text-[10px] font-bold mt-1 ml-2">{{ $message }}</span> @enderror
                         </div>
                         <div class="group">
                             <label
                                 class="block text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Nomor
                                 NIK (KTP)</label>
                             <input type="text" wire:model="nik" maxlength="16"
-                                class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-white/5 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-black focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 dark:text-white text-slate-900"
+                                class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-black/40 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-black focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 dark:text-white text-slate-900 shadow-inner"
                                 placeholder="16 DIGIT">
+                            @error('nik') <span
+                                class="text-rose-600 text-[10px] font-bold mt-1 ml-2">{{ $message }}</span> @enderror
                         </div>
                     </div>
 
@@ -247,18 +262,22 @@
                                 class="block text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2.5 ml-1 text-shadow-sm">Status
                                 Karyawan</label>
                             <select wire:model="status"
-                                class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-white/5 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-black focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 dark:text-white text-slate-900">
+                                class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-black/40 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-black focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 dark:text-white text-slate-900">
                                 <option value="Active">AKTIF / BEKERJA</option>
                                 <option value="Inactive">NON-AKTIF / RESIGN</option>
                             </select>
+                            @error('status') <span
+                                class="text-rose-600 text-[10px] font-bold mt-1 ml-2">{{ $message }}</span> @enderror
                         </div>
                         <div class="group">
                             <label
                                 class="block text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Cabang
-                                Regional</label>
+                                Cabang</label>
                             <input type="text" wire:model="city"
-                                class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-white/5 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-black uppercase focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-600 dark:text-white text-slate-900 shadow-inner"
+                                class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-black/40 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-black uppercase focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-600 dark:text-white text-slate-900 shadow-inner"
                                 placeholder="BANJARMASIN">
+                            @error('city') <span
+                                class="text-rose-600 text-[10px] font-bold mt-1 ml-2">{{ $message }}</span> @enderror
                         </div>
                     </div>
                 </div>
