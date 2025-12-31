@@ -11,12 +11,17 @@ class Sales extends Model
     protected $fillable = [
         'sales_code',
         'sales_name',
-        'nik',           // Pastikan ini ada
-        'alamat',        // Pastikan ini ada
-        'tempat_lahir',  // Pastikan ini ada
-        'tanggal_lahir', // Pastikan ini ada
+        'phone',      
+        'nik',
+        'alamat',
+        'tempat_lahir',
+        'tanggal_lahir',
         'divisi',
         'city',
         'status'
+    ];
+
+    protected $casts = [
+        'tanggal_lahir' => 'date',
     ];
 }

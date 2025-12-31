@@ -7,7 +7,6 @@ use Livewire\WithPagination;
 use Livewire\WithFileUploads;
 use App\Models\Master\Sales;
 use App\Models\Master\SalesTarget;
-use App\Models\Transaksi\Penjualan;
 use App\Services\Import\SalesImportService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
@@ -21,18 +20,19 @@ class SalesIndex extends Component
     public $isImportOpen = false;
     public $isTargetOpen = false;
     
-    // Form Properties Sales (Lama)
+    // Properties Sales
     public $salesId, $sales_name, $sales_code, $city, $status = 'Active';
+    public $phone, $nik, $alamat, $tempat_lahir, $tanggal_lahir;
 
-    // Form Properties Sales (Baru - Manual Input)
-    public $nik, $alamat, $tempat_lahir, $tanggal_lahir;
-
-    // Form Properties Target
+    // Properties Target
     public $targetYear;
-    public $monthlyTargets = [];
+    public $monthlyTargets = []; 
     public $selectedSalesNameForTarget;
 
-    // Import
+    // Properties Fitur Cepat
+    public $bulkTarget; 
+    public $multiplier = 1000000; // Default Jutaan
+
     public $file, $resetData = false;
 
     public function mount() {
@@ -45,25 +45,17 @@ class SalesIndex extends Component
     {
         try {
             DB::beginTransaction();
-            
             $transactions = DB::table('penjualans')
                 ->select('sales_name', 'kode_sales', 'cabang')
                 ->whereNotNull('sales_name')
                 ->distinct()
                 ->get();
 
-            $added = 0;
-            $updated = 0;
-
+            $added = 0; $updated = 0;
             foreach ($transactions as $trx) {
                 $sales = null;
-                if (!empty($trx->kode_sales)) {
-                    $sales = Sales::where('sales_code', $trx->kode_sales)->first();
-                }
-
-                if (!$sales) {
-                    $sales = Sales::where('sales_name', $trx->sales_name)->first();
-                }
+                if (!empty($trx->kode_sales)) { $sales = Sales::where('sales_code', $trx->kode_sales)->first(); }
+                if (!$sales) { $sales = Sales::where('sales_name', $trx->sales_name)->first(); }
 
                 if (!$sales) {
                     Sales::create([
@@ -75,84 +67,33 @@ class SalesIndex extends Component
                     $added++;
                 } else {
                     $doSave = false;
-                    if (empty($sales->sales_code) && !empty($trx->kode_sales)) {
-                        $sales->sales_code = $trx->kode_sales;
-                        $doSave = true;
-                    }
-                    if (empty($sales->city) && !empty($trx->cabang)) {
-                        $sales->city = $trx->cabang;
-                        $doSave = true;
-                    }
-                    if ($doSave) {
-                        $sales->save();
-                        $updated++;
-                    }
+                    if (empty($sales->sales_code) && !empty($trx->kode_sales)) { $sales->sales_code = $trx->kode_sales; $doSave = true; }
+                    if (empty($sales->city) && !empty($trx->cabang)) { $sales->city = $trx->cabang; $doSave = true; }
+                    if ($doSave) { $sales->save(); $updated++; }
                 }
             }
-
-            $this->clearReportCaches();
             DB::commit();
             $this->dispatch('show-toast', ['type' => 'success', 'message' => "Sync Selesai: $added Baru, $updated Dilengkapi"]);
         } catch (\Exception $e) {
             DB::rollBack();
-            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal: ' . $e->getMessage()]);
+            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal Sinkronisasi']);
         }
     }
 
-    // --- FITUR 2: CRUD & PROPAGASI NAMA ---
-    public function store() {
-    $this->validate([
-        'sales_name' => 'required|min:3',
-        'sales_code' => 'nullable|unique:sales,sales_code,' . $this->salesId,
-        'nik'        => 'nullable|numeric',
-    ]);
-
-    try {
-        DB::beginTransaction();
-        
-        $oldName = $this->salesId ? Sales::where('id', $this->salesId)->value('sales_name') : null;
-        
-        // Simpan data ke database
-        Sales::updateOrCreate(['id' => $this->salesId], [
-            'sales_name'    => $this->sales_name,
-            'sales_code'    => $this->sales_code ?: null,
-            'nik'           => $this->nik ?: null,
-            'alamat'        => $this->alamat ?: null,
-            'tempat_lahir'  => $this->tempat_lahir ?: null,
-            // Penting: Jika tanggal kosong, kirim NULL, bukan ""
-            'tanggal_lahir' => $this->tanggal_lahir ?: null, 
-            'city'          => $this->city,
-            'status'        => $this->status,
-        ]);
-
-        // ... kode propagasi nama tetap di bawah sini ...
-
-        DB::commit();
-        $this->isOpen = false; 
-        $this->resetInput();
-        $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Data Salesman Berhasil Disimpan']);
-    } catch (\Exception $e) {
-        DB::rollBack();
-        // Cek error log jika masih gagal
-        \Log::error('Gagal Simpan Sales: ' . $e->getMessage());
-        $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Error: ' . $e->getMessage()]);
-    }
-}
-
-    protected function clearReportCaches()
+    // --- FITUR 2: MANAJEMEN TARGET ---
+    public function applyBulkTarget()
     {
-        Cache::forget('opt_jual_sales');
-        Cache::forget('opt_jual_cabang');
-        Cache::forget('opt_ret_sales');
-        Cache::forget('opt_ret_cab');
-        Cache::forget('opt_ar_sales');
-        Cache::forget('opt_ar_cabang');
-        Cache::forget('opt_col_sal');
-        Cache::forget('opt_col_cab');
-        Cache::forget('dash_sales');
+        if ($this->bulkTarget !== null && $this->bulkTarget !== '') {
+            // Bersihkan input dari titik/koma
+            $val = (float) str_replace(['.', ','], '', $this->bulkTarget);
+            $finalValue = $val * (float)$this->multiplier;
+
+            for ($i = 1; $i <= 12; $i++) {
+                $this->monthlyTargets[$i] = $finalValue;
+            }
+        }
     }
 
-    // --- FITUR 3: MANAJEMEN TARGET ---
     public function manageTargets($id) {
         $sales = Sales::findOrFail($id);
         $this->salesId = $id;
@@ -162,48 +103,75 @@ class SalesIndex extends Component
     }
 
     public function loadTargets() {
-        for ($i = 1; $i <= 12; $i++) {
-            $this->monthlyTargets[$i] = 0;
-        }
-
-        $targets = SalesTarget::where('sales_id', $this->salesId)
-            ->where('year', $this->targetYear)
-            ->get();
-
+        $this->monthlyTargets = [];
+        for ($i = 1; $i <= 12; $i++) { $this->monthlyTargets[$i] = 0; }
+        $targets = SalesTarget::where('sales_id', $this->salesId)->where('year', $this->targetYear)->get();
         foreach ($targets as $t) {
-            $this->monthlyTargets[$t->month] = (float) $t->target_ims;
+            $this->monthlyTargets[(int)$t->month] = (float)$t->target_ims;
         }
     }
 
     public function updatedTargetYear() {
-        if ($this->salesId) {
-            $this->loadTargets();
-        }
+        if ($this->salesId) { $this->loadTargets(); }
     }
 
     public function saveTargets() {
         try {
+            DB::beginTransaction();
             foreach ($this->monthlyTargets as $month => $amount) {
-                $cleanAmount = (float) str_replace(['.', ','], '', $amount);
+                $cleanAmount = is_numeric($amount) ? $amount : (float) str_replace(['.', ','], '', $amount);
                 SalesTarget::updateOrCreate(
                     ['sales_id' => $this->salesId, 'year' => $this->targetYear, 'month' => $month],
                     ['target_ims' => $cleanAmount]
                 );
             }
+            DB::commit();
             $this->isTargetOpen = false;
-            $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Target Bulanan Berhasil Disimpan']);
+            $this->bulkTarget = null;
+            $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Target Berhasil Disimpan']);
         } catch (\Exception $e) {
+            DB::rollBack();
             $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal Simpan Target']);
         }
     }
 
-    // --- HELPER & MODAL CONTROLS ---
+    // --- FITUR 3: CRUD ---
+    public function store() {
+        $this->validate([
+            'sales_name' => 'required|min:3',
+            'sales_code' => 'nullable|unique:sales,sales_code,' . $this->salesId,
+            'nik'        => 'nullable|numeric|digits:16',
+            'phone'      => 'nullable|numeric',
+        ]);
+
+        try {
+            DB::beginTransaction();
+            Sales::updateOrCreate(['id' => $this->salesId], [
+                'sales_name'    => $this->sales_name,
+                'sales_code'    => $this->sales_code ?: null,
+                'phone'         => $this->phone ?: null,
+                'nik'           => $this->nik ?: null,
+                'alamat'        => $this->alamat ?: null,
+                'tempat_lahir'  => $this->tempat_lahir ?: null,
+                'tanggal_lahir' => !empty($this->tanggal_lahir) ? $this->tanggal_lahir : null, 
+                'city'          => $this->city,
+                'status'        => $this->status,
+            ]);
+            DB::commit();
+            $this->closeModal();
+            $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Data Berhasil Diperbarui']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal Simpan']);
+        }
+    }
+
     public function edit($id) {
         $s = Sales::findOrFail($id);
         $this->salesId = $id; 
         $this->sales_name = $s->sales_name; 
         $this->sales_code = $s->sales_code;
-        // Load data manual ke form saat edit
+        $this->phone = $s->phone;
         $this->nik = $s->nik;
         $this->alamat = $s->alamat;
         $this->tempat_lahir = $s->tempat_lahir;
@@ -216,60 +184,26 @@ class SalesIndex extends Component
     public function delete($id) {
         try {
             Sales::findOrFail($id)->delete();
-            $this->clearReportCaches();
-            $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Salesman Dihapus']);
+            $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Data Dihapus']);
         } catch (\Exception $e) {
-            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal Hapus: Masih ada relasi data']);
+            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal Hapus']);
         }
     }
 
-    public function openImportModal() { $this->resetErrorBag(); $this->isImportOpen = true; }
-    public function closeImportModal() { $this->isImportOpen = false; $this->file = null; }
-    
-    public function import(SalesImportService $importService) {
-        $this->validate(['file' => 'required|mimes:xlsx,xls,csv|max:51200']);
-        try {
-            if ($this->resetData) { Sales::truncate(); }
-            $importService->handle($this->file->getRealPath());
-            $this->isImportOpen = false;
-            $this->clearReportCaches();
-            $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Import Berhasil']);
-        } catch (\Exception $e) {
-            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal Import']);
-        }
-    }
-
-    public function create() { $this->resetInput(); $this->isOpen = true; }
-    
-    public function closeModal() { 
-        $this->isOpen = false; 
-        $this->isTargetOpen = false; 
-        $this->isImportOpen = false;
-        $this->resetInput(); 
-    }
+    public function closeModal() { $this->isOpen = false; $this->isTargetOpen = false; $this->resetInput(); }
     
     public function resetInput() { 
-        $this->reset([
-            'salesId', 'sales_name', 'sales_code', 'city', 'status', 
-            'monthlyTargets', 'nik', 'alamat', 'tempat_lahir', 'tanggal_lahir'
-        ]); 
+        $this->reset(['salesId', 'sales_name', 'sales_code', 'phone', 'nik', 'alamat', 'tempat_lahir', 'tanggal_lahir', 'city', 'monthlyTargets', 'bulkTarget']); 
         $this->status = 'Active'; 
+        $this->multiplier = 1000000;
     }
 
     public function render() {
         $query = Sales::query();
         if ($this->search) {
-            $query->where(fn($q) => 
-                $q->where('sales_name', 'like', '%'.$this->search.'%')
-                  ->orWhere('sales_code', 'like', '%'.$this->search.'%')
-                  ->orWhere('nik', 'like', '%'.$this->search.'%')
-            );
+            $query->where(fn($q) => $q->where('sales_name', 'like', '%'.$this->search.'%')->orWhere('sales_code', 'like', '%'.$this->search.'%')->orWhere('nik', 'like', '%'.$this->search.'%')->orWhere('phone', 'like', '%'.$this->search.'%'));
         }
-        
-        $sales = $query->orderByRaw("CASE WHEN status = 'Active' THEN 1 ELSE 2 END")
-                       ->orderBy('sales_name')
-                       ->paginate(15);
-                       
+        $sales = $query->orderByRaw("CASE WHEN status = 'Active' THEN 1 ELSE 2 END")->orderBy('sales_name')->paginate(15);
         return view('livewire.master.sales-index', compact('sales'))->layout('layouts.app');
     }
 }

@@ -1,352 +1,303 @@
-<div class="min-h-screen space-y-6 pb-10 transition-colors duration-300 font-jakarta" x-data="{ filterOpen: false }">
+<div class="min-h-screen space-y-6 pb-10 transition-colors duration-300 font-jakarta bg-slate-50 dark:bg-[#050505]">
 
     {{-- HEADER & NAVIGASI --}}
     <div class="sticky top-0 z-40 backdrop-blur-xl border-b transition-all duration-300 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-4 mb-6
-        dark:bg-[#0a0a0a]/80 dark:border-white/5 bg-white/80 border-slate-200 shadow-sm">
-
+        dark:bg-[#0a0a0a]/80 dark:border-white/10 bg-white/95 border-slate-300 shadow-md">
         <div class="flex flex-col xl:flex-row gap-4 items-center justify-between">
-            <div class="flex items-center gap-4 w-full xl:w-auto">
+            <div class="flex items-center gap-4 w-full xl:w-auto shrink-0">
                 <div
-                    class="p-2.5 rounded-xl shadow-lg dark:bg-indigo-500/20 bg-indigo-600 text-white dark:text-indigo-400">
-                    <i class="fas fa-box text-xl"></i>
+                    class="p-3 rounded-2xl shadow-xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white ring-4 ring-blue-500/20">
+                    <i class="fas fa-user-tie text-xl"></i>
                 </div>
                 <div>
                     <h1
-                        class="text-xl font-black tracking-tighter uppercase leading-none dark:text-white text-slate-800">
-                        Master <span class="text-indigo-500">Produk</span>
+                        class="text-xl font-black tracking-tighter uppercase leading-none dark:text-white text-slate-900">
+                        Master <span class="text-blue-600 dark:text-blue-400">Salesman</span>
                     </h1>
-                    <div class="flex items-center gap-2 mt-1.5">
-                        <p
-                            class="text-[9px] font-bold uppercase tracking-[0.3em] opacity-50 dark:text-slate-400 text-slate-500">
-                            Manajemen Inventaris</p>
-                        <span
-                            class="px-2 py-0.5 dark:bg-indigo-500/10 bg-indigo-50 dark:text-indigo-400 text-indigo-600 rounded text-[9px] font-black border dark:border-indigo-500/20 border-indigo-100 shadow-sm">
-                            <i class="fas fa-cubes mr-1"></i> {{ $produks->total() }} SKU
-                        </span>
-                    </div>
+                    <p
+                        class="text-[9px] font-extrabold uppercase tracking-[0.3em] dark:text-slate-400 text-slate-600 mt-1.5 opacity-90">
+                        Manajemen Personel & Performa
+                    </p>
                 </div>
             </div>
 
-            <div class="flex flex-wrap sm:flex-nowrap gap-3 items-center w-full xl:w-auto justify-end">
-
-                {{-- FORM PENCARIAN --}}
-                <div class="relative w-full sm:w-64 group">
+            {{-- FILTER GROUP: RAPI & PROPORSIONAL --}}
+            <div class="flex flex-wrap lg:flex-nowrap items-center gap-3 w-full xl:w-auto justify-end">
+                <div class="relative group min-w-[200px] lg:w-64">
                     <i
-                        class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors text-xs"></i>
+                        class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors text-xs"></i>
                     <input wire:model.live.debounce.300ms="search" type="text"
-                        class="w-full pl-10 pr-4 py-2.5 rounded-2xl border text-[11px] font-bold uppercase tracking-widest focus:ring-2 focus:ring-indigo-500/20 transition-all
-                        dark:bg-black/40 dark:border-white/10 dark:text-white bg-slate-100 border-slate-200 shadow-inner" placeholder="Cari Nama / SKU / Kode-C...">
+                        class="pl-10 pr-4 py-2.5 w-full rounded-2xl border-2 text-[11px] font-bold uppercase transition-all
+                        dark:bg-white/5 dark:border-white/10 dark:text-white bg-white border-slate-200 text-slate-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 outline-none"
+                        placeholder="Cari Sales / HP / NIK...">
                 </div>
 
-                {{-- FILTER CABANG/REGIONAL --}}
-                <div class="relative w-full sm:w-40" x-data="{ open: false }">
-                    <button @click="open = !open" @click.outside="open = false"
-                        class="w-full flex items-center justify-between border px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm
-                        dark:bg-black/40 dark:border-white/5 dark:text-slate-300 bg-white border-slate-200 text-slate-700 hover:border-indigo-400">
-                        <span
-                            class="truncate">{{ empty($filterCabang) ? 'Semua Cabang' : count($filterCabang).' Dipilih' }}</span>
-                        <i class="fas fa-filter opacity-40 text-[10px] transition-transform"
-                            :class="open ? 'rotate-180' : ''"></i>
+                <div class="flex gap-2 shrink-0">
+                    <button wire:click="autoDiscover"
+                        class="px-5 py-2.5 bg-slate-800 dark:bg-white dark:text-slate-900 text-white rounded-2xl text-[10px] font-black uppercase hover:scale-105 transition-all shadow-lg flex items-center gap-2">
+                        <i class="fas fa-sync-alt" wire:loading.class="fa-spin" wire:target="autoDiscover"></i>
+                        <span class="hidden sm:inline">Sinkron Data</span>
                     </button>
-                    <div x-show="open" x-transition class="absolute z-50 mt-2 w-full border rounded-2xl shadow-2xl p-2 max-h-60 overflow-y-auto custom-scrollbar
-                        dark:bg-slate-900 border-slate-800 bg-white border-slate-200" style="display: none;">
-                        @foreach($optCabang as $c)
-                        <label
-                            class="flex items-center px-3 py-2.5 hover:bg-indigo-500/10 rounded-xl cursor-pointer transition-colors group">
-                            <input type="checkbox" value="{{ $c }}" wire:model.live="filterCabang"
-                                class="rounded-full border-slate-500 text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5">
-                            <span
-                                class="ml-3 text-[10px] font-bold uppercase tracking-tight group-hover:text-indigo-400 dark:text-slate-400 text-slate-600">{{ $c }}</span>
-                        </label>
-                        @endforeach
-                    </div>
-                </div>
-
-                {{-- TOMBOL IMPORT --}}
-                <button wire:click="openImportModal"
-                    class="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-600/20 transition-all transform active:scale-95">
-                    <i class="fas fa-file-excel"></i>
-                    <span class="hidden sm:inline">Unggah Data</span>
-                </button>
-
-                <div wire:loading
-                    class="w-10 h-10 rounded-xl flex items-center justify-center dark:bg-slate-800 bg-white border dark:border-white/5 border-slate-200 shadow-sm">
-                    <i class="fas fa-circle-notch fa-spin text-indigo-500"></i>
+                    <button wire:click="create"
+                        class="px-6 py-2.5 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase shadow-xl shadow-blue-600/20 hover:bg-blue-700 hover:scale-105 transition-all active:scale-95 flex items-center gap-2">
+                        <i class="fas fa-plus"></i>
+                        <span>Baru</span>
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- AREA TABEL DATA --}}
-    <div wire:loading.class="opacity-50 pointer-events-none"
-        class="transition-opacity duration-300 max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+    {{-- TABEL DATA: URUTAN KOLOM DIPERBAIKI --}}
+    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         <div
-            class="rounded-[2.5rem] border overflow-hidden transition-all duration-300 flex flex-col h-[75vh]
-            dark:bg-slate-900/40 dark:border-white/5 bg-white border-slate-200 shadow-2xl shadow-slate-200/40 dark:shadow-black/40">
-
-            <div class="overflow-auto flex-1 w-full custom-scrollbar">
-                <table class="text-[10px] text-left border-collapse whitespace-nowrap min-w-max w-full">
-                    <thead class="sticky top-0 z-20 shadow-sm border-b dark:border-white/5 border-slate-200">
+            class="rounded-[2.5rem] border-2 overflow-hidden dark:bg-[#0f0f0f] dark:border-white/10 bg-white border-slate-200 shadow-2xl">
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-sm text-left border-collapse">
+                    <thead>
                         <tr
-                            class="dark:bg-slate-900 bg-slate-50 text-slate-500 dark:text-slate-400 font-black uppercase tracking-widest">
+                            class="dark:bg-white/5 bg-slate-100 text-slate-800 dark:text-slate-100 font-black text-[9px] uppercase tracking-[0.2em] border-b-2 dark:border-white/10 border-slate-200">
+                            <th class="px-6 py-5 w-16 text-center">No</th>
+                            <th class="px-6 py-5">Kode</th>
+                            <th class="px-6 py-5">Nama Salesman</th>
+                            <th class="px-6 py-5">Alamat Domisili</th>
+                            <th class="px-6 py-5">Tempat Tgl Lahir</th>
+                            <th class="px-6 py-5">No. HP</th>
+                            <th class="px-6 py-5 text-center">NIK</th>
+                            <th class="px-6 py-5 text-center">Status</th>
+                            <th class="px-6 py-5 text-center">Cabang</th>
                             <th
-                                class="px-4 py-5 border-r dark:border-white/5 border-slate-200 sticky left-0 dark:bg-slate-900 bg-slate-50 z-30">
-                                Cabang</th>
-                            <th
-                                class="px-4 py-5 border-r dark:border-white/5 border-slate-200 sticky left-[70px] dark:bg-slate-900 bg-slate-50 z-30">
-                                Kode C</th>
-                            <th
-                                class="px-4 py-5 border-r dark:border-white/5 border-slate-200 sticky left-[140px] dark:bg-slate-900 bg-slate-50 z-30">
-                                SKU</th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200">Kategori</th>
-                            <th
-                                class="px-4 py-5 border-r dark:border-white/5 border-slate-200 min-w-[250px] sticky left-[210px] dark:bg-slate-800 bg-slate-100 z-30 text-indigo-500">
-                                Nama Produk</th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200">Tgl Kadaluarsa</th>
-                            <th
-                                class="px-4 py-5 border-r border-blue-500/20 dark:bg-blue-600/10 bg-blue-50 text-blue-600 text-right">
-                                Stok Akhir</th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-center">Satuan</th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Baik (Pcs)
-                            </th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Konv. Baik
-                            </th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Karton</th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Nilai Baik
-                                (Rp)</th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Rata 3B (Sat)
-                            </th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Rata 3B (Ktn)
-                            </th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Rata 3B
-                                (Nilai)</th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200">Status Gerak</th>
-                            <th
-                                class="px-4 py-5 border-r border-red-500/20 dark:bg-red-600/10 bg-red-50 text-red-600 text-right">
-                                Rusak (Pcs)</th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Konv. Rusak
-                            </th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Rusak (Ktn)
-                            </th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Nilai Rusak
-                                (Rp)</th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Gudang 1</th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Gudang 1 (K)
-                            </th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Gudang 1 (N)
-                            </th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Gudang 2</th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Gudang 2 (K)
-                            </th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Gudang 2 (N)
-                            </th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Gudang 3</th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Gudang 3 (K)
-                            </th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Gudang 3 (N)
-                            </th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200">Penyimpanan</th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Jual/Minggu
-                            </th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200">Keterangan</th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200">Info Kosong</th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Batas Min
-                            </th>
-                            <th
-                                class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right font-bold text-orange-500">
-                                Saran Order</th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200">Info Kadaluarsa</th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Harga Beli
-                            </th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Disk. Beli
-                            </th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Beli/Ktn</th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Harga Rata
-                            </th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right font-bold">
-                                Total Nilai</th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Harga UP</th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Harga Fix
-                            </th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">PPN</th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-right">Fix Tanpa PPN
-                            </th>
-                            <th
-                                class="px-4 py-5 border-r border-yellow-500/20 dark:bg-yellow-500/10 bg-yellow-50 text-right text-yellow-600">
-                                Laba (Margin)</th>
-                            <th
-                                class="px-4 py-5 border-r border-yellow-500/20 dark:bg-yellow-500/10 bg-yellow-50 text-right text-yellow-600">
-                                % Laba</th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200">No. Order</th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-purple-500">Pemasok
-                            </th>
-                            <th class="px-4 py-5 border-r dark:border-white/5 border-slate-200">SKU Induk</th>
-                            <th
-                                class="px-4 py-5 border-r dark:border-white/5 border-slate-200 text-xs font-bold bg-slate-100 border-l border-slate-200 sticky right-0 z-30">
+                                class="px-6 py-5 text-right bg-slate-200/50 dark:bg-white/5 border-l dark:border-white/10 border-slate-200">
                                 Aksi</th>
                         </tr>
                     </thead>
-
-                    <tbody class="divide-y dark:divide-white/5 divide-slate-100">
-                        @forelse($produks as $item)
-                        <tr
-                            class="transition-colors group @if($item->is_duplicate) dark:bg-rose-500/5 bg-rose-50/50 @else dark:hover:bg-white/[0.02] hover:bg-slate-50 @endif">
-
-                            <td
-                                class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-indigo-500 font-bold sticky left-0 bg-inherit z-10 uppercase tracking-tighter">
-                                {{ $item->cabang }}</td>
-                            <td
-                                class="px-4 py-3 border-r dark:border-white/5 border-slate-100 font-mono opacity-50 sticky left-[70px] bg-inherit z-10">
-                                {{ $item->ccode }}</td>
-                            <td
-                                class="px-4 py-3 border-r dark:border-white/5 border-slate-100 font-mono font-black text-slate-700 dark:text-slate-200 sticky left-[140px] bg-inherit z-10">
-                                {{ $item->sku }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 opacity-60">
-                                {{ $item->kategori }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 font-black text-slate-800 dark:text-white truncate max-w-[250px] sticky left-[210px] bg-inherit z-10 shadow-xl shadow-black/5"
-                                title="{{ $item->name_item }}">
-                                {{ $item->name_item }}
-                                @if($item->is_duplicate)
+                    <tbody class="divide-y-2 dark:divide-white/5 divide-slate-100 uppercase">
+                        @forelse($sales as $index => $item)
+                        <tr class="hover:bg-blue-600/[0.04] dark:hover:bg-blue-400/[0.02] group transition-all">
+                            <td class="px-6 py-4 text-center text-slate-500 font-mono font-bold text-[10px]">
+                                {{ $sales->firstItem() + $index }}
+                            </td>
+                            <td class="px-6 py-4">
                                 <span
-                                    class="ml-2 px-1.5 py-0.5 rounded text-[8px] font-black bg-rose-600 text-white animate-pulse">GANDA</span>
+                                    class="px-2 py-1 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 font-mono font-black text-[10px] border border-blue-200">
+                                    {{ $item->sales_code ?: 'N/A' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <p class="font-black dark:text-white text-slate-900 text-xs tracking-tight">
+                                    {{ $item->sales_name }}</p>
+                            </td>
+                            <td class="px-6 py-4">
+                                <p
+                                    class="text-[10px] text-slate-600 dark:text-slate-400 font-bold normal-case italic truncate max-w-[180px]">
+                                    {{ $item->alamat ?: '-' }}
+                                </p>
+                            </td>
+                            <td class="px-6 py-4 text-[10px] font-black text-slate-700 dark:text-slate-300">
+                                {{ $item->tempat_lahir ?: '-' }}<br>
+                                <span
+                                    class="opacity-50 font-bold">{{ $item->tanggal_lahir ? \Carbon\Carbon::parse($item->tanggal_lahir)->format('d/m/Y') : '-' }}</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                @if($item->phone)
+                                <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $item->phone) }}" target="_blank"
+                                    class="flex items-center gap-2 text-[10px] font-black text-emerald-600 dark:text-emerald-400 hover:scale-105 transition-transform">
+                                    <i class="fab fa-whatsapp text-xs"></i> {{ $item->phone }}
+                                </a>
+                                @else
+                                <span class="text-[9px] font-bold text-slate-400 italic">No Contact</span>
                                 @endif
                             </td>
-
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 opacity-60">
-                                {{ $item->expired_date }}</td>
                             <td
-                                class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right font-black text-blue-500 dark:bg-blue-500/5 bg-blue-50/50">
-                                {{ number_format((float)$item->stok, 0, ',', '.') }}</td>
-                            <td
-                                class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-center font-bold opacity-40 italic">
-                                {{ $item->oum }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right">
-                                {{ $item->good }}</td>
-                            <td
-                                class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right font-mono opacity-60">
-                                {{ $item->good_konversi }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right">
-                                {{ $item->ktn }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right">
-                                {{ number_format((float)$item->good_amount, 0, ',', '.') }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right">
-                                {{ $item->avg_3m_in_oum }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right">
-                                {{ $item->avg_3m_in_ktn }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right">
-                                {{ number_format((float)$item->avg_3m_in_value, 0, ',', '.') }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100">{{ $item->not_move_3m }}
+                                class="px-6 py-4 text-center font-mono text-[10px] text-slate-700 dark:text-slate-300 font-bold">
+                                {{ $item->nik ?: '-' }}
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <span
+                                    class="px-3 py-1.5 rounded-full text-[9px] font-black {{ $item->status == 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200' }} border-2 transition-all">
+                                    {{ $item->status == 'Active' ? 'AKTIF' : 'RESIGN' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <span
+                                    class="px-2.5 py-1 rounded-lg text-[9px] font-black bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200">
+                                    {{ $item->city ?: 'N/A' }}
+                                </span>
                             </td>
                             <td
-                                class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right text-rose-500 font-bold dark:bg-rose-500/5 bg-rose-50/50">
-                                {{ $item->bad }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right">
-                                {{ $item->bad_konversi }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right">
-                                {{ $item->bad_ktn }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right">
-                                {{ number_format((float)$item->bad_amount, 0, ',', '.') }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right">
-                                {{ $item->wrh1 }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right">
-                                {{ $item->wrh1_konversi }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right">
-                                {{ $item->wrh1_amount }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right">
-                                {{ $item->wrh2 }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right">
-                                {{ $item->wrh2_konversi }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right">
-                                {{ $item->wrh2_amount }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right">
-                                {{ $item->wrh3 }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right">
-                                {{ $item->wrh3_konversi }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right">
-                                {{ $item->wrh3_amount }}</td>
-                            <td
-                                class="px-4 py-3 border-r dark:border-white/5 border-slate-100 uppercase font-black opacity-30">
-                                {{ $item->good_storage }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right">
-                                {{ $item->sell_per_week }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100">{{ $item->blank_field }}
-                            </td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-center">
-                                {{ $item->empty_field }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right opacity-60">
-                                {{ $item->min }}</td>
-                            <td
-                                class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right font-black text-orange-500">
-                                {{ $item->re_qty }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 italic opacity-40">
-                                {{ $item->expired_info }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right">
-                                {{ number_format((float)$item->buy, 0, ',', '.') }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right">
-                                {{ number_format((float)$item->buy_disc, 0, ',', '.') }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right">
-                                {{ number_format((float)$item->buy_in_ktn, 0, ',', '.') }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right">
-                                {{ number_format((float)$item->avg, 0, ',', '.') }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right font-black">
-                                {{ number_format((float)$item->total, 0, ',', '.') }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right">
-                                {{ number_format((float)$item->up, 0, ',', '.') }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right">
-                                {{ number_format((float)$item->fix, 0, ',', '.') }}</td>
-                            <td
-                                class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right font-mono opacity-50">
-                                {{ number_format((float)$item->ppn, 0, ',', '.') }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-right italic">
-                                {{ number_format((float)$item->fix_exc_ppn, 0, ',', '.') }}</td>
-                            <td
-                                class="px-4 py-3 border-r border-yellow-500/20 dark:bg-yellow-500/10 bg-yellow-50/50 text-right font-black text-yellow-600">
-                                {{ number_format((float)$item->margin, 0, ',', '.') }}</td>
-                            <td
-                                class="px-4 py-3 border-r border-yellow-500/20 dark:bg-yellow-500/10 bg-yellow-50/50 text-right font-black text-yellow-600">
-                                {{ number_format((float)$item->percent_margin, 2, ',', '.') }}%</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 opacity-40">
-                                {{ $item->order_no }}</td>
-                            <td
-                                class="px-4 py-3 border-r dark:border-white/5 border-slate-100 text-purple-500 font-bold truncate max-w-[150px] italic">
-                                {{ $item->supplier }}</td>
-                            <td class="px-4 py-3 border-r dark:border-white/5 border-slate-100 font-mono opacity-50">
-                                {{ $item->mother_sku }}</td>
-
-                            {{-- AKSI --}}
-                            <td
-                                class="px-4 py-3 text-center sticky right-0 dark:bg-[#0a0a0a] bg-white border-l dark:border-white/10 border-slate-200 z-10">
-                                <button wire:click="delete({{ $item->id }})"
-                                    onclick="return confirm('Hapus produk ini?') || event.stopImmediatePropagation()"
-                                    class="w-8 h-8 rounded-xl flex items-center justify-center dark:text-slate-500 text-slate-400 dark:hover:text-white hover:text-white hover:bg-rose-600 dark:hover:bg-rose-500 transition-all shadow-sm">
-                                    <i class="fas fa-trash-alt text-[10px]"></i>
-                                </button>
+                                class="px-6 py-4 text-right bg-slate-50/50 dark:bg-white/[0.01] border-l dark:border-white/10 border-slate-200">
+                                <div class="flex justify-end gap-2">
+                                    <button wire:click="manageTargets({{ $item->id }})"
+                                        class="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center hover:bg-purple-600 hover:text-white transition-all shadow-sm"><i
+                                            class="fas fa-crosshairs text-xs"></i></button>
+                                    <button wire:click="edit({{ $item->id }})"
+                                        class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all shadow-sm"><i
+                                            class="fas fa-edit text-xs"></i></button>
+                                    <button onclick="confirm('Hapus?') || event.stopImmediatePropagation()"
+                                        wire:click="delete({{ $item->id }})"
+                                        class="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all shadow-sm"><i
+                                            class="fas fa-trash-alt text-xs"></i></button>
+                                </div>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="53" class="px-6 py-24 text-center">
-                                <div class="flex flex-col items-center opacity-20">
-                                    <i class="fas fa-box-open text-6xl mb-4"></i>
-                                    <p class="text-xs font-black tracking-[0.4em]">Database Produk Kosong</p>
-                                </div>
-                            </td>
+                            <td colspan="10"
+                                class="px-6 py-24 text-center opacity-30 font-black tracking-widest text-xs uppercase">
+                                Database Salesman Kosong</td>
                         </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-
-            {{-- PAGINASI --}}
             <div
-                class="px-6 py-4 border-t dark:border-white/5 border-slate-200 dark:bg-white/[0.02] bg-slate-50/50 shadow-inner">
-                {{ $produks->links() }}
+                class="px-6 py-6 border-t-2 dark:border-white/10 border-slate-200 dark:bg-black/20 bg-slate-50 uppercase font-black text-[11px] dark:text-slate-300 text-slate-700">
+                {{ $sales->links() }}
             </div>
         </div>
     </div>
 
-    {{-- MODAL IMPORT --}}
-    @if($isImportOpen)
-    @include('livewire.partials.import-modal', ['title' => 'Sinkronisasi Katalog Produk', 'color' => 'indigo'])
+    {{-- MODAL EDIT/TAMBAH --}}
+    @if($isOpen)
+    <div class="fixed inset-0 z-[160] overflow-y-auto px-4 py-10">
+        <div class="flex items-center justify-center min-h-screen">
+            <div class="fixed inset-0 bg-slate-900/95 backdrop-blur-md" wire:click="closeModal"></div>
+            <div
+                class="relative bg-white dark:bg-[#0d0d0d] rounded-[2.5rem] w-full max-w-2xl overflow-hidden shadow-2xl border-2 dark:border-white/10 border-slate-300">
+                <div
+                    class="bg-gradient-to-r from-blue-600 to-indigo-700 p-8 text-white flex justify-between items-center shadow-lg relative">
+                    <div class="absolute -right-4 -bottom-4 opacity-10 rotate-12"><i
+                            class="fas fa-user-tie text-8xl"></i></div>
+                    <div class="relative z-10">
+                        <h3 class="font-black uppercase tracking-widest text-base">Profil Lengkap Salesman</h3>
+                        <p class="text-[10px] font-bold opacity-80 uppercase tracking-widest mt-1 italic">
+                            {{ $salesId ? 'Perbarui Data Personal' : 'Registrasi Salesman Baru' }}
+                        </p>
+                    </div>
+                    <button wire:click="closeModal"
+                        class="relative z-10 w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 flex items-center justify-center transition-all text-white font-bold"><i
+                            class="fas fa-times"></i></button>
+                </div>
+
+                <div class="p-10 space-y-6 font-jakarta">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="group">
+                            <label
+                                class="block text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Kode
+                                Salesman</label>
+                            <input type="text" wire:model="sales_code"
+                                class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-black/40 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-black uppercase focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 dark:text-white text-slate-900 shadow-inner"
+                                placeholder="CONTOH: SL001">
+                        </div>
+                        <div class="group">
+                            <label
+                                class="block text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Nama
+                                Lengkap</label>
+                            <input type="text" wire:model="sales_name"
+                                class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-black/40 bg-slate-50 dark:border-white/10 border-slate-200 text-sm font-black uppercase focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 dark:text-white text-slate-900 shadow-inner">
+                        </div>
+                    </div>
+
+                    <div class="group">
+                        <label
+                            class="block text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Alamat
+                            Domisili Lengkap</label>
+                        <textarea wire:model="alamat" rows="2"
+                            class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-black/40 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-bold dark:text-white text-slate-800 focus:border-blue-600 transition-all outline-none"
+                            placeholder="ALAMAT LENGKAP SAAT INI..."></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="group">
+                            <label
+                                class="block text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Tempat
+                                Lahir</label>
+                            <input type="text" wire:model="tempat_lahir"
+                                class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-black/40 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-black uppercase focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 dark:text-white text-slate-900 shadow-inner">
+                        </div>
+                        <div class="group">
+                            <label
+                                class="block text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Tanggal
+                                Lahir</label>
+                            <input type="date" wire:model="tanggal_lahir"
+                                class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-black/40 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-black focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 dark:text-white text-slate-900 shadow-inner">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="group">
+                            <label
+                                class="block text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2.5 ml-1">No.
+                                HP / WhatsApp</label>
+                            <input type="text" wire:model="phone"
+                                class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-black/40 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-black focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 dark:text-white text-slate-900 shadow-inner"
+                                placeholder="0812...">
+                        </div>
+                        <div class="group">
+                            <label
+                                class="block text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Nomor
+                                NIK (KTP)</label>
+                            <input type="text" wire:model="nik" maxlength="16"
+                                class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-black/40 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-black focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 dark:text-white text-slate-900 shadow-inner"
+                                placeholder="16 DIGIT">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="group">
+                            <label
+                                class="block text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2.5 ml-1 text-shadow-sm">Status
+                                Karyawan</label>
+                            <select wire:model="status"
+                                class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-black/40 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-black focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 dark:text-white text-slate-900">
+                                <option value="Active">AKTIF / BEKERJA</option>
+                                <option value="Inactive">NON-AKTIF / RESIGN</option>
+                            </select>
+                        </div>
+                        <div class="group">
+                            <label
+                                class="block text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Cabang
+                                Regional</label>
+                            <input type="text" wire:model="city"
+                                class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-black/40 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-black uppercase focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-600 dark:text-white text-slate-900 shadow-inner"
+                                placeholder="BANJARMASIN">
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="dark:bg-white/[0.02] bg-slate-100 px-10 py-8 flex justify-end gap-4 border-t-2 dark:border-white/10 border-slate-200">
+                    <button wire:click="closeModal"
+                        class="px-8 py-3 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 hover:text-rose-600 transition-colors">Batal</button>
+                    <button wire:click="store"
+                        class="px-10 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-800 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-blue-600/30 transform active:scale-95 transition-all ring-2 ring-white/10">
+                        SIMPAN DATABASE
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
     @endif
+
+    {{-- MODAL TARGET --}}
+    @if($isTargetOpen)
+    @include('livewire.master.partials.modal-target-sales')
+    @endif
+
 </div>
+
+<style>
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(37, 99, 235, 0.3);
+    border-radius: 10px;
+}
+</style>
