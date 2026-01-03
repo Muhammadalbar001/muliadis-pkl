@@ -57,9 +57,9 @@
                         <tr
                             class="dark:bg-white/5 bg-slate-100 text-slate-800 dark:text-slate-100 font-black text-[9px] uppercase tracking-[0.2em] border-b-2 dark:border-white/10 border-slate-200">
                             <th class="px-6 py-5 w-16 text-center">No</th>
-                            <th class="px-6 py-5">Kode</th>
+                            <th class="px-6 py-5">Kode Salesman</th>
                             <th class="px-6 py-5">Nama Salesman</th>
-                            <th class="px-6 py-5">Alamat Domisili</th>
+                            <th class="px-6 py-5">Alamat</th>
                             <th class="px-6 py-5">Tempat Tgl Lahir</th>
                             <th class="px-6 py-5">No. HP</th>
                             <th class="px-6 py-5 text-center">NIK</th>

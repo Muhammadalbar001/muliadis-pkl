@@ -154,7 +154,7 @@
                             <th class="px-6 py-5 border-r dark:border-white/5 border-slate-100 text-center">Cabang</th>
                             <th
                                 class="px-6 py-5 border-r dark:border-white/5 border-slate-100 text-right dark:bg-emerald-600/10 bg-emerald-50/50 text-emerald-600">
-                                Grand Total</th>
+                                Total Nilai</th>
                             <th
                                 class="px-6 py-5 text-center bg-slate-50/50 dark:bg-white/5 border-l dark:border-white/5 border-slate-100 sticky right-0 z-20">
                                 Aksi</th>

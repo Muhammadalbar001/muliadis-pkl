@@ -124,7 +124,7 @@
                 <div class="flex items-center">
                     <span class="w-5 flex justify-center"><i
                             class="fas fa-file-contract text-base {{ (request()->routeIs('pimpinan.*') || request()->routeIs('laporan.*')) ? 'text-amber-400' : 'group-hover:text-amber-400' }}"></i></span>
-                    <span x-show="isSidebarExpanded" class="ml-4">Analytics</span>
+                    <span x-show="isSidebarExpanded" class="ml-4">ANALISA</span>
                 </div>
                 <i x-show="isSidebarExpanded" class="fas fa-chevron-right text-[8px] transition-transform duration-300"
                     :class="{'rotate-90 text-amber-400': open}"></i>
