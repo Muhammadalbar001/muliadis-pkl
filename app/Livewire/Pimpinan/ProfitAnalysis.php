@@ -5,6 +5,7 @@ namespace App\Livewire\Pimpinan;
 use Livewire\Component;
 use App\Models\Master\Produk;
 use Illuminate\Support\Facades\Response;
+use Barryvdh\DomPDF\Facade\Pdf; // Pastikan library ini diimport
 
 class ProfitAnalysis extends Component
 {
@@ -17,18 +18,20 @@ class ProfitAnalysis extends Component
     // Sorting
     public $sortDirection = 'desc'; 
 
-    // --- TAMBAHAN BARU: STATE UNTUK MODAL DETAIL ---
+    // State Modal Detail
     public $detailProduct = null;
     public $isDetailOpen = false;
 
     public function mount()
     {
+        // Ambil daftar cabang unik
         $branches = Produk::select('cabang')
             ->whereNotNull('cabang')
             ->where('cabang', '!=', '')
             ->distinct()
             ->pluck('cabang');
 
+        // Inisialisasi state filter per cabang
         foreach ($branches as $b) {
             $this->search[$b] = '';
             $this->selectedSuppliers[$b] = [];
@@ -37,6 +40,7 @@ class ProfitAnalysis extends Component
         }
     }
 
+    // Reset filter produk jika supplier berubah
     public function updatedSelectedSuppliers($value, $key)
     {
         $parts = explode('.', $key);
@@ -47,16 +51,13 @@ class ProfitAnalysis extends Component
         }
     }
 
-    // --- 1. FUNCTION SORTING ---
     public function toggleSort()
     {
         $this->sortDirection = $this->sortDirection === 'desc' ? 'asc' : 'desc';
     }
 
-    // --- 2. FUNCTION MODAL DETAIL (DRILL DOWN) ---
     public function openDetail($id)
     {
-        // Ambil data produk berdasarkan ID saat diklik
         $this->detailProduct = Produk::find($id);
         $this->isDetailOpen = true;
     }
@@ -67,7 +68,7 @@ class ProfitAnalysis extends Component
         $this->detailProduct = null;
     }
 
-    // --- 3. FUNCTION EXPORT CSV ---
+    // --- FUNGSI EXPORT CSV (EXCEL) ---
     public function export($branch)
     {
         $suppliersSelected = $this->selectedSuppliers[$branch] ?? [];
@@ -147,6 +148,90 @@ class ProfitAnalysis extends Component
         return Response::stream($callback, 200, $headers);
     }
 
+    // --- FUNGSI EXPORT PDF (TAMPILAN PROFESIONAL) ---
+    public function exportPdf($branch)
+    {
+        $suppliersSelected = $this->selectedSuppliers[$branch] ?? [];
+        
+        if (empty($suppliersSelected)) {
+            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Pilih supplier terlebih dahulu']);
+            return; 
+        }
+
+        // Query dasar
+        $baseQuery = Produk::query()
+            ->where('cabang', $branch)
+            ->whereIn('supplier', $suppliersSelected);
+
+        // Filter Mode (All / Selected)
+        $mode = $this->filterMode[$branch] ?? 'all';
+        $productIdsSelected = $this->selectedProductIds[$branch] ?? [];
+
+        if ($mode === 'selected' && !empty($productIdsSelected)) {
+            $baseQuery->whereIn('id', $productIdsSelected);
+        } elseif ($mode === 'selected' && empty($productIdsSelected)) {
+            $baseQuery->whereRaw('1 = 0');
+        }
+
+        // Pencarian Teks
+        $searchQuery = $this->search[$branch] ?? '';
+        if (!empty($searchQuery)) {
+            $baseQuery->where(function($q) use ($searchQuery) {
+                $q->where('name_item', 'like', '%' . $searchQuery . '%')
+                  ->orWhere('sku', 'like', '%' . $searchQuery . '%');
+            });
+        }
+
+        // Urutkan default berdasarkan supplier dan nama
+        $baseQuery->orderBy('supplier', 'asc')->orderBy('name_item', 'asc');
+
+        // Mapping Data untuk PDF
+        $products = $baseQuery->get()->map(function ($item) {
+            $modalDasar = (float) $item->avg > 0 ? (float) $item->avg : (float) $item->buy;
+            $rawPpn = $item->ppn; 
+            $persenPpn = 0;
+            if (is_numeric($rawPpn) && $rawPpn > 0) { $persenPpn = (float) $rawPpn; } 
+            elseif (strtoupper(trim($rawPpn)) === 'Y') { $persenPpn = 11; }
+
+            $nominalPpn = $modalDasar * ($persenPpn / 100);
+            $hppFinal = $modalDasar + $nominalPpn;
+            $hargaJual = (float) $item->fix; 
+            $marginRp = $hargaJual - $hppFinal;
+            $marginPersen = ($hppFinal > 0) ? ($marginRp / $hppFinal) * 100 : 0;
+
+            return [
+                'last_supplier' => $item->supplier,
+                'name_item'     => $item->name_item,
+                'sku'           => $item->sku,
+                'stock'         => $item->stok,
+                'avg_ppn'       => $hppFinal,
+                'harga_jual'    => $hargaJual,
+                'margin_rp'     => $marginRp,
+                'margin_persen' => $marginPersen,
+            ];
+        });
+
+        // Sorting manual collection
+        if ($this->sortDirection === 'desc') {
+            $products = $products->sortByDesc('margin_persen')->values();
+        } else {
+            $products = $products->sortBy('margin_persen')->values();
+        }
+
+        // Load View PDF
+        $pdf = Pdf::loadView('livewire.pimpinan.exports.profit-pdf', [
+            'cabang' => $branch,
+            'products' => $products,
+            'suppliers' => implode(', ', $suppliersSelected),
+            'tanggal_cetak' => now()->format('d F Y H:i'),
+            'user_pencetak' => auth()->user()->name ?? 'System'
+        ])->setPaper('a4', 'landscape'); // A4 Landscape agar tabel luas
+
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->output();
+        }, 'Laporan_Analisa_Margin_' . $branch . '.pdf');
+    }
+
     public function render()
     {
         $branches = Produk::select('cabang')
@@ -159,8 +244,6 @@ class ProfitAnalysis extends Component
         $output = [];
 
         foreach ($branches as $branch) {
-            
-            // List Supplier
             $suppliersList = Produk::select('supplier')
                 ->where('cabang', $branch)
                 ->whereNotNull('supplier')
@@ -170,7 +253,6 @@ class ProfitAnalysis extends Component
                 ->pluck('supplier')
                 ->toArray();
 
-            // Logic Data
             $products = collect();
             $productsListForDropdown = [];
 
@@ -180,7 +262,6 @@ class ProfitAnalysis extends Component
             $productIdsSelected = $this->selectedProductIds[$branch] ?? [];
 
             if (!empty($suppliersSelected)) {
-                
                 $baseQuery = Produk::query()
                     ->where('cabang', $branch)
                     ->whereIn('supplier', $suppliersSelected);

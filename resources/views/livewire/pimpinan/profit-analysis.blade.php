@@ -2,7 +2,7 @@
 
     {{-- HEADER UTAMA --}}
     <div
-        class="sticky top-0 z-40 pt-6 pb-4 px-6 border-b shadow-sm transition-colors duration-300 bg-white/95 backdrop-blur-md border-slate-200 dark:bg-[#121212]/95 dark:border-white/5">
+        class="sticky top-0 z-40 pt-6 pb-4 px-6 border-b shadow-sm transition-all duration-300 bg-white/95 backdrop-blur-md border-slate-200 dark:bg-[#121212]/95 dark:border-white/5">
         <div class="max-w-8xl mx-auto flex justify-between items-end">
             <div>
                 <h1 class="text-2xl font-black tracking-tighter uppercase leading-none text-slate-800 dark:text-white">
@@ -13,11 +13,14 @@
                 </p>
             </div>
 
-            <div class="hidden md:block">
-                <span class="text-[10px] uppercase font-bold text-slate-400">URUTAN BERDASARKAN:</span>
-                <span class="text-xs font-black text-emerald-500 uppercase">
-                    {{ $sortDirection === 'desc' ? 'Margin Tertinggi' : 'Margin Terendah' }}
-                </span>
+            <div class="flex items-center gap-6">
+                <div class="hidden md:block text-right">
+                    <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">URUTAN BERDASARKAN:</span>
+                    <span class="text-xs font-black text-emerald-500 uppercase flex items-center gap-2 justify-end">
+                        <i class="fas fa-chart-line"></i>
+                        {{ $sortDirection === 'desc' ? 'Margin Tertinggi' : 'Margin Terendah' }}
+                    </span>
+                </div>
             </div>
         </div>
     </div>
@@ -26,62 +29,27 @@
 
         @foreach($dataPerCabang as $cabang => $data)
 
-        {{-- SETUP TEMA WARNA DINAMIS (DENGAN PERBAIKAN DARK MODE) --}}
+        {{-- SETUP TEMA WARNA DINAMIS --}}
         @php
         $themes = [
-        // Tema 1: Biru Laut (Ocean)
-        [
-        'gradient' => 'from-blue-600 via-blue-500 to-cyan-500',
-        'bg_soft' => 'bg-blue-50/50 dark:bg-blue-500/10', // Mode Gelap: Background transparan
-        'border' => 'border-blue-200 dark:border-blue-500/20', // Mode Gelap: Border redup
-        'text' => 'text-blue-600 dark:text-blue-400', // Mode Gelap: Teks lebih terang
-        'ring' => 'focus:ring-blue-500',
-        'icon' => 'bg-blue-500',
-        'btn' => 'hover:shadow-blue-500/30'
-        ],
-        // Tema 2: Emerald (Nature)
-        [
-        'gradient' => 'from-emerald-600 via-emerald-500 to-teal-500',
-        'bg_soft' => 'bg-emerald-50/50 dark:bg-emerald-500/10',
-        'border' => 'border-emerald-200 dark:border-emerald-500/20',
-        'text' => 'text-emerald-600 dark:text-emerald-400',
-        'ring' => 'focus:ring-emerald-500',
-        'icon' => 'bg-emerald-500',
-        'btn' => 'hover:shadow-emerald-500/30'
-        ],
-        // Tema 3: Violet (Royal)
-        [
-        'gradient' => 'from-violet-600 via-purple-500 to-fuchsia-500',
-        'bg_soft' => 'bg-violet-50/50 dark:bg-violet-500/10',
-        'border' => 'border-violet-200 dark:border-violet-500/20',
-        'text' => 'text-violet-600 dark:text-violet-400',
-        'ring' => 'focus:ring-violet-500',
-        'icon' => 'bg-violet-500',
-        'btn' => 'hover:shadow-violet-500/30'
-        ],
-        // Tema 4: Amber (Sunset)
-        [
-        'gradient' => 'from-amber-500 via-orange-500 to-red-500',
-        'bg_soft' => 'bg-amber-50/50 dark:bg-amber-500/10',
-        'border' => 'border-amber-200 dark:border-amber-500/20',
-        'text' => 'text-amber-600 dark:text-amber-400',
-        'ring' => 'focus:ring-amber-500',
-        'icon' => 'bg-amber-500',
-        'btn' => 'hover:shadow-amber-500/30'
-        ],
-        // Tema 5: Rose (Passion)
-        [
-        'gradient' => 'from-rose-600 via-pink-500 to-red-400',
-        'bg_soft' => 'bg-rose-50/50 dark:bg-rose-500/10',
-        'border' => 'border-rose-200 dark:border-rose-500/20',
-        'text' => 'text-rose-600 dark:text-rose-400',
-        'ring' => 'focus:ring-rose-500',
-        'icon' => 'bg-rose-500',
-        'btn' => 'hover:shadow-rose-500/30'
-        ],
+        ['gradient' => 'from-blue-600 via-blue-500 to-cyan-500', 'bg_soft' => 'bg-blue-50/50 dark:bg-blue-500/10',
+        'border' => 'border-blue-200 dark:border-blue-500/20', 'text' => 'text-blue-600 dark:text-blue-400', 'ring' =>
+        'focus:ring-blue-500', 'icon' => 'bg-blue-500', 'btn' => 'hover:shadow-blue-500/30'],
+        ['gradient' => 'from-emerald-600 via-emerald-500 to-teal-500', 'bg_soft' => 'bg-emerald-50/50
+        dark:bg-emerald-500/10', 'border' => 'border-emerald-200 dark:border-emerald-500/20', 'text' =>
+        'text-emerald-600 dark:text-emerald-400', 'ring' => 'focus:ring-emerald-500', 'icon' => 'bg-emerald-500', 'btn'
+        => 'hover:shadow-emerald-500/30'],
+        ['gradient' => 'from-violet-600 via-purple-500 to-fuchsia-500', 'bg_soft' => 'bg-violet-50/50
+        dark:bg-violet-500/10', 'border' => 'border-violet-200 dark:border-violet-500/20', 'text' => 'text-violet-600
+        dark:text-violet-400', 'ring' => 'focus:ring-violet-500', 'icon' => 'bg-violet-500', 'btn' =>
+        'hover:shadow-violet-500/30'],
+        ['gradient' => 'from-amber-500 via-orange-500 to-red-500', 'bg_soft' => 'bg-amber-50/50 dark:bg-amber-500/10',
+        'border' => 'border-amber-200 dark:border-amber-500/20', 'text' => 'text-amber-600 dark:text-amber-400', 'ring'
+        => 'focus:ring-amber-500', 'icon' => 'bg-amber-500', 'btn' => 'hover:shadow-amber-500/30'],
+        ['gradient' => 'from-rose-600 via-pink-500 to-red-400', 'bg_soft' => 'bg-rose-50/50 dark:bg-rose-500/10',
+        'border' => 'border-rose-200 dark:border-rose-500/20', 'text' => 'text-rose-600 dark:text-rose-400', 'ring' =>
+        'focus:ring-rose-500', 'icon' => 'bg-rose-500', 'btn' => 'hover:shadow-rose-500/30'],
         ];
-
-        // Pilih tema berdasarkan urutan loop (cycling)
         $theme = $themes[$loop->index % count($themes)];
         @endphp
 
@@ -91,11 +59,9 @@
             <div
                 class="rounded-[2.5rem] overflow-hidden border border-slate-200 dark:border-white/10 shadow-2xl bg-white dark:bg-[#121212]">
 
-                {{-- HEADER CABANG (GRADIENT) --}}
+                {{-- HEADER CABANG --}}
                 <div
                     class="bg-gradient-to-r {{ $theme['gradient'] }} p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
-
-                    {{-- Pattern Decoration --}}
                     <div class="absolute inset-0 opacity-10 pattern-dots pointer-events-none"></div>
                     <div
                         class="absolute -right-10 -top-10 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none">
@@ -115,30 +81,36 @@
                         </div>
                     </div>
 
+                    {{-- TOMBOL EXPORT --}}
                     @if(count($data['products']) > 0)
-                    <button wire:click="export('{{ $cabang }}')" wire:loading.attr="disabled"
-                        class="relative z-10 flex items-center gap-3 px-6 py-3 bg-white text-slate-800 rounded-xl shadow-lg {{ $theme['btn'] }} transition-all text-xs font-black uppercase tracking-wider group hover:-translate-y-1">
-                        <span
-                            class="w-6 h-6 rounded-full bg-gradient-to-br {{ $theme['gradient'] }} flex items-center justify-center text-white text-[10px]">
-                            <i class="fas fa-file-excel"></i>
-                        </span>
-                        <span>Export Data</span>
-                        <span wire:loading wire:target="export('{{ $cabang }}')" class="ml-2">
-                            <i class="fas fa-spinner fa-spin text-slate-400"></i>
-                        </span>
-                    </button>
+                    <div class="flex items-center gap-3 relative z-10">
+                        {{-- Excel --}}
+                        <button wire:click="export('{{ $cabang }}')" wire:loading.attr="disabled"
+                            class="flex items-center gap-3 px-5 py-3 bg-white text-slate-800 rounded-xl shadow-lg {{ $theme['btn'] }} transition-all text-[10px] font-black uppercase tracking-wider group hover:-translate-y-1">
+                            <i class="fas fa-file-excel text-emerald-500 text-sm"></i>
+                            <span>Excel</span>
+                        </button>
+
+                        {{-- PDF --}}
+                        <button wire:click="exportPdf('{{ $cabang }}')" wire:loading.attr="disabled"
+                            class="flex items-center gap-3 px-5 py-3 bg-rose-600 text-white rounded-xl shadow-lg hover:bg-rose-700 transition-all text-[10px] font-black uppercase tracking-wider group hover:-translate-y-1 shadow-rose-500/20">
+                            <i class="fas fa-file-pdf text-sm"></i>
+                            <span>Cetak PDF</span>
+                            <span wire:loading wire:target="exportPdf('{{ $cabang }}')" class="ml-1">
+                                <i class="fas fa-circle-notch fa-spin"></i>
+                            </span>
+                        </button>
+                    </div>
                     @endif
                 </div>
 
                 {{-- CONTENT BODY --}}
                 <div class="p-6 md:p-8 space-y-8">
-
-                    {{-- FILTER SECTION --}}
+                    {{-- Filter Section --}}
                     <div
                         class="p-6 rounded-3xl border border-dashed {{ $theme['border'] }} {{ $theme['bg_soft'] }} space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-
-                            {{-- LANGKAH 1: PILIH SUPPLIER --}}
+                            {{-- Supplier Filter --}}
                             <div class="md:col-span-4" x-data="{ 
                                     open: false, 
                                     search: '', 
@@ -166,7 +138,6 @@
                                         </div>
                                     </button>
 
-                                    {{-- DROPDOWN MENU --}}
                                     <div x-show="open" x-transition.opacity x-cloak
                                         class="absolute z-50 w-full mt-2 bg-white dark:bg-[#1a1a1a] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl max-h-80 overflow-hidden flex flex-col ring-1 ring-black/5">
                                         <div
@@ -199,7 +170,7 @@
                                 </div>
                             </div>
 
-                            {{-- LANGKAH 2: OPSI FILTER --}}
+                            {{-- Filter Options --}}
                             @if(count($selectedSuppliers[$cabang] ?? []) > 0)
                             <div class="md:col-span-8 flex items-end pb-1 gap-6 animate-fade-in-up">
                                 <div>
@@ -231,10 +202,9 @@
                             @endif
                         </div>
 
-                        {{-- FILTER LANJUTAN: PILIH ITEM & SEARCH --}}
+                        {{-- Advanced Filter --}}
                         @if(count($selectedSuppliers[$cabang] ?? []) > 0)
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-4 pt-2 animate-fade-in-up">
-
                             @if(($filterMode[$cabang] ?? 'all') === 'selected')
                             <div class="md:col-span-6" x-data="{ 
                                     open: false, 
@@ -258,7 +228,6 @@
                                         </div>
                                     </button>
 
-                                    {{-- Dropdown Item --}}
                                     <div x-show="open" x-transition.opacity x-cloak
                                         class="absolute z-50 w-full mt-2 bg-white dark:bg-[#1a1a1a] border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl max-h-80 overflow-hidden flex flex-col">
                                         <div
@@ -329,8 +298,6 @@
                                         <th
                                             class="px-4 py-4 text-center w-20 border-r border-slate-200 dark:border-white/5">
                                             STOCK</th>
-
-                                        
                                         <th
                                             class="px-4 py-4 text-right w-36 {{ $theme['text'] }} {{ $theme['bg_soft'] }} border-r {{ $theme['border'] }}">
                                             Harga Beli + PPN
@@ -338,7 +305,6 @@
                                                 class="text-[9px] opacity-70 normal-case font-bold tracking-tight mt-0.5">
                                                 <i class="fas fa-mouse-pointer mr-1"></i>Klik Detail</div>
                                         </th>
-
                                         <th
                                             class="px-4 py-4 text-right w-32 text-blue-600 dark:text-blue-400 bg-blue-50/30 dark:bg-blue-500/10 border-r border-blue-100 dark:border-white/5">
                                             Harga Jual Sistem</th>
@@ -368,24 +334,25 @@
                                         </td>
                                         <td
                                             class="px-4 py-3 text-center font-mono font-bold text-slate-600 dark:text-slate-300 border-r border-slate-100 dark:border-white/5">
-                                            {{ $p['stock'] }}</td>
-
-                                        {{-- CELL AVG (INTERACTIVE) --}}
+                                            {{ $p['stock'] }}
+                                        </td>
                                         <td wire:click="openDetail({{ $p['id'] }})"
                                             class="px-4 py-3 text-right font-mono font-black {{ $theme['text'] }} {{ $theme['bg_soft'] }} border-r {{ $theme['border'] }} cursor-pointer hover:brightness-95 transition-all duration-200 relative group-cell"
                                             title="Lihat Detail Pembentuk Harga">
                                             {{ number_format($p['avg_ppn'], 0, ',', '.') }}
                                             <div
                                                 class="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-cell-hover:opacity-100 transition-opacity">
-                                                <i class="fas fa-eye text-[10px]"></i></div>
+                                                <i class="fas fa-eye text-[10px]"></i>
+                                            </div>
                                         </td>
-
                                         <td
                                             class="px-4 py-3 text-right font-mono font-bold text-blue-600 dark:text-blue-400 bg-blue-50/10 dark:bg-blue-500/5 border-r border-blue-50 dark:border-white/5">
-                                            {{ number_format($p['harga_jual'], 0, ',', '.') }}</td>
+                                            {{ number_format($p['harga_jual'], 0, ',', '.') }}
+                                        </td>
                                         <td
                                             class="px-4 py-3 text-right font-mono font-black {{ $p['margin_persen'] < 0 ? 'text-red-500' : 'text-emerald-600 dark:text-emerald-400' }} bg-emerald-50/10 dark:bg-emerald-500/5">
-                                            {{ number_format($p['margin_persen'], 2, ',', '.') }}%</td>
+                                            {{ number_format($p['margin_persen'], 2, ',', '.') }}%
+                                        </td>
                                     </tr>
                                     @endforeach
                                 </tbody>
@@ -417,16 +384,13 @@
                     </div>
                     @endif
                     @endif
-
                 </div>
             </div>
-
         </div>
         @endforeach
-
     </div>
 
-    {{-- MODAL DETAIL (REDESIGNED) --}}
+    {{-- MODAL DETAIL --}}
     <div x-data="{ show: @entangle('isDetailOpen') }" x-show="show"
         x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95"
         x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-200"
@@ -438,7 +402,6 @@
 
         <div
             class="bg-white dark:bg-[#121212] rounded-3xl shadow-2xl w-full max-w-3xl overflow-hidden border border-slate-100 dark:border-white/10 relative z-10 flex flex-col max-h-[90vh]">
-
             @if($detailProduct)
             <div
                 class="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 dark:from-black dark:to-[#1a1a1a] p-8 flex justify-between items-start text-white">
@@ -472,7 +435,8 @@
                     <div class="space-y-4">
                         <h4
                             class="text-xs font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2 mb-4">
-                            <i class="fas fa-warehouse text-emerald-500"></i> Inventory Stats</h4>
+                            <i class="fas fa-warehouse text-emerald-500"></i> Inventory Stats
+                        </h4>
                         <div
                             class="bg-white dark:bg-[#181818] p-5 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm space-y-4">
                             <div class="flex justify-between items-center group">
@@ -511,19 +475,14 @@
                                 <span
                                     class="text-sm font-bold text-slate-700 dark:text-slate-200">{{ $detailProduct->ktn }}</span>
                             </div>
-                            <div
-                                class="mt-2 p-3 bg-slate-50 dark:bg-white/5 rounded-xl flex justify-between items-center border border-slate-100 dark:border-white/5">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase">Sell / Week</span>
-                                <span
-                                    class="text-xs font-black text-slate-800 dark:text-white font-mono">{{ $detailProduct->sell_per_week }}</span>
-                            </div>
                         </div>
                     </div>
 
                     <div class="space-y-4">
                         <h4
                             class="text-xs font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2 mb-4">
-                            <i class="fas fa-coins text-amber-500"></i> Cost Structure</h4>
+                            <i class="fas fa-coins text-amber-500"></i> Cost Structure
+                        </h4>
                         <div
                             class="bg-white dark:bg-[#181818] p-5 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm space-y-3 relative overflow-hidden">
                             <div class="flex justify-between items-end pb-2">
@@ -545,29 +504,12 @@
                             </div>
                             <div class="py-2">
                                 <div class="flex justify-between items-center mb-1">
-                                    <span
-                                        class="text-[11px] font-black text-amber-600 dark:text-amber-500 uppercase">RAW
+                                    <span class="text-[11px] font-black text-amber-600 dark:text-amber-50 uppercase">RAW
                                         HPP (AVG)</span>
-                                    <span class="text-base font-black text-amber-600 dark:text-amber-500 font-mono">Rp
+                                    <span class="text-base font-black text-amber-600 dark:text-amber-50 font-mono">Rp
                                         {{ number_format($detailProduct->avg, 0, ',', '.') }}</span>
                                 </div>
-                                <p class="text-[9px] text-slate-400 leading-tight">*Angka ini adalah HPP murni dari
-                                    Analisa Stok sebelum ditambah PPN.</p>
-                            </div>
-                            <div
-                                class="bg-slate-50 dark:bg-white/5 rounded-xl p-3 border border-slate-100 dark:border-white/5 flex justify-between items-center">
-                                <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">PPN
-                                    Input</span>
-                                <div class="flex items-center gap-2">
-                                    <span
-                                        class="text-xs font-black text-slate-800 dark:text-white font-mono">{{ is_numeric($detailProduct->ppn) ? $detailProduct->ppn . '%' : $detailProduct->ppn }}</span>
-                                    @if(strtoupper(trim($detailProduct->ppn)) === 'Y' ||
-                                    (is_numeric($detailProduct->ppn) && $detailProduct->ppn > 0))
-                                    <i class="fas fa-check-circle text-emerald-500 text-xs"></i>
-                                    @else
-                                    <i class="fas fa-times-circle text-slate-300 text-xs"></i>
-                                    @endif
-                                </div>
+                                <p class="text-[9px] text-slate-400 leading-tight">*HPP murni sebelum PPN.</p>
                             </div>
                         </div>
                     </div>
@@ -586,8 +528,7 @@
                         </div>
                     </div>
                     <button wire:click="closeDetail"
-                        class="px-8 py-3 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-black font-bold text-xs uppercase tracking-widest hover:scale-105 transition-transform shadow-lg">Tutup
-                        Detail</button>
+                        class="px-8 py-3 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-black font-bold text-xs uppercase hover:scale-105 transition-transform shadow-lg">Tutup</button>
                 </div>
             </div>
             @else
@@ -602,7 +543,6 @@
 </div>
 
 <style>
-/* Custom Scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
     height: 6px;
 }
@@ -640,7 +580,6 @@
     }
 }
 
-/* Pattern Dot untuk Hiasan Header */
 .pattern-dots {
     background-image: radial-gradient(rgba(255, 255, 255, 0.2) 1px, transparent 1px);
     background-size: 8px 8px;
