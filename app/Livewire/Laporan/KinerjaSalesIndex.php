@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Spatie\SimpleExcel\SimpleExcelWriter;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class KinerjaSalesIndex extends Component
 {
@@ -32,6 +33,11 @@ class KinerjaSalesIndex extends Component
     public function updatedFilterCabang() { $this->resetPage(); }
     public function updatedBulan() { $this->resetPage(); }
 
+    public function setTab($tab)
+    {
+        $this->activeTab = $tab;
+    }
+
     public function resetFilter()
     {
         $this->reset(['filterCabang', 'minNominal', 'search']);
@@ -39,6 +45,7 @@ class KinerjaSalesIndex extends Component
         $this->resetPage();
     }
 
+    // --- EXPORT EXCEL (TIDAK BERUBAH) ---
     public function export()
     {
         $data = $this->getDataLaporan(); 
@@ -76,6 +83,67 @@ class KinerjaSalesIndex extends Component
         return $writer->toBrowser();
     }
 
+    // --- [UPDATE] EXPORT PDF UNTUK SEMUA TAB ---
+    public function exportPdf()
+{
+    $dataRaw = $this->getDataLaporan();
+    $laporanCollection = $dataRaw['laporan'];
+    
+    // Setup Variabel Dasar
+    $dateObj = Carbon::parse($this->bulan . '-01');
+    $periodeStr = $dateObj->translatedFormat('F Y');
+    $user = auth()->user()->name ?? 'Administrator';
+    $now = now()->format('d/m/Y H:i');
+
+    $dataView = [
+        'periode' => $periodeStr,
+        'cetak_oleh' => $user,
+        'tgl_cetak' => $now,
+    ];
+
+    $view = '';
+    $fileName = '';
+    
+    // Switch Logic
+    switch ($this->activeTab) {
+        case 'ar':
+            $view = 'livewire.laporan.exports.kinerja-ar-pdf';
+            $fileName = 'Laporan_Monitoring_Kredit_' . $this->bulan . '.pdf';
+            $dataView['data'] = $laporanCollection->sortByDesc('ar_total');
+            break;
+
+        case 'supplier':
+            $view = 'livewire.laporan.exports.kinerja-supplier-pdf';
+            $fileName = 'Laporan_Penjualan_Supplier_' . $this->bulan . '.pdf';
+            $dataView['data'] = $laporanCollection->sortByDesc('total_supplier_val');
+            $dataView['topSuppliers'] = $dataRaw['topSuppliers'];
+            $dataView['matrixSupplier'] = $dataRaw['matrixSupplier'];
+            break;
+
+        case 'produktifitas':
+            $view = 'livewire.laporan.exports.kinerja-produktivitas-pdf';
+            $fileName = 'Laporan_Produktivitas_Sales_' . $this->bulan . '.pdf';
+            $dataView['data'] = $laporanCollection->sortByDesc('ec');
+            $dataView['minNominal'] = $this->minNominal;
+            break;
+
+        case 'penjualan':
+        default:
+            // Kita ganti nama viewnya agar fresh
+            $view = 'livewire.laporan.exports.kinerja-penjualan-pdf'; 
+            $fileName = 'Laporan_Kinerja_Penjualan_' . $this->bulan . '.pdf';
+            $dataView['data'] = $laporanCollection->sortByDesc('persen_ims');
+            break;
+    }
+
+    $pdf = Pdf::loadView($view, $dataView)->setPaper('a4', 'landscape');
+
+    return response()->streamDownload(function () use ($pdf) {
+        echo $pdf->output();
+    }, $fileName);
+}
+
+    // --- LOGIC DATA (TIDAK DIUBAH) ---
     private function getDataLaporan()
     {
         $bulanPilih = $this->bulan ?: date('Y-m');
@@ -85,7 +153,6 @@ class KinerjaSalesIndex extends Component
         
         $currentMin = (float) str_replace(['.', ','], '', $this->minNominal ?: 0);
 
-        // 1. Query Master Sales
         $salesQuery = Sales::query();
         if ($this->search) {
             $salesQuery->where(function($q) {
@@ -98,13 +165,11 @@ class KinerjaSalesIndex extends Component
         $salesQuery->whereIn('status', ['Active', 'aktif', 'Aktif']);
         $allSales = $salesQuery->orderBy('sales_name')->get();
 
-        // 2. Ambil Target
         $targets = SalesTarget::where('year', $dateObj->year)
             ->where('month', $dateObj->month)
             ->get()
             ->keyBy('sales_id');
 
-        // 3. Logic EC & OA (Fixed Logic)
         $subQuery = DB::table('penjualans')
             ->select('sales_name', 'trans_no', 'kode_pelanggan', DB::raw("SUM(total_grand) as total_per_nota"))
             ->whereBetween('tgl_penjualan', [$start, $end])
@@ -122,20 +187,17 @@ class KinerjaSalesIndex extends Component
             ->get()
             ->keyBy('sales_name');
 
-        // 4. Statistik AR
         $arStats = AccountReceivable::selectRaw("sales_name, 
             SUM(nilai) as total_ar, 
             SUM(CASE WHEN umur_piutang <= 30 THEN nilai ELSE 0 END) as ar_lancar, 
             SUM(CASE WHEN umur_piutang > 30 THEN nilai ELSE 0 END) as ar_macet")
             ->groupBy('sales_name')->get()->keyBy('sales_name');
 
-        // 5. Statistik Supplier (REVISI: TAMPIL SEMUA / TANPA LIMIT)
         $topSuppliers = Penjualan::select('supplier', DB::raw("SUM(total_grand) as val"))
             ->whereBetween('tgl_penjualan', [$start, $end])
             ->whereNotNull('supplier')
             ->groupBy('supplier')
             ->orderByDesc('val')
-            // ->limit(10) // Limit dihapus agar tampil semua
             ->pluck('supplier');
 
         $rawPivot = Penjualan::selectRaw("sales_name, supplier, SUM(total_grand) as total")
@@ -147,7 +209,6 @@ class KinerjaSalesIndex extends Component
         $matrixSupplier = [];
         foreach ($rawPivot as $p) { $matrixSupplier[$p->sales_name][$p->supplier] = $p->total; }
 
-        // 6. Mapping Data
         $laporan = [];
         foreach ($allSales as $sales) {
             $name = $sales->sales_name;
@@ -186,7 +247,7 @@ class KinerjaSalesIndex extends Component
 
         return [
             'laporan' => collect($laporan)->sortByDesc('persen_ims')->values(),
-            'topSuppliers' => $topSuppliers, // Sekarang berisi semua supplier
+            'topSuppliers' => $topSuppliers, 
             'matrixSupplier' => $matrixSupplier
         ];
     }

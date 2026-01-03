@@ -1,4 +1,4 @@
-<div class="min-h-screen space-y-6 pb-20 transition-colors duration-300 font-jakarta"
+<div class="min-h-screen space-y-6 pb-20 transition-colors duration-300 font-jakarta bg-slate-50 dark:bg-[#050505]"
     x-data="{ activeTab: @entangle('activeTab').live }">
 
     {{-- HEADER & NAVIGASI --}}
@@ -34,7 +34,7 @@
                         placeholder="Cari Kode/Nama...">
                 </div>
 
-                {{-- FILTER MINIMAL NOTA (Hanya muncul di tab Produktivitas) --}}
+                {{-- FILTER MINIMAL NOTA --}}
                 <div x-show="activeTab === 'produktifitas'" x-transition
                     class="flex items-center dark:bg-black/40 bg-white border dark:border-white/10 border-slate-200 rounded-xl px-3 shadow-inner h-[38px]">
                     <span
@@ -51,16 +51,11 @@
                         class="w-full flex items-center justify-between border px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm h-[38px]
                         dark:bg-black/40 dark:border-white/10 dark:text-slate-300 bg-white border-slate-200 text-slate-700 hover:border-amber-400 dark:hover:border-amber-500/50">
                         <span class="truncate">
-                            @if(count($filterCabang) > 0)
-                            {{ count($filterCabang) }} Regional
-                            @else
-                            Pilih Cabang
-                            @endif
+                            @if(count($filterCabang) > 0) {{ count($filterCabang) }} Regional @else Pilih Cabang @endif
                         </span>
                         <i class="fas fa-chevron-down opacity-40 text-[10px] transition-transform"
                             :class="open ? 'rotate-180' : ''"></i>
                     </button>
-
                     <div x-show="open" x-cloak x-transition class="absolute z-[100] mt-2 w-56 border rounded-2xl shadow-2xl p-2 max-h-72 overflow-y-auto custom-scrollbar
                         dark:bg-[#1a1a1a] dark:border-white/10 bg-white border-slate-200">
                         @foreach($optCabang as $c)
@@ -86,9 +81,24 @@
                     <button wire:click="resetFilter"
                         class="px-4 py-2 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 rounded-xl text-[10px] hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 transition-all shadow-sm h-[38px]"
                         title="Reset Filter"><i class="fas fa-undo"></i></button>
+
                     <button wire:click="export"
                         class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-amber-600/20 h-[38px] flex items-center gap-2 transition-transform active:scale-95">
-                        <i class="fas fa-file-excel"></i> Ekspor
+                        <i class="fas fa-file-excel"></i> Excel
+                    </button>
+
+                    {{-- TOMBOL PDF DINAMIS --}}
+                    <button wire:click="exportPdf" wire:loading.attr="disabled"
+                        class="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-600/20 h-[38px] flex items-center gap-2 transition-transform active:scale-95">
+                        <i class="fas fa-file-pdf"></i>
+                        <span>
+                            @if($activeTab == 'penjualan') Cetak Rapor
+                            @elseif($activeTab == 'ar') Cetak Kredit
+                            @elseif($activeTab == 'supplier') Cetak Supplier
+                            @elseif($activeTab == 'produktifitas') Cetak Produktivitas
+                            @else Cetak PDF @endif
+                        </span>
+                        <i wire:loading wire:target="exportPdf" class="fas fa-spinner fa-spin ml-1"></i>
                     </button>
                 </div>
             </div>
@@ -99,16 +109,14 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 px-4 sm:px-6 lg:px-8">
         <div
             class="p-5 rounded-[2rem] border transition-all dark:bg-slate-900/40 bg-white border-slate-100 dark:border-white/5 shadow-xl flex flex-col justify-center">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 opacity-60">Target Omzet
-            </p>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 opacity-60">Target Omzet</p>
             <h3 class="text-xl font-black dark:text-white text-slate-800 tracking-tighter">Rp
                 {{ $this->formatCompact($globalSummary['total_target']) }}</h3>
         </div>
         <div
             class="relative p-5 rounded-[2rem] border transition-all overflow-hidden dark:bg-emerald-500/10 dark:border-emerald-500/20 bg-emerald-600 text-white shadow-xl shadow-emerald-600/20">
             <p class="text-emerald-100 text-[10px] font-black uppercase tracking-widest mb-1 opacity-80">Realisasi
-                Bersih
-            </p>
+                Bersih</p>
             <h3 class="text-2xl font-black tracking-tighter">Rp {{ $this->formatCompact($globalSummary['total_real']) }}
             </h3>
             <i class="fas fa-arrow-trend-up absolute -right-2 -bottom-2 text-5xl opacity-10 rotate-12"></i>
@@ -132,22 +140,22 @@
     <div class="px-4 sm:px-6 lg:px-8">
         <div
             class="flex space-x-2 dark:bg-white/5 bg-slate-100 p-1.5 rounded-2xl w-fit overflow-x-auto border dark:border-white/5 border-slate-200">
-            <button @click="activeTab = 'penjualan'"
+            <button wire:click="setTab('penjualan')"
                 :class="activeTab === 'penjualan' ? 'bg-white dark:bg-emerald-600 text-emerald-600 dark:text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
                 class="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-2">
                 <i class="fas fa-chart-line"></i> Kinerja Penjualan
             </button>
-            <button @click="activeTab = 'ar'"
+            <button wire:click="setTab('ar')"
                 :class="activeTab === 'ar' ? 'bg-white dark:bg-orange-600 text-orange-600 dark:text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
                 class="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-2">
                 <i class="fas fa-money-bill-wave"></i> Monitoring Kredit
             </button>
-            <button @click="activeTab = 'supplier'"
+            <button wire:click="setTab('supplier')"
                 :class="activeTab === 'supplier' ? 'bg-white dark:bg-purple-600 text-purple-600 dark:text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
                 class="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-2">
                 <i class="fas fa-boxes-stacked"></i> Penjualan By Supplier
             </button>
-            <button @click="activeTab = 'produktifitas'"
+            <button wire:click="setTab('produktifitas')"
                 :class="activeTab === 'produktifitas' ? 'bg-white dark:bg-blue-600 text-blue-600 dark:text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
                 class="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-2">
                 <i class="fas fa-users-viewfinder"></i> Analisa Produktivitas
@@ -163,6 +171,7 @@
 
             {{-- 1. TAB KINERJA PENJUALAN --}}
             <div x-show="activeTab === 'penjualan'" x-transition>
+                {{-- ... TABLE KINERJA PENJUALAN (COPY DARI SEBELUMNYA) ... --}}
                 <div class="p-6 border-b dark:border-white/5 border-slate-100 bg-emerald-50/20 dark:bg-emerald-500/10">
                     <span
                         class="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">Matriks
@@ -199,20 +208,13 @@
                                 </td>
                                 <td
                                     class="px-6 py-4 text-right font-mono text-slate-500 dark:text-slate-400 border-r border-slate-50 dark:border-white/5">
-                                    {{ number_format($row['target_ims'], 0, ',', '.') }}
-                                </td>
+                                    {{ number_format($row['target_ims'], 0, ',', '.') }}</td>
                                 <td
                                     class="px-6 py-4 text-right font-black text-emerald-700 dark:text-emerald-400 border-r border-slate-50 dark:border-white/5 bg-emerald-500/[0.01] dark:bg-emerald-500/[0.05]">
-                                    {{ number_format($row['real_ims'], 0, ',', '.') }}
-                                </td>
+                                    {{ number_format($row['real_ims'], 0, ',', '.') }}</td>
                                 <td class="px-6 py-4 text-center border-r border-slate-50 dark:border-white/5">
                                     <span
-                                        class="px-3 py-1 rounded-full text-[9px] font-black tracking-widest border 
-                                        {{ $row['persen_ims'] >= 100 
-                                            ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border-emerald-500/20' 
-                                            : ($row['persen_ims'] >= 80 
-                                                ? 'bg-amber-500/10 text-amber-500 dark:text-amber-400 border-amber-500/20' 
-                                                : 'bg-rose-500/10 text-rose-500 dark:text-rose-400 border-rose-500/20') }}">
+                                        class="px-3 py-1 rounded-full text-[9px] font-black tracking-widest border {{ $row['persen_ims'] >= 100 ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border-emerald-500/20' : ($row['persen_ims'] >= 80 ? 'bg-amber-500/10 text-amber-500 dark:text-amber-400 border-amber-500/20' : 'bg-rose-500/10 text-rose-500 dark:text-rose-400 border-rose-500/20') }}">
                                         {{ number_format($row['persen_ims'], 1) }}%
                                     </span>
                                 </td>
@@ -229,6 +231,7 @@
 
             {{-- 2. TAB MONITORING KREDIT --}}
             <div x-show="activeTab === 'ar'" x-transition style="display: none;">
+                {{-- ... TABLE MONITORING KREDIT ... --}}
                 <div class="p-6 border-b dark:border-white/5 border-slate-100 bg-orange-50/20 dark:bg-orange-500/10">
                     <span
                         class="text-[11px] font-black uppercase tracking-[0.2em] text-orange-600 dark:text-orange-400">Monitor
@@ -280,6 +283,7 @@
 
             {{-- 3. TAB MIX SUPPLIER --}}
             <div x-show="activeTab === 'supplier'" x-transition style="display: none;">
+                {{-- ... TABLE MIX SUPPLIER ... --}}
                 <div class="p-6 border-b dark:border-white/5 border-slate-100 bg-purple-50/20 dark:bg-purple-500/10">
                     <span
                         class="text-[11px] font-black uppercase tracking-[0.2em] text-purple-600 dark:text-purple-400">Matriks
@@ -296,9 +300,7 @@
                                     Personel Sales</th>
                                 @foreach($topSuppliers as $supp)
                                 <th class="px-6 py-5 text-right border-r border-slate-100 dark:border-white/5 w-32 truncate"
-                                    title="{{ $supp }}">
-                                    {{ Str::limit($supp, 15) }}
-                                </th>
+                                    title="{{ $supp }}">{{ Str::limit($supp, 15) }}</th>
                                 @endforeach
                                 <th
                                     class="px-6 py-5 text-center bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border-l dark:border-white/5 sticky right-32 z-30">
@@ -321,19 +323,15 @@
                                     class="px-6 py-4 text-right border-r border-slate-50 dark:border-white/5 font-mono text-slate-500 dark:text-slate-400">
                                     @php $val = $matrixSupplier[$row['nama']][$supp] ?? 0; @endphp
                                     <span
-                                        class="{{ $val > 0 ? 'text-slate-800 dark:text-slate-200 font-bold' : 'opacity-20' }}">
-                                        {{ $val > 0 ? number_format($val, 0, ',', '.') : '-' }}
-                                    </span>
+                                        class="{{ $val > 0 ? 'text-slate-800 dark:text-slate-200 font-bold' : 'opacity-20' }}">{{ $val > 0 ? number_format($val, 0, ',', '.') : '-' }}</span>
                                 </td>
                                 @endforeach
                                 <td
                                     class="px-6 py-4 text-center font-black bg-purple-50 dark:bg-purple-900/10 border-l dark:border-white/5 sticky right-32 z-10 text-purple-700 dark:text-purple-400">
-                                    {{ $row['jml_supplier'] }}
-                                </td>
+                                    {{ $row['jml_supplier'] }}</td>
                                 <td
                                     class="px-6 py-4 text-right font-black bg-purple-100 dark:bg-purple-800/20 text-purple-900 dark:text-purple-200 sticky right-0 z-10">
-                                    {{ number_format($row['total_supplier_val'], 0, ',', '.') }}
-                                </td>
+                                    {{ number_format($row['total_supplier_val'], 0, ',', '.') }}</td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -343,6 +341,7 @@
 
             {{-- 4. TAB ANALISA PRODUKTIVITAS --}}
             <div x-show="activeTab === 'produktifitas'" x-transition style="display: none;">
+                {{-- ... TABLE PRODUKTIVITAS ... --}}
                 <div
                     class="p-6 border-b dark:border-white/5 border-slate-100 bg-blue-50/20 dark:bg-blue-500/10 flex justify-between items-center">
                     <span
@@ -382,8 +381,7 @@
                                     {{ $row['real_oa'] }}</td>
                                 <td
                                     class="px-6 py-4 text-center font-black text-emerald-600 dark:text-emerald-400 text-lg">
-                                    {{ $row['ec'] }}
-                                </td>
+                                    {{ $row['ec'] }}</td>
                                 <td class="px-6 py-4 text-center border-l border-slate-50 dark:border-white/5">
                                     @php $ratio = $row['real_oa'] > 0 ? ($row['ec'] / $row['real_oa']) * 100 : 0;
                                     @endphp
