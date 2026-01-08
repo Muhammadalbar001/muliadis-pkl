@@ -30,6 +30,15 @@
         font-size: 10px;
     }
 
+    /* STYLE BARU UNTUK DESKRIPSI */
+    .description {
+        text-align: center;
+        font-size: 9px;
+        color: #64748b;
+        margin-top: 5px;
+        font-style: italic;
+    }
+
     table {
         width: 100%;
         border-collapse: collapse;
@@ -88,13 +97,25 @@
         border-top: 1px solid #e2e8f0;
         padding-top: 5px;
     }
+
+    .page-number:after {
+        content: counter(page);
+    }
     </style>
 </head>
 
 <body>
     <div class="header">
         <h1>Laporan Pencapaian Target Sales</h1>
-        <p>Periode: {{ $periode }}</p>
+
+        {{-- DESKRIPSI TAMBAHAN --}}
+        <p class="description">
+            Laporan ini menyajikan perbandingan antara target penjualan yang ditetapkan dengan realisasi penjualan
+            aktual per salesman.
+            Data digunakan untuk mengevaluasi kinerja tim sales dalam periode berjalan.
+        </p>
+
+        <p style="margin-top: 8px;"><strong>Periode:</strong> {{ $periode }}</p>
         <p>Dicetak Oleh: {{ $cetak_oleh }} | Tanggal: {{ $tgl_cetak }}</p>
     </div>
 
@@ -129,10 +150,26 @@
             </tr>
             @endforeach
         </tbody>
+        <tfoot>
+            <tr style="background-color: #1e3a8a; color: white; font-weight: bold;">
+                <td colspan="4" class="text-right" style="padding: 8px;">TOTAL KESELURUHAN :</td>
+                <td class="text-right">{{ number_format($data->sum('target_ims'), 0, ',', '.') }}</td>
+                <td class="text-right">{{ number_format($data->sum('real_ims'), 0, ',', '.') }}</td>
+                <td class="text-center">
+                    @php
+                    $totT = $data->sum('target_ims');
+                    $totR = $data->sum('real_ims');
+                    $totP = $totT > 0 ? ($totR / $totT) * 100 : 0;
+                    @endphp
+                    {{ number_format($totP, 1) }}%
+                </td>
+                <td class="text-right">{{ number_format($data->sum('gap'), 0, ',', '.') }}</td>
+            </tr>
+        </tfoot>
     </table>
 
     <div class="footer">
-        Dokumen Rahasia Perusahaan - Halaman <span class="page-number"></span>
+        Dokumen Rahasia Perusahaan | Halaman <span class="page-number"></span>
     </div>
 </body>
 

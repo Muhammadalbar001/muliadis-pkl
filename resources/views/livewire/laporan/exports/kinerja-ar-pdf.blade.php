@@ -30,6 +30,15 @@
         font-size: 10px;
     }
 
+    /* DESKRIPSI TAMBAHAN */
+    .description {
+        text-align: center;
+        font-size: 9px;
+        color: #64748b;
+        margin-top: 5px;
+        font-style: italic;
+    }
+
     table {
         width: 100%;
         border-collapse: collapse;
@@ -83,13 +92,24 @@
         border-top: 1px solid #e2e8f0;
         padding-top: 5px;
     }
+
+    .page-number:after {
+        content: counter(page);
+    }
     </style>
 </head>
 
 <body>
     <div class="header">
         <h1>Laporan Monitoring Piutang & Kredit</h1>
-        <p>Periode: {{ $periode }}</p>
+
+        {{-- DESKRIPSI TAMBAHAN --}}
+        <p class="description">
+            Laporan ini memantau status piutang dagang (AR) yang beredar di pelanggan. Data ini mencakup total piutang,
+            piutang lancar, serta piutang macet (>30 hari) untuk mengukur risiko kredit per salesman.
+        </p>
+
+        <p style="margin-top: 8px;"><strong>Periode Data:</strong> {{ $periode }}</p>
         <p>Dicetak Oleh: {{ $cetak_oleh }} | Tanggal: {{ $tgl_cetak }}</p>
     </div>
 
@@ -103,7 +123,7 @@
                 <th width="15%">Total Piutang</th>
                 <th width="15%">Piutang Lancar</th>
                 <th width="15%">Macet (>30 Hari)</th>
-                <th width="5%">Rasio</th>
+                <th width="5%">Rasio Macet</th>
             </tr>
         </thead>
         <tbody>
@@ -122,10 +142,26 @@
             </tr>
             @endforeach
         </tbody>
+        <tfoot>
+            <tr style="background-color: #c2410c; color: white; font-weight: bold;">
+                <td colspan="4" class="text-right" style="padding: 8px;">GRAND TOTAL :</td>
+                <td class="text-right">{{ number_format($data->sum('ar_total'), 0, ',', '.') }}</td>
+                <td class="text-right">{{ number_format($data->sum('ar_lancar'), 0, ',', '.') }}</td>
+                <td class="text-right">{{ number_format($data->sum('ar_macet'), 0, ',', '.') }}</td>
+                <td class="text-center">
+                    @php
+                    $tAR = $data->sum('ar_total');
+                    $tMacet = $data->sum('ar_macet');
+                    $tRasio = $tAR > 0 ? ($tMacet / $tAR) * 100 : 0;
+                    @endphp
+                    {{ number_format($tRasio, 1) }}%
+                </td>
+            </tr>
+        </tfoot>
     </table>
 
     <div class="footer">
-        Dokumen Rahasia Perusahaan
+        Dokumen Rahasia Perusahaan | Halaman <span class="page-number"></span>
     </div>
 </body>
 

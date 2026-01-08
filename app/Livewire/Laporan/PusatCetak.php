@@ -14,18 +14,29 @@ use Carbon\Carbon;
 
 class PusatCetak extends Component
 {
-    // Filter Global Sales
+    // Filter Global
     public $bulan;
     public $tahun;
     public $minNominal = 50000;
 
-    // Filter Stok
+    // --- DATA OPSI (List untuk Dropdown) ---
+    public $salesOptions = [];
+    public $productOptionsStok = [];
+    public $productOptionsProfit = [];
+
+    // --- SALES ---
+    public $selectedCabangSales = 'Semua Cabang'; 
+    public $selectedSalesIds = []; // Array ID Sales terpilih
+
+    // --- STOK ---
     public $selectedCabangStok;
-    public $selectedSupplierStok;
-    
-    // Filter Profit (DIPERBARUI)
+    public $selectedSupplierStok = []; // Array Nama Supplier
+    public $selectedProductStok = []; // Array SKU Produk
+
+    // --- PROFIT ---
     public $selectedCabangProfit;
-    public $selectedSupplierProfit; // Tambahan Baru
+    public $selectedSupplierProfit = []; // Array Nama Supplier
+    public $selectedProductProfit = []; // Array SKU Produk
 
     public function mount()
     {
@@ -33,21 +44,119 @@ class PusatCetak extends Component
         $this->tahun = date('Y');
         
         $firstBranch = Produk::whereNotNull('cabang')->where('cabang', '!=', '')->orderBy('cabang')->first();
-        
-        // Default Cabang
-        $cabangDefault = $firstBranch->cabang ?? '';
-        $this->selectedCabangStok = $cabangDefault;
-        $this->selectedCabangProfit = $cabangDefault;
+        $defaultCabang = $firstBranch->cabang ?? '';
+
+        $this->selectedCabangStok = $defaultCabang;
+        $this->selectedCabangProfit = $defaultCabang;
+
+        // Load Data Awal
+        $this->loadSalesOptions();
+        $this->loadProductStok();
+        $this->loadProductProfit();
     }
 
-    // --- 1. LOGIC CETAK KINERJA SALES ---
+    // ========================================================================
+    // LOGIC LOAD DATA (DEPENDENCY)
+    // ========================================================================
+
+    public function loadSalesOptions()
+    {
+        $query = Sales::where('status', 'Active');
+        
+        if ($this->selectedCabangSales !== 'Semua Cabang' && !empty($this->selectedCabangSales)) {
+            $query->where('city', $this->selectedCabangSales);
+        }
+        
+        $this->salesOptions = $query->orderBy('sales_name')->get(['id', 'sales_name', 'sales_code'])->toArray();
+    }
+
+    // Trigger saat Cabang Sales berubah
+    public function updatedSelectedCabangSales()
+    {
+        $this->selectedSalesIds = []; // Reset pilihan
+        $this->loadSalesOptions();
+    }
+
+    // --- LOGIC STOK ---
+    public function updatedSelectedSupplierStok()
+    {
+        $this->selectedProductStok = []; // Reset produk saat supplier ganti
+        $this->loadProductStok();
+    }
+
+    public function updatedSelectedCabangStok()
+    {
+        $this->selectedSupplierStok = [];
+        $this->selectedProductStok = [];
+        $this->loadProductStok();
+    }
+
+    public function loadProductStok()
+    {
+        $query = Produk::where('cabang', $this->selectedCabangStok);
+
+        if (!empty($this->selectedSupplierStok)) {
+            $query->whereIn('supplier', $this->selectedSupplierStok);
+        }
+
+        // Ambil max 500 produk agar tidak berat, user bisa search di frontend
+        $this->productOptionsStok = $query->orderBy('name_item')
+            ->select('sku', 'name_item')
+            ->limit(500) 
+            ->get()->toArray();
+    }
+
+    // --- LOGIC PROFIT ---
+    public function updatedSelectedSupplierProfit()
+    {
+        $this->selectedProductProfit = []; 
+        $this->loadProductProfit();
+    }
+
+    public function updatedSelectedCabangProfit()
+    {
+        $this->selectedSupplierProfit = [];
+        $this->selectedProductProfit = [];
+        $this->loadProductProfit();
+    }
+
+    public function loadProductProfit()
+    {
+        $query = Produk::where('cabang', $this->selectedCabangProfit);
+
+        if (!empty($this->selectedSupplierProfit)) {
+            $query->whereIn('supplier', $this->selectedSupplierProfit);
+        }
+
+        $this->productOptionsProfit = $query->orderBy('name_item')
+            ->select('sku', 'name_item')
+            ->limit(500)
+            ->get()->toArray();
+    }
+
+
+    // ========================================================================
+    // 1. LOGIC CETAK KINERJA SALES
+    // ========================================================================
     public function cetakSales($jenis)
     {
-        // ... (LOGIC SAMA SEPERTI SEBELUMNYA, TIDAK BERUBAH) ...
-        // Agar hemat tempat, saya persingkat di sini. 
-        // Pastikan logic cetakSales Anda tetap ada seperti file sebelumnya.
-        
-        $salesman = Sales::where('status', 'Active')->orderBy('sales_name')->get();
+        $querySales = Sales::where('status', 'Active');
+
+        // Filter Multi Select Sales (Berdasarkan ID)
+        if (!empty($this->selectedSalesIds)) {
+            $querySales->whereIn('id', $this->selectedSalesIds);
+        } elseif ($this->selectedCabangSales !== 'Semua Cabang') {
+            $querySales->where('city', $this->selectedCabangSales);
+        }
+
+        $salesman = $querySales->orderBy('sales_name')->get();
+
+        if ($salesman->isEmpty()) {
+            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Data Salesman tidak ditemukan.']);
+            return;
+        }
+
+        // ... (Logic Pengambilan Data Statistik Tetap Sama - Copy Paste dari sebelumnya) ...
         $dateObj = Carbon::createFromDate($this->tahun, $this->bulan, 1);
         $start = $dateObj->startOfMonth()->format('Y-m-d');
         $end = $dateObj->endOfMonth()->format('Y-m-d');
@@ -77,12 +186,10 @@ class PusatCetak extends Component
             $name = $sales->sales_name;
             $t = $targets->get($sales->id);
             $ar = $arStats->first(fn($i) => strtoupper($i->sales_name) === strtoupper($name));
-            
             $myStats = $salesStats->where('sales_name', $name);
             $realIMS = $myStats->sum('total_per_nota');
             $realOA = $myStats->unique('kode_pelanggan')->count();
             $realEC = $myStats->filter(fn($row) => $row->total_per_nota >= $this->minNominal)->unique('trans_no')->count();
-
             $targetIMS = $t ? (float)$t->target_ims : 0;
             $arTotal = $ar ? (float)$ar->total_ar : 0;
             $arMacet = $ar ? (float)$ar->ar_macet : 0;
@@ -108,33 +215,33 @@ class PusatCetak extends Component
             ];
         });
 
+        // Setup View
         $periodeStr = $dateObj->translatedFormat('F Y');
         $user = auth()->user()->name ?? 'System';
         $now = now()->format('d F Y H:i');
-        
         $view = ''; $fileName = ''; $dataView = ['periode' => $periodeStr, 'cetak_oleh' => $user, 'tgl_cetak' => $now];
 
         switch ($jenis) {
             case 'penjualan':
                 $view = 'livewire.laporan.exports.kinerja-penjualan-pdf';
-                $fileName = 'Laporan_Kinerja_Penjualan_'.$periodeStr.'.pdf';
+                $fileName = 'Kinerja_Penjualan_'.$periodeStr.'.pdf';
                 $dataView['data'] = $laporan->sortByDesc('persen_ims')->values();
                 break;
             case 'ar':
                 $view = 'livewire.laporan.exports.kinerja-ar-pdf';
-                $fileName = 'Laporan_Monitoring_Kredit_'.$periodeStr.'.pdf';
+                $fileName = 'Monitoring_Kredit_'.$periodeStr.'.pdf';
                 $dataView['data'] = $laporan->sortByDesc('ar_total')->values();
                 break;
             case 'supplier':
                 $view = 'livewire.laporan.exports.kinerja-supplier-pdf';
-                $fileName = 'Laporan_Penjualan_Supplier_'.$periodeStr.'.pdf';
+                $fileName = 'Penjualan_Supplier_'.$periodeStr.'.pdf';
                 $dataView['data'] = $laporan->sortByDesc('total_supplier_val')->values();
                 $dataView['topSuppliers'] = $topSuppliers;
                 $dataView['matrixSupplier'] = $matrixSupplier;
                 break;
             case 'produktifitas':
                 $view = 'livewire.laporan.exports.kinerja-produktivitas-pdf';
-                $fileName = 'Laporan_Produktivitas_'.$periodeStr.'.pdf';
+                $fileName = 'Produktivitas_'.$periodeStr.'.pdf';
                 $dataView['data'] = $laporan->sortByDesc('ec')->values();
                 $dataView['minNominal'] = $this->minNominal;
                 break;
@@ -144,21 +251,32 @@ class PusatCetak extends Component
         return response()->streamDownload(function () use ($pdf) { echo $pdf->output(); }, $fileName);
     }
 
-    // --- 2. LOGIC CETAK ANALISA STOK ---
+    // ========================================================================
+    // 2. LOGIC CETAK ANALISA STOK
+    // ========================================================================
     public function cetakStok()
     {
         $query = Produk::query()->where('cabang', $this->selectedCabangStok);
 
+        // Filter Multi Supplier
         if (!empty($this->selectedSupplierStok)) {
-            $query->where('supplier', $this->selectedSupplierStok);
-            $label = $this->selectedSupplierStok;
+            $query->whereIn('supplier', $this->selectedSupplierStok);
+            $label = count($this->selectedSupplierStok) . ' Supplier Terpilih';
         } else {
             $label = 'SEMUA PEMASOK';
         }
 
+        // Filter Multi Produk (Berdasarkan SKU yang dipilih di dropdown)
+        if (!empty($this->selectedProductStok)) {
+            $query->whereIn('sku', $this->selectedProductStok);
+        }
+
         $data = $query->orderBy('supplier')->orderBy('name_item')->get();
 
-        if ($data->isEmpty()) { return; }
+        if ($data->isEmpty()) { 
+            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Data Stok kosong.']);
+            return; 
+        }
 
         $totalQty = 0; $totalAset = 0;
         foreach($data as $item) {
@@ -183,30 +301,32 @@ class PusatCetak extends Component
             'user' => auth()->user()->name ?? 'System'
         ])->setPaper('a4', 'landscape');
 
-        return response()->streamDownload(function () use ($pdf) { echo $pdf->output(); }, 'Laporan_Valuasi_Stok.pdf');
+        return response()->streamDownload(function () use ($pdf) { echo $pdf->output(); }, 'Valuasi_Stok.pdf');
     }
 
-    // --- 3. LOGIC CETAK LABA RUGI (DIPERBARUI) ---
+    // ========================================================================
+    // 3. LOGIC CETAK LABA RUGI
+    // ========================================================================
     public function cetakProfit()
     {
-        // 1. Query Dasar
         $query = Produk::query()->where('cabang', $this->selectedCabangProfit);
 
-        // 2. Tambahkan Filter Supplier
         if (!empty($this->selectedSupplierProfit)) {
-            $query->where('supplier', $this->selectedSupplierProfit);
-            $labelSupplier = $this->selectedSupplierProfit;
+            $query->whereIn('supplier', $this->selectedSupplierProfit);
+            $labelSupplier = count($this->selectedSupplierProfit) . ' Supplier Terpilih';
         } else {
             $labelSupplier = 'SEMUA PEMASOK';
         }
 
-        // 3. Eksekusi & Mapping
+        if (!empty($this->selectedProductProfit)) {
+            $query->whereIn('sku', $this->selectedProductProfit);
+        }
+
         $products = $query->orderBy('supplier')->orderBy('name_item')->get()
             ->map(function ($item) {
                 $modalDasar = (float) $item->avg > 0 ? (float) $item->avg : (float) $item->buy;
                 $rawPpn = $item->ppn; 
                 $persenPpn = (is_numeric($rawPpn) && $rawPpn > 0) ? (float) $rawPpn : (strtoupper(trim($rawPpn)) === 'Y' ? 11 : 0);
-                
                 $hppFinal = $modalDasar + ($modalDasar * ($persenPpn / 100));
                 $hargaJual = (float) $item->fix; 
                 $marginRp = $hargaJual - $hppFinal;
@@ -225,45 +345,39 @@ class PusatCetak extends Component
             });
 
         if ($products->isEmpty()) {
-            return; // Atau dispatch notifikasi data kosong
+            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Data kosong.']);
+            return;
         }
 
-        // 4. Generate PDF
         $pdf = Pdf::loadView('livewire.pimpinan.exports.profit-pdf', [
             'cabang' => $this->selectedCabangProfit,
             'products' => $products,
-            'suppliers' => $labelSupplier, // Kirim nama supplier terpilih ke PDF
+            'suppliers' => $labelSupplier,
             'tanggal_cetak' => now()->format('d F Y H:i'),
             'user_pencetak' => auth()->user()->name ?? 'System'
         ])->setPaper('a4', 'landscape');
 
-        return response()->streamDownload(function () use ($pdf) { echo $pdf->output(); }, 'Laporan_Laba_Rugi.pdf');
+        return response()->streamDownload(function () use ($pdf) { echo $pdf->output(); }, 'Laba_Rugi.pdf');
     }
 
     public function render()
     {
         $cabangOptions = Produk::select('cabang')->distinct()->whereNotNull('cabang')->where('cabang','!=','')->orderBy('cabang')->pluck('cabang');
         
-        // Option Supplier untuk Card Stok
         $supplierOptionsStok = [];
         if($this->selectedCabangStok) {
-            $supplierOptionsStok = Produk::select('supplier')
-                ->where('cabang', $this->selectedCabangStok)
-                ->distinct()->orderBy('supplier')->pluck('supplier');
+            $supplierOptionsStok = Produk::select('supplier')->where('cabang', $this->selectedCabangStok)->distinct()->orderBy('supplier')->pluck('supplier');
         }
 
-        // Option Supplier untuk Card Profit (DIPERBARUI)
         $supplierOptionsProfit = [];
         if($this->selectedCabangProfit) {
-            $supplierOptionsProfit = Produk::select('supplier')
-                ->where('cabang', $this->selectedCabangProfit)
-                ->distinct()->orderBy('supplier')->pluck('supplier');
+            $supplierOptionsProfit = Produk::select('supplier')->where('cabang', $this->selectedCabangProfit)->distinct()->orderBy('supplier')->pluck('supplier');
         }
 
         return view('livewire.laporan.pusat-cetak', [
             'cabangOptions' => $cabangOptions,
             'supplierOptionsStok' => $supplierOptionsStok,
-            'supplierOptionsProfit' => $supplierOptionsProfit // Kirim ke view
+            'supplierOptionsProfit' => $supplierOptionsProfit
         ])->layout('layouts.app', ['header' => 'Pusat Cetak']);
     }
 }

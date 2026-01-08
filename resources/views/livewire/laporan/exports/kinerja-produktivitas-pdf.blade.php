@@ -30,6 +30,15 @@
         font-size: 10px;
     }
 
+    /* DESKRIPSI TAMBAHAN */
+    .description {
+        text-align: center;
+        font-size: 9px;
+        color: #64748b;
+        margin-top: 5px;
+        font-style: italic;
+    }
+
     table {
         width: 100%;
         border-collapse: collapse;
@@ -83,14 +92,29 @@
         border-top: 1px solid #e2e8f0;
         padding-top: 5px;
     }
+
+    .page-number:after {
+        content: counter(page);
+    }
     </style>
 </head>
 
 <body>
     <div class="header">
         <h1>Laporan Produktivitas & Efektivitas Kunjungan</h1>
-        <p>Periode: {{ $periode }} | Min. Nota Efektif: Rp {{ number_format($minNominal, 0, ',', '.') }}</p>
-        <p>Dicetak Oleh: {{ $cetak_oleh }}</p>
+
+        {{-- DESKRIPSI TAMBAHAN --}}
+        <p class="description">
+            Laporan ini mengukur produktivitas sales berdasarkan jumlah toko yang dikunjungi (OA - Outlet Active)
+            dibandingkan dengan jumlah nota penjualan yang berhasil dicetak (EC - Effective Call) dengan nilai minimal
+            tertentu.
+        </p>
+
+        <p style="margin-top: 8px;">
+            <strong>Periode:</strong> {{ $periode }} |
+            <strong>Min. Nota Efektif:</strong> Rp {{ number_format($minNominal, 0, ',', '.') }}
+        </p>
+        <p>Dicetak Oleh: {{ $cetak_oleh }} | Tanggal: {{ date('d/m/Y H:i') }}</p>
     </div>
 
     <table>
@@ -123,10 +147,25 @@
             </tr>
             @endforeach
         </tbody>
+        <tfoot>
+            <tr style="background-color: #0369a1; color: white; font-weight: bold;">
+                <td colspan="4" class="text-right" style="padding: 8px;">TOTAL NASIONAL :</td>
+                <td>{{ number_format($data->sum('real_oa'), 0, ',', '.') }}</td>
+                <td>{{ number_format($data->sum('ec'), 0, ',', '.') }}</td>
+                <td>
+                    @php
+                    $tOA = $data->sum('real_oa');
+                    $tEC = $data->sum('ec');
+                    $tRatio = $tOA > 0 ? ($tEC / $tOA) * 100 : 0;
+                    @endphp
+                    {{ number_format($tRatio, 1) }}%
+                </td>
+            </tr>
+        </tfoot>
     </table>
 
     <div class="footer">
-        Dokumen Rahasia Perusahaan
+        Dokumen Rahasia Perusahaan | Halaman <span class="page-number"></span>
     </div>
 </body>
 

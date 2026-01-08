@@ -24,6 +24,8 @@
         /* Garis biru tebal */
         padding-bottom: 10px;
         margin-bottom: 20px;
+        text-align: center;
+        /* Center align header content */
     }
 
     .header-title {
@@ -40,6 +42,16 @@
         color: #555;
         margin: 2px 0 0;
         text-transform: uppercase;
+    }
+
+    /* DESKRIPSI TAMBAHAN */
+    .description {
+        text-align: center;
+        font-size: 9px;
+        color: #64748b;
+        margin-top: 5px;
+        font-style: italic;
+        margin-bottom: 5px;
     }
 
     /* Informasi Metadata Laporan */
@@ -146,6 +158,14 @@
 
     <div class="header">
         <h1 class="header-title">Laporan Analisa Margin & Profitabilitas</h1>
+
+        {{-- DESKRIPSI TAMBAHAN --}}
+        <p class="description">
+            Laporan ini menganalisa selisih (margin) antara Harga Jual Final dengan Harga Pokok Pembelian (HPP) yang
+            telah memperhitungkan PPN Masukan.
+            Margin negatif menandakan harga jual di bawah modal.
+        </p>
+
         <p class="header-subtitle">Cabang: {{ $cabang }}</p>
     </div>
 

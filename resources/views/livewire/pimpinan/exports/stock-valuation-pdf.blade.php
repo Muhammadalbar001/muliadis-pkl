@@ -27,6 +27,15 @@
         font-size: 18px;
     }
 
+    /* DESKRIPSI TAMBAHAN */
+    .description {
+        text-align: center;
+        font-size: 9px;
+        color: #64748b;
+        margin-top: 5px;
+        font-style: italic;
+    }
+
     .meta-info {
         width: 100%;
         margin-bottom: 15px;
@@ -102,6 +111,12 @@
 <body>
     <div class="header">
         <h1>Laporan Valuasi Aset Stok</h1>
+
+        {{-- DESKRIPSI TAMBAHAN --}}
+        <p class="description">
+            Laporan ini menghitung total nilai aset persediaan barang (Inventory Value) berdasarkan stok fisik dikalikan
+            dengan Harga Pokok Pembelian (HPP) Rata-rata.
+        </p>
     </div>
 
     <table class="meta-info">
