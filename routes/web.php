@@ -22,11 +22,12 @@ use App\Livewire\Laporan\RekapPenjualanIndex;
 use App\Livewire\Laporan\RekapReturIndex;
 use App\Livewire\Laporan\RekapArIndex;
 use App\Livewire\Laporan\RekapCollectionIndex;
-
-// --- 5. ANALISA ---
 use App\Livewire\Laporan\KinerjaSalesIndex;
+
+// --- 5. ANALISA & PIMPINAN ---
 use App\Livewire\Pimpinan\StockAnalysis;
 use App\Livewire\Pimpinan\ProfitAnalysis;
+use App\Livewire\Laporan\PusatCetak; // <--- WAJIB ADA INI
 
 // --- PROFILE ---
 use App\Http\Controllers\ProfileController;
@@ -63,7 +64,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::middleware(['role:super_admin'])->get('/user', UserIndex::class)->name('user'); 
         });
 
-        // TRANSAKSI (Pastikan Retur & Collection Ada)
+        // TRANSAKSI
         Route::prefix('transaksi')->name('transaksi.')->group(function () {
             Route::get('/penjualan', PenjualanIndex::class)->name('penjualan');
             Route::get('/retur', ReturIndex::class)->name('retur');
@@ -71,7 +72,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/collection', CollectionIndex::class)->name('collection');
         });
 
-        // LAPORAN REKAP (Pastikan Rekap Retur & Rekap Collection Ada)
+        // LAPORAN REKAP
         Route::prefix('laporan')->name('laporan.')->group(function () {
             Route::get('/rekap-penjualan', RekapPenjualanIndex::class)->name('rekap-penjualan');
             Route::get('/rekap-retur', RekapReturIndex::class)->name('rekap-retur');
@@ -83,6 +84,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // ANALISA PIMPINAN
         Route::get('/stock-analysis', StockAnalysis::class)->name('pimpinan.stock-analysis');
         Route::get('/profit-analysis', ProfitAnalysis::class)->name('pimpinan.profit-analysis');
+
+        // PUSAT CETAK (Ditaruh diluar prefix 'laporan.' agar namanya pas 'pusat-cetak')
+        // Ini sinkron dengan sidebar: route('pusat-cetak')
+        Route::get('/laporan/pusat-cetak', PusatCetak::class)->name('pusat-cetak');
     });
 
 });

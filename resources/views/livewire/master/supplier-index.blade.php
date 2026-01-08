@@ -1,3 +1,4 @@
+<div>
 <div class="min-h-screen space-y-6 pb-10 transition-colors duration-300 font-jakarta" x-data="{ filterOpen: false }">
 
     <div class="sticky top-0 z-40 backdrop-blur-xl border-b transition-all duration-300 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-4 mb-6
@@ -339,3 +340,5 @@
     border-radius: 10px;
 }
 </style>
+
+</div>

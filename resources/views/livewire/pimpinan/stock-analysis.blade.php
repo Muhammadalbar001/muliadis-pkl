@@ -8,7 +8,7 @@
                 <div>
                     <h1
                         class="text-2xl font-black tracking-tighter uppercase leading-none text-slate-800 dark:text-white">
-                        Analisa Stok
+                        Analisa Stok & <span class="text-blue-600 dark:text-blue-400">Valuasi Aset</span>
                     </h1>
                     <p class="text-[10px] font-bold tracking-[0.3em] uppercase mt-1 text-slate-400 dark:text-slate-500">
                         Kecerdasan Multi-Cabang & Pemasok
@@ -42,7 +42,7 @@
                     open: false, 
                     search: '', 
                     selected: @entangle('selectedSuppliers').live,
-                    items: {{ json_encode($suppliersList) }}
+                    items: {{ json_encode($suppliersList) }} 
                  }">
                 <label
                     class="text-[9px] font-black uppercase tracking-widest mb-1.5 block text-slate-500 dark:text-slate-400 ml-1">
@@ -103,20 +103,31 @@
                 </div>
             </div>
 
-            <div class="md:col-span-8 opacity-50 transition-opacity duration-300"
+            <div class="md:col-span-8 flex flex-col md:flex-row gap-4 items-end opacity-50 transition-opacity duration-300"
                 :class="{'opacity-100': selected.length > 0}">
-                <label
-                    class="text-[9px] font-black uppercase tracking-widest mb-1.5 block text-slate-500 dark:text-slate-400 ml-1">
-                    Cari Produk (Dalam Pemasok Terpilih)
-                </label>
-                <div class="relative group">
-                    <i
-                        class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors text-xs"></i>
-                    <input wire:model.live.debounce.300ms="search" type="text" class="w-full pl-10 pr-4 py-2.5 rounded-xl text-xs font-bold border transition-all h-[42px] uppercase
-                        bg-slate-50 border-slate-200 text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 placeholder-slate-400
-                        dark:bg-[#0a0a0a] dark:border-white/10 dark:text-white dark:placeholder-slate-600"
-                        placeholder="KETIK NAMA BARANG / SKU..." :disabled="selected.length === 0">
+
+                <div class="flex-1 w-full">
+                    <label
+                        class="text-[9px] font-black uppercase tracking-widest mb-1.5 block text-slate-500 dark:text-slate-400 ml-1">
+                        Cari Produk (Dalam Pemasok Terpilih)
+                    </label>
+                    <div class="relative group">
+                        <i
+                            class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors text-xs"></i>
+                        <input wire:model.live.debounce.300ms="search" type="text" class="w-full pl-10 pr-4 py-2.5 rounded-xl text-xs font-bold border transition-all h-[42px] uppercase
+                            bg-slate-50 border-slate-200 text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 placeholder-slate-400
+                            dark:bg-[#0a0a0a] dark:border-white/10 dark:text-white dark:placeholder-slate-600"
+                            placeholder="KETIK NAMA BARANG / SKU..." :disabled="selected.length === 0">
+                    </div>
                 </div>
+
+                {{-- TOMBOL CETAK PDF (DIPERBAIKI: SELALU AKTIF) --}}
+                <button wire:click="exportPdf" wire:loading.attr="disabled"
+                    class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-600/20 h-[42px] flex items-center gap-2 transition-transform active:scale-95 shrink-0">
+                    <i class="fas fa-file-pdf"></i> Cetak Valuasi
+                    <i wire:loading wire:target="exportPdf" class="fas fa-spinner fa-spin ml-1"></i>
+                </button>
+
             </div>
         </div>
     </div>
@@ -141,9 +152,12 @@
                         {{ count($selectedSuppliers) }} Pemasok
                     </span>
                 </div>
+                {{-- Cek apakah products adalah objek Paginator --}}
+                @if(method_exists($products, 'total'))
                 <div class="text-[10px] font-bold text-slate-400 uppercase">
                     Total {{ $products->total() }} Produk
                 </div>
+                @endif
             </div>
 
             <div class="overflow-x-auto custom-scrollbar">
@@ -152,9 +166,11 @@
                             bg-slate-100 text-slate-500 border-b border-slate-200 
                             dark:bg-[#0a0a0a] dark:text-slate-400 dark:border-white/10">
                         <tr>
+                            <th class="px-4 py-4 w-12 text-center border-r border-slate-200 dark:border-white/5">No</th>
                             <th class="px-4 py-4 sticky left-0 z-30 w-64 border-r transition-colors shadow-[4px_0_10px_rgba(0,0,0,0.02)]
                                     bg-slate-100 border-slate-200 dark:bg-[#0a0a0a] dark:border-white/10">Nama Item
                             </th>
+                            <th class="px-4 py-4 text-center w-24">Stok</th>
                             <th class="px-4 py-4 text-center w-24">Konv. Baik</th>
                             <th class="px-4 py-4 text-center w-24 text-blue-600 dark:text-blue-400">KTN</th>
                             <th class="px-4 py-4 text-center w-24 text-purple-600 dark:text-purple-400">Jual/Minggu</th>
@@ -171,14 +187,23 @@
                     </thead>
 
                     <tbody class="divide-y divide-slate-100 dark:divide-white/5">
-                        @forelse($products as $p)
+                        @forelse($products as $index => $p)
                         <tr class="transition-colors group border-b border-slate-50 dark:border-white/5 
                                 hover:bg-blue-50/30 dark:hover:bg-blue-500/5">
+                            <td
+                                class="px-4 py-3 text-center border-r border-slate-50 dark:border-white/5 text-slate-400 font-bold">
+                                {{ $products->firstItem() + $index }}
+                            </td>
                             <td
                                 class="px-4 py-3 font-bold sticky left-0 border-r z-10 transition-colors shadow-[4px_0_10px_rgba(0,0,0,0.02)]
                                     bg-white text-slate-700 border-slate-100 group-hover:bg-blue-50/30 
                                     dark:bg-[#121212] dark:text-slate-200 dark:border-white/5 dark:group-hover:bg-[#151515]">
                                 <div class="truncate w-64" title="{{ $p['nama_item'] }}">{{ $p['nama_item'] }}</div>
+                            </td>
+
+                            <td
+                                class="px-4 py-3 text-center font-black text-slate-800 dark:text-white bg-slate-50/50 dark:bg-white/5">
+                                {{ number_format($p['stok'], 0, ',', '.') }}
                             </td>
 
                             <td class="px-4 py-3 text-center font-mono text-slate-500 text-[10px]">
@@ -219,7 +244,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="11" class="px-6 py-12 text-center text-slate-400 dark:text-slate-500">
+                            <td colspan="13" class="px-6 py-12 text-center text-slate-400 dark:text-slate-500">
                                 <i class="fas fa-search text-2xl mb-2 opacity-50"></i>
                                 <p class="text-xs">Tidak ada produk ditemukan.</p>
                             </td>
@@ -229,7 +254,8 @@
                 </table>
             </div>
 
-            @if($products->hasPages())
+            {{-- PAGINASI YANG AMAN --}}
+            @if(method_exists($products, 'hasPages') && $products->hasPages())
             <div
                 class="px-6 py-4 border-t transition-colors bg-slate-50 border-slate-200 dark:bg-[#1a1a1a] dark:border-white/5">
                 {{ $products->links() }}
@@ -247,8 +273,9 @@
                 Pilih Pemasok Terlebih Dahulu
             </h2>
             <p class="text-sm mt-2 max-w-md text-center text-slate-400 dark:text-slate-500">
-                Data produk sengaja disembunyikan. Silakan pilih satu atau lebih <strong>Pemasok</strong> pada kolom di
-                atas untuk menampilkan analisa stok.
+                Silakan pilih satu atau lebih <strong>Pemasok</strong> pada kolom di atas untuk menampilkan data.<br>
+                <span class="text-rose-500 font-bold">*Tips: Klik "Cetak Valuasi" untuk export PDF semua data (Tanpa
+                    filter pemasok).</span>
             </p>
         </div>
         @endif
