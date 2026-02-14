@@ -145,8 +145,8 @@
 
                         <div
                             class="px-4 py-3 border-b dark:border-white/5 border-slate-100 mb-1 bg-slate-50/50 dark:bg-white/[0.02] rounded-t-[1.5rem]">
-                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Session
-                                Access</p>
+                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">AKSES
+                                SESI</p>
                             <p class="text-[10px] font-bold dark:text-blue-400 text-blue-600 uppercase tracking-tight">
                                 {{ Auth::user()->role ?? 'Administrator' }}</p>
                         </div>
@@ -157,7 +157,7 @@
                                 class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
                                 <i class="fas fa-user-gear text-xs"></i>
                             </div>
-                            <span class="text-[10px] font-black uppercase tracking-widest">Account Settings</span>
+                            <span class="text-[10px] font-black uppercase tracking-widest">Pengaturan Akun</span>
                         </a>
 
                         <div class="h-px dark:bg-white/5 bg-slate-100 my-1 mx-2"></div>
@@ -169,7 +169,7 @@
                                 <div class="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center">
                                     <i class="fas fa-power-off text-xs group-hover:animate-pulse"></i>
                                 </div>
-                                <span class="text-[10px] font-black uppercase tracking-widest">Sign Out System</span>
+                                <span class="text-[10px] font-black uppercase tracking-widest">Keluar</span>
                             </button>
                         </form>
                     </div>
