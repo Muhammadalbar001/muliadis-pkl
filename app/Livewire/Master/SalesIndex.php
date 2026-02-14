@@ -7,12 +7,14 @@ use Livewire\WithPagination;
 use Livewire\WithFileUploads;
 use App\Models\Master\Sales;
 use App\Models\Master\SalesTarget;
+use App\Models\Transaksi\Penjualan; 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
+
 class SalesIndex extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithPagination, WithFileUploads; 
 
     public $search = '';
     public $isOpen = false;
@@ -37,9 +39,53 @@ class SalesIndex extends Component
         $this->resetInput();
     }
 
+    public function create()
+    {
+        $this->resetInput();
+        $this->isOpen = true;
+    }
+
+    public function autoDiscover()
+    {
+        try {
+         
+            $salesFromTrx = Penjualan::select('kode_sales', 'sales_name', 'cabang')
+                ->whereNotNull('kode_sales')
+                ->distinct()
+                ->get();
+
+            $count = 0;
+            foreach ($salesFromTrx as $trx) {
+                
+                $exists = Sales::where('sales_code', $trx->kode_sales)->exists();
+                
+                if (!$exists) {
+                    Sales::create([
+                        'sales_code' => $trx->kode_sales,
+                        'sales_name' => $trx->sales_name ?? 'Unknown',
+                        'city'       => $trx->cabang ?? null, 
+                        'status'     => 'Active'
+                    ]);
+                    $count++;
+                }
+            }
+
+            $this->dispatch('show-toast', [
+                'type' => 'success', 
+                'message' => "Sinkronisasi Selesai. $count Sales baru ditambahkan."
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error("Auto Discover Error: " . $e->getMessage());
+            $this->dispatch('show-toast', [
+                'type' => 'error', 
+                'message' => 'Gagal Sinkronisasi: ' . $e->getMessage()
+            ]);
+        }
+    }
+
     // --- FUNGSI SIMPAN (STORE & UPDATE) ---
     public function store() {
-        // PERBAIKAN: Tambahkan pengecualian ID ($this->salesId) pada validasi unique agar tidak bentrok saat edit
         $this->validate([
             'sales_name' => 'required|min:3',
             'sales_code' => 'nullable|unique:sales,sales_code,' . $this->salesId,
@@ -55,7 +101,6 @@ class SalesIndex extends Component
         try {
             DB::beginTransaction();
             
-            // Perbaikan format tanggal: Jika string kosong, jadikan null agar tidak error di database tipe date
             $tanggalLahirValue = !empty($this->tanggal_lahir) ? $this->tanggal_lahir : null;
 
             Sales::updateOrCreate(['id' => $this->salesId], [
@@ -75,7 +120,7 @@ class SalesIndex extends Component
             $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Data Salesman Berhasil Disimpan']);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error Simpan Sales: ' . $e->getMessage()); // Cek storage/logs/laravel.log
+            Log::error('Error Simpan Sales: ' . $e->getMessage());
             $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal Simpan: ' . $e->getMessage()]);
         }
     }
@@ -112,7 +157,6 @@ class SalesIndex extends Component
         try {
             DB::beginTransaction();
             foreach ($this->monthlyTargets as $month => $amount) {
-                // Pastikan input angka bersih
                 $cleanAmount = is_numeric($amount) ? (float)$amount : (float) str_replace(['.', ','], '', $amount);
                 SalesTarget::updateOrCreate(
                     ['sales_id' => $this->salesId, 'year' => $this->targetYear, 'month' => $month],
@@ -137,7 +181,6 @@ class SalesIndex extends Component
         $this->nik = $s->nik;
         $this->alamat = $s->alamat;
         $this->tempat_lahir = $s->tempat_lahir;
-        // Format tanggal untuk input date HTML (YYYY-MM-DD)
         $this->tanggal_lahir = $s->tanggal_lahir ? ($s->tanggal_lahir instanceof \DateTime ? $s->tanggal_lahir->format('Y-m-d') : date('Y-m-d', strtotime($s->tanggal_lahir))) : null;
         $this->city = $s->city; 
         $this->status = $s->status; 
@@ -153,7 +196,11 @@ class SalesIndex extends Component
         }
     }
 
-    public function closeModal() { $this->isOpen = false; $this->isTargetOpen = false; $this->resetInput(); }
+    public function closeModal() { 
+        $this->isOpen = false; 
+        $this->isTargetOpen = false; 
+        $this->resetInput(); 
+    }
     
     public function resetInput() { 
         $this->reset(['salesId', 'sales_name', 'sales_code', 'phone', 'nik', 'alamat', 'tempat_lahir', 'tanggal_lahir', 'city', 'monthlyTargets', 'bulkTarget']); 
@@ -164,9 +211,15 @@ class SalesIndex extends Component
     public function render() {
         $query = Sales::query();
         if ($this->search) {
-            $query->where(fn($q) => $q->where('sales_name', 'like', '%'.$this->search.'%')->orWhere('sales_code', 'like', '%'.$this->search.'%')->orWhere('nik', 'like', '%'.$this->search.'%')->orWhere('phone', 'like', '%'.$this->search.'%'));
+            $query->where(fn($q) => $q->where('sales_name', 'like', '%'.$this->search.'%')
+                                      ->orWhere('sales_code', 'like', '%'.$this->search.'%')
+                                      ->orWhere('nik', 'like', '%'.$this->search.'%')
+                                      ->orWhere('phone', 'like', '%'.$this->search.'%'));
         }
-        $sales = $query->orderByRaw("CASE WHEN status = 'Active' THEN 1 ELSE 2 END")->orderBy('sales_name')->paginate(15);
+        $sales = $query->orderByRaw("CASE WHEN status = 'Active' THEN 1 ELSE 2 END")
+                       ->orderBy('sales_name')
+                       ->paginate(15);
+                       
         return view('livewire.master.sales-index', compact('sales'))->layout('layouts.app');
     }
 }

@@ -14,17 +14,18 @@ class ProdukIndex extends Component
 {
     use WithPagination, WithFileUploads;
 
-    // --- 1. FILTER PROPERTIES (UBAH JADI ARRAY) ---
+    // --- 1. FILTER PROPERTIES ---
     public $search = '';
-    public $filterCabang = [];   // Array
-    public $filterKategori = []; // Array
-    public $filterDivisi = [];   // Array
-    public $filterSupplier = []; // Array
-    public $filterStok = '';     // Tetap string (opsi tunggal)
+    public $filterCabang = [];   
+    public $filterKategori = []; 
+    public $filterDivisi = [];   
+    public $filterSupplier = []; 
+    public $filterStok = '';     
 
     // --- 2. MODAL & UPLOAD ---
     public $isImportOpen = false;
     public $file;
+    public $resetData = false;
 
     // Reset Page saat filter berubah
     public function updatedSearch() { $this->resetPage(); }
@@ -36,13 +37,7 @@ class ProdukIndex extends Component
 
     public function resetFilter()
     {
-        // Reset menjadi array kosong
-        $this->filterCabang = [];
-        $this->filterKategori = [];
-        $this->filterDivisi = [];
-        $this->filterSupplier = [];
-        $this->filterStok = '';
-        $this->search = '';
+        $this->reset(['filterCabang', 'filterKategori', 'filterDivisi', 'filterSupplier', 'filterStok', 'search']);
         $this->resetPage();
     }
 
@@ -59,7 +54,7 @@ class ProdukIndex extends Component
             });
         }
 
-        // B. FILTER MULTI-SELECT (Gunakan whereIn jika array tidak kosong)
+        // B. FILTER
         $query->when(!empty($this->filterCabang), fn($q) => $q->whereIn('cabang', $this->filterCabang));
         $query->when(!empty($this->filterKategori), fn($q) => $q->whereIn('kategori', $this->filterKategori));
         $query->when(!empty($this->filterDivisi), fn($q) => $q->whereIn('divisi', $this->filterDivisi));
@@ -87,20 +82,33 @@ class ProdukIndex extends Component
         ))->layout('layouts.app', ['header' => 'Master Produk']);
     }
 
-    // --- IMPORT & DELETE (Sama seperti sebelumnya) ---
-    public function openImportModal() { $this->resetErrorBag(); $this->isImportOpen = true; }
-    public function closeImportModal() { $this->isImportOpen = false; $this->file = null; }
+    // --- IMPORT LOGIC ---
+    public function openImportModal() 
+    { 
+        $this->resetErrorBag(); 
+        $this->resetData = false; 
+        $this->isImportOpen = true; 
+    }
+    
+    public function closeImportModal() 
+    { 
+        $this->isImportOpen = false; 
+        $this->file = null; 
+    }
 
     public function import()
     {
         $this->validate(['file' => 'required|file|mimes:xlsx,xls,csv|max:10240']);
+        
         try {
             $path = $this->file->store('temp-import', 'local');
             $fullPath = Storage::disk('local')->path($path);
-            (new ProdukImportService)->handle($fullPath);
+            
+            (new ProdukImportService)->handle($fullPath, $this->resetData);
             
             if(Storage::disk('local')->exists($path)) Storage::disk('local')->delete($path);
             
+            // Clear Cache
             Cache::forget('opt_prod_cabang');
             Cache::forget('opt_prod_kategori');
             Cache::forget('opt_prod_divisi');

@@ -10,7 +10,8 @@ use Carbon\Carbon;
 
 class ProdukImportService
 {
-    public function handle(string $filePath)
+    // Tambahkan parameter bool $resetData = false
+    public function handle(string $filePath, bool $resetData = false)
     {
         // 1. Konfigurasi Resource (Hemat & Cepat)
         ini_set('memory_limit', '512M');
@@ -18,6 +19,14 @@ class ProdukImportService
         DB::disableQueryLog();
 
         try {
+            // --- LOGIKA RESET DATA ---
+            if ($resetData) {
+                // Matikan foreign key check sementara agar truncate aman
+                DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+                DB::table('produks')->truncate();
+                DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+            }
+
             $reader = SimpleExcelReader::create($filePath)->noHeaderRow();
 
             $stats = [
@@ -35,7 +44,6 @@ class ProdukImportService
             $lastCabang = null;
             
             // Pelacak Duplikat (In-Memory)
-            // Key: "cabang|sku"
             $seenKeys = [];
 
             foreach ($reader->getRows() as $rawRow) {
@@ -176,7 +184,6 @@ class ProdukImportService
     private function processBatch(array $data)
     {
         if (empty($data)) return;
-        // Gunakan INSERT (Bukan Upsert/Ignore) karena tabel produk sudah bersih dari unique index
         DB::table('produks')->insert($data);
     }
 
