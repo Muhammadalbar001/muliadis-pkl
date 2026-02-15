@@ -7,16 +7,20 @@ use Livewire\WithPagination;
 use Livewire\WithFileUploads;
 use App\Models\Master\Sales;
 use App\Models\Master\SalesTarget;
-use App\Models\Transaksi\Penjualan; 
+use App\Models\Transaksi\Penjualan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-
+use Illuminate\Support\Facades\Cache; 
 
 class SalesIndex extends Component
 {
-    use WithPagination, WithFileUploads; 
+    use WithPagination, WithFileUploads;
 
     public $search = '';
+    // --- 1. FILTER CABANG ---
+    public $filterCabang = []; 
+    // ------------------------
+
     public $isOpen = false;
     public $isImportOpen = false;
     public $isTargetOpen = false;
@@ -34,21 +38,53 @@ class SalesIndex extends Component
     public $bulkTarget; 
     public $multiplier = 1000000;
 
+    // Reset halaman saat filter berubah
+    public function updatedSearch() { $this->resetPage(); }
+    public function updatedFilterCabang() { $this->resetPage(); }
+
     public function mount() {
         $this->targetYear = date('Y');
         $this->resetInput();
     }
 
-    public function create()
-    {
-        $this->resetInput();
-        $this->isOpen = true;
+    public function render() {
+        $query = Sales::query();
+
+        // A. SEARCH
+        if ($this->search) {
+            $query->where(fn($q) => $q->where('sales_name', 'like', '%'.$this->search.'%')
+                                      ->orWhere('sales_code', 'like', '%'.$this->search.'%')
+                                      ->orWhere('nik', 'like', '%'.$this->search.'%')
+                                      ->orWhere('phone', 'like', '%'.$this->search.'%'));
+        }
+
+        // B. FILTER CABANG (CITY)
+        if (!empty($this->filterCabang)) {
+            $query->whereIn('city', $this->filterCabang);
+        }
+
+        $sales = $query->orderByRaw("CASE WHEN status = 'Active' THEN 1 ELSE 2 END")
+                       ->orderBy('sales_name')
+                       ->paginate(15);
+
+        // --- DATA UNTUK FILTER (Cache) ---
+        $optCabang = Cache::remember('opt_cabang_sales', 3600, function () {
+            return Sales::select('city')->distinct()
+                ->whereNotNull('city')->where('city', '!=', '')
+                ->orderBy('city')->pluck('city');
+        });
+
+        // --- DATA UNTUK FORM DROPDOWN (Default + DB) ---
+        $defaultCabang = collect(['Banjarmasin', 'Palangkaraya', 'Barabai', 'Batulicin', 'Pharma']);
+        $formCabang = $defaultCabang->merge($optCabang)->unique()->sort()->values();
+
+        return view('livewire.master.sales-index', compact('sales', 'optCabang', 'formCabang'))
+            ->layout('layouts.app');
     }
 
     public function autoDiscover()
     {
         try {
-         
             $salesFromTrx = Penjualan::select('kode_sales', 'sales_name', 'cabang')
                 ->whereNotNull('kode_sales')
                 ->distinct()
@@ -56,7 +92,6 @@ class SalesIndex extends Component
 
             $count = 0;
             foreach ($salesFromTrx as $trx) {
-                
                 $exists = Sales::where('sales_code', $trx->kode_sales)->exists();
                 
                 if (!$exists) {
@@ -69,6 +104,9 @@ class SalesIndex extends Component
                     $count++;
                 }
             }
+
+            // Clear cache agar filter cabang terupdate
+            Cache::forget('opt_cabang_sales');
 
             $this->dispatch('show-toast', [
                 'type' => 'success', 
@@ -84,18 +122,24 @@ class SalesIndex extends Component
         }
     }
 
-    // --- FUNGSI SIMPAN (STORE & UPDATE) ---
+    public function create()
+    {
+        $this->resetInput();
+        $this->isOpen = true;
+    }
+
     public function store() {
         $this->validate([
             'sales_name' => 'required|min:3',
             'sales_code' => 'nullable|unique:sales,sales_code,' . $this->salesId,
             'nik'        => 'nullable|numeric|digits:16',
             'phone'      => 'nullable|numeric',
+            'city'       => 'required', 
         ], [
             'sales_name.required' => 'Nama Salesman wajib diisi.',
             'sales_code.unique' => 'Kode Salesman sudah digunakan.',
             'nik.digits' => 'NIK harus 16 digit.',
-            'nik.numeric' => 'NIK harus berupa angka.',
+            'city.required' => 'Silakan pilih cabang.',
         ]);
 
         try {
@@ -116,6 +160,10 @@ class SalesIndex extends Component
             ]);
 
             DB::commit();
+            
+            // Clear cache cabang
+            Cache::forget('opt_cabang_sales');
+            
             $this->closeModal();
             $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Data Salesman Berhasil Disimpan']);
         } catch (\Exception $e) {
@@ -190,6 +238,7 @@ class SalesIndex extends Component
     public function delete($id) {
         try {
             Sales::findOrFail($id)->delete();
+            Cache::forget('opt_cabang_sales'); 
             $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Data Dihapus']);
         } catch (\Exception $e) {
             $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal Hapus']);
@@ -206,20 +255,5 @@ class SalesIndex extends Component
         $this->reset(['salesId', 'sales_name', 'sales_code', 'phone', 'nik', 'alamat', 'tempat_lahir', 'tanggal_lahir', 'city', 'monthlyTargets', 'bulkTarget']); 
         $this->status = 'Active'; 
         $this->multiplier = 1000000;
-    }
-
-    public function render() {
-        $query = Sales::query();
-        if ($this->search) {
-            $query->where(fn($q) => $q->where('sales_name', 'like', '%'.$this->search.'%')
-                                      ->orWhere('sales_code', 'like', '%'.$this->search.'%')
-                                      ->orWhere('nik', 'like', '%'.$this->search.'%')
-                                      ->orWhere('phone', 'like', '%'.$this->search.'%'));
-        }
-        $sales = $query->orderByRaw("CASE WHEN status = 'Active' THEN 1 ELSE 2 END")
-                       ->orderBy('sales_name')
-                       ->paginate(15);
-                       
-        return view('livewire.master.sales-index', compact('sales'))->layout('layouts.app');
     }
 }

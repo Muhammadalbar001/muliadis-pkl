@@ -8,6 +8,7 @@ use Livewire\WithFileUploads;
 use App\Models\Master\Produk;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use App\Services\Import\ProdukImportService;
 
 class ProdukIndex extends Component
@@ -27,7 +28,6 @@ class ProdukIndex extends Component
     public $file;
     public $resetData = false;
 
-    // Reset Page saat filter berubah
     public function updatedSearch() { $this->resetPage(); }
     public function updatedFilterCabang() { $this->resetPage(); }
     public function updatedFilterKategori() { $this->resetPage(); }
@@ -118,6 +118,35 @@ class ProdukIndex extends Component
             $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Data Produk berhasil diimport!']);
         } catch (\Exception $e) {
             $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal Import: ' . $e->getMessage()]);
+        }
+    }
+
+    // --- FITUR BARU: RESET DATABASE TANPA UPLOAD ---
+    public function resetDatabase()
+    {
+        try {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+            DB::table('produks')->truncate();
+            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
+            // Bersihkan Cache Dropdown
+            Cache::forget('opt_prod_cabang');
+            Cache::forget('opt_prod_kategori');
+            Cache::forget('opt_prod_divisi');
+            Cache::forget('opt_prod_supplier');
+
+            $this->resetPage();
+
+            $this->dispatch('show-toast', [
+                'type' => 'success', 
+                'message' => 'DATABASE PRODUK BERHASIL DIKOSONGKAN!'
+            ]);
+
+        } catch (\Exception $e) {
+            $this->dispatch('show-toast', [
+                'type' => 'error', 
+                'message' => 'Gagal Hapus Data: ' . $e->getMessage()
+            ]);
         }
     }
 

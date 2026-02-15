@@ -7,6 +7,7 @@ use Livewire\WithPagination;
 use App\Models\Master\Supplier;
 use App\Models\Master\Produk;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class SupplierIndex extends Component
@@ -15,18 +16,14 @@ class SupplierIndex extends Component
 
     public $search = '';
     public $filterCabang = []; 
-    // --- TAMBAHAN FILTER BARU ---
     public $filterKategori = [];
-    public $filterStatus = ''; // '' = Semua, '1' = Aktif, '0' = Non-Aktif
-    // ----------------------------
+    public $filterStatus = ''; 
 
     public $isOpen = false;
     
-    // Form Input menggunakan Bahasa Indonesia
     public $supplierId, $cabang, $nama_supplier, $kategori, $nama_kontak, $telepon, $email, $alamat;
     public $is_active = true;
 
-    // Reset halaman saat filter berubah
     public function updatedSearch() { $this->resetPage(); }
     public function updatedFilterCabang() { $this->resetPage(); }
     public function updatedFilterKategori() { $this->resetPage(); }
@@ -36,7 +33,6 @@ class SupplierIndex extends Component
     {
         $query = Supplier::query();
 
-        // 1. Search (Nama Supplier & Narahubung)
         if ($this->search) {
             $query->where(function($q) {
                 $q->where('nama_supplier', 'like', '%'.$this->search.'%')
@@ -44,17 +40,14 @@ class SupplierIndex extends Component
             });
         }
 
-        // 2. Filter Multi-Cabang
         if (!empty($this->filterCabang)) {
             $query->whereIn('cabang', $this->filterCabang);
         }
 
-        // 3. Filter Multi-Kategori (Divisi)
         if (!empty($this->filterKategori)) {
             $query->whereIn('kategori', $this->filterKategori);
         }
 
-        // 4. Filter Status
         if ($this->filterStatus !== '') {
             $query->where('is_active', $this->filterStatus);
         }
@@ -63,12 +56,16 @@ class SupplierIndex extends Component
                            ->orderBy('nama_supplier', 'asc')
                            ->paginate(25);
 
-        // Ambil pilihan filter dari cache agar performa cepat
+        // Filter List (Hanya yang ada di DB)
         $optCabang = Cache::remember('opt_cabang_supp', 3600, function () {
             return Supplier::select('cabang')->distinct()
                 ->whereNotNull('cabang')->where('cabang', '!=', '')
                 ->orderBy('cabang')->pluck('cabang');
         });
+
+        $defaultCabang = collect(['Banjarmasin', 'Palangkaraya', 'Barabai', 'Batulicin', 'Pharma']);
+        $formCabang = $defaultCabang->merge($optCabang)->unique()->sort()->values();
+        // ---------------------------------------------------------------------
 
         $optKategori = Cache::remember('opt_kategori_supp', 3600, function () {
             return Supplier::select('kategori')->distinct()
@@ -76,11 +73,10 @@ class SupplierIndex extends Component
                 ->orderBy('kategori')->pluck('kategori');
         });
 
-        return view('livewire.master.supplier-index', compact('suppliers', 'optCabang', 'optKategori'))
+        return view('livewire.master.supplier-index', compact('suppliers', 'optCabang', 'optKategori', 'formCabang'))
             ->layout('layouts.app', ['header' => 'Master Supplier']);
     }
 
-    // --- SYNC DARI PRODUK (DENGAN KATEGORI/DIVISI) ---
     public function syncFromProducts()
     {
         try {
@@ -110,7 +106,6 @@ class SupplierIndex extends Component
                 if ($supplier->wasRecentlyCreated) $count++;
             }
 
-            // Hapus cache agar filter kategori/cabang terbaru muncul
             Cache::forget('opt_cabang_supp');
             Cache::forget('opt_kategori_supp');
             
@@ -121,7 +116,30 @@ class SupplierIndex extends Component
         }
     }
 
-    // --- SISANYA TETAP SAMA (CRUD & MODAL) ---
+    public function resetDatabase()
+    {
+        try {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+            DB::table('suppliers')->truncate();
+            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
+            Cache::forget('opt_cabang_supp');
+            Cache::forget('opt_kategori_supp');
+
+            $this->resetPage();
+
+            $this->dispatch('show-toast', [
+                'type' => 'success', 
+                'message' => 'DATABASE SUPPLIER BERHASIL DIKOSONGKAN!'
+            ]);
+
+        } catch (Throwable $e) {
+            $this->dispatch('show-toast', [
+                'type' => 'error', 
+                'message' => 'Gagal Hapus Data: ' . $e->getMessage()
+            ]);
+        }
+    }
 
     public function create() { $this->resetInputFields(); $this->openModal(); }
     public function openModal() { $this->isOpen = true; }

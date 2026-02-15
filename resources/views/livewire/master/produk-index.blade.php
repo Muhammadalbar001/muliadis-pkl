@@ -69,6 +69,14 @@
                     <span class="hidden sm:inline">Unggah Data</span>
                 </button>
 
+                {{-- TOMBOL KOSONGKAN DATA (BARU) --}}
+                <button wire:click="resetDatabase"
+                    wire:confirm="PERINGATAN FATAL:\n\nApakah Anda YAKIN ingin menghapus SEMUA DATA PRODUK?\n\nTindakan ini akan mengosongkan seluruh tabel produk dan tidak dapat dibatalkan."
+                    class="flex items-center gap-2 px-6 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-600/20 transition-all transform active:scale-95 ml-2">
+                    <i class="fas fa-trash-alt"></i>
+                    <span class="hidden sm:inline">Kosongkan Data</span>
+                </button>
+
                 <div wire:loading
                     class="w-10 h-10 rounded-xl flex items-center justify-center dark:bg-slate-800 bg-white border dark:border-white/5 border-slate-200 shadow-sm">
                     <i class="fas fa-circle-notch fa-spin text-indigo-500"></i>

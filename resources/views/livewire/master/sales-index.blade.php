@@ -1,10 +1,11 @@
 <div>
-    <div class="min-h-screen space-y-6 pb-10 transition-colors duration-300 font-jakarta bg-slate-50 dark:bg-[#050505]">
+    <div class="min-h-screen space-y-6 pb-10 transition-colors duration-300 font-jakarta bg-slate-50 dark:bg-[#050505]"
+        x-data="{ filterOpen: false }">
 
         {{-- HEADER & NAVIGASI --}}
         <div class="sticky top-0 z-40 backdrop-blur-xl border-b transition-all duration-300 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-4 mb-6
         dark:bg-[#0a0a0a]/80 dark:border-white/10 bg-white/95 border-slate-300 shadow-md">
-            <div class="flex flex-col xl:flex-row gap-4 items-center justify-between">
+            <div class="flex flex-col xl:flex-row gap-6 items-center justify-between">
                 <div class="flex items-center gap-4 w-full xl:w-auto shrink-0">
                     <div
                         class="p-3 rounded-2xl shadow-xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white ring-4 ring-blue-500/20">
@@ -22,26 +23,61 @@
                     </div>
                 </div>
 
-                <div class="flex flex-wrap lg:flex-nowrap items-center gap-3 w-full xl:w-auto justify-end">
-                    <div class="relative group min-w-[200px] lg:w-64">
+                {{-- FILTER & SEARCH --}}
+                <div class="flex flex-wrap xl:flex-nowrap items-center gap-2 w-full xl:w-auto justify-end">
+
+                    {{-- 1. SEARCH --}}
+                    <div class="relative w-full sm:w-auto sm:min-w-[200px] xl:w-64 group">
                         <i
                             class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors text-xs"></i>
                         <input wire:model.live.debounce.300ms="search" type="text"
-                            class="pl-10 pr-4 py-2.5 w-full rounded-2xl border-2 text-[11px] font-bold uppercase transition-all
-                        dark:bg-white/5 dark:border-white/10 dark:text-white bg-white border-slate-200 text-slate-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 outline-none"
+                            class="pl-10 pr-4 py-2.5 w-full rounded-xl border-2 text-[11px] font-bold uppercase transition-all
+                        dark:bg-white/5 dark:border-white/10 dark:text-white bg-white border-slate-200 text-slate-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 outline-none shadow-sm"
                             placeholder="Cari Sales / HP / NIK...">
                     </div>
 
-                    <div class="flex gap-2 shrink-0">
+                    {{-- 2. FILTER CABANG --}}
+                    <div class="relative shrink-0 w-full sm:w-auto"
+                        x-data="{ open: false, selected: @entangle('filterCabang').live }">
+                        <button @click="open = !open" @click.outside="open = false"
+                            class="w-full sm:w-auto flex items-center justify-between gap-3 border-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm
+                            dark:bg-white/5 dark:text-slate-200 bg-white border-slate-200 text-slate-800 hover:border-blue-500 whitespace-nowrap">
+                            <span x-text="selected.length > 0 ? selected.length + ' Cabang' : 'Cabang'"></span>
+                            <i class="fas fa-map-marker-alt opacity-60 text-[9px] transition-transform"
+                                :class="open ? 'rotate-180' : ''"></i>
+                        </button>
+                        <div x-show="open" x-transition
+                            class="absolute right-0 z-50 mt-2 w-full sm:min-w-[180px] border-2 rounded-2xl shadow-2xl p-2 dark:bg-slate-900 bg-white dark:border-white/10 border-slate-200"
+                            style="display: none;">
+                            <div @click="selected = []"
+                                class="px-3 py-2 text-[10px] text-rose-600 font-black uppercase tracking-widest cursor-pointer hover:bg-rose-50 rounded-xl mb-1 flex items-center gap-2 border-b dark:border-white/5 border-slate-100">
+                                <i class="fas fa-times-circle"></i> Reset
+                            </div>
+                            <div class="max-h-60 overflow-y-auto custom-scrollbar">
+                                @foreach($optCabang as $c)
+                                <label
+                                    class="flex items-center px-3 py-2.5 hover:bg-blue-50 dark:hover:bg-white/5 rounded-xl cursor-pointer transition-colors group">
+                                    <input type="checkbox" value="{{ $c }}" x-model="selected"
+                                        class="rounded border-slate-400 text-blue-600 focus:ring-blue-500 h-4 w-4">
+                                    <span
+                                        class="ml-3 text-[10px] font-bold uppercase dark:text-slate-300 text-slate-700 group-hover:text-blue-600 whitespace-nowrap">{{ $c }}</span>
+                                </label>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- 3. TOMBOL AKSI --}}
+                    <div class="flex items-center gap-2 shrink-0 ml-0 sm:ml-2 w-full sm:w-auto justify-end">
                         <button wire:click="autoDiscover"
-                            class="px-5 py-2.5 bg-slate-800 dark:bg-white dark:text-slate-900 text-white rounded-2xl text-[10px] font-black uppercase hover:scale-105 transition-all shadow-lg flex items-center gap-2">
+                            class="px-5 py-2.5 bg-slate-800 dark:bg-white dark:text-slate-900 text-white rounded-xl text-[10px] font-black uppercase hover:scale-105 transition-all shadow-lg flex items-center gap-2">
                             <i class="fas fa-sync-alt" wire:loading.class="fa-spin" wire:target="autoDiscover"></i>
-                            <span class="hidden sm:inline">Sinkron Data</span>
+                            <span class="hidden xl:inline">Sinkron</span>
                         </button>
                         <button wire:click="create"
-                            class="px-6 py-2.5 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase shadow-xl shadow-blue-600/20 hover:bg-blue-700 hover:scale-105 transition-all active:scale-95 flex items-center gap-2">
+                            class="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase shadow-xl shadow-blue-600/20 hover:bg-blue-700 hover:scale-105 transition-all active:scale-95 flex items-center gap-2">
                             <i class="fas fa-plus"></i>
-                            <span>Tambah Baru</span>
+                            <span class="hidden xl:inline">Baru</span>
                         </button>
                     </div>
                 </div>
@@ -281,10 +317,18 @@
                             <div class="group">
                                 <label
                                     class="block text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Cabang
-                                    Cabang</label>
-                                <input type="text" wire:model="city"
-                                    class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-black/40 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-black uppercase focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-600 dark:text-white text-slate-900 shadow-inner"
-                                    placeholder="BANJARMASIN">
+                                    Penempatan</label>
+                                <div class="relative">
+                                    <select wire:model="city"
+                                        class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-black/40 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-black uppercase focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 dark:text-white text-slate-900 shadow-inner appearance-none">
+                                        <option value="">PILIH CABANG</option>
+                                        @foreach($formCabang as $c)
+                                        <option value="{{ $c }}">{{ $c }}</option>
+                                        @endforeach
+                                    </select>
+                                    <i
+                                        class="fas fa-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                                </div>
                                 @error('city') <span
                                     class="text-rose-600 text-[10px] font-bold mt-1 ml-2">{{ $message }}</span>
                                 @enderror
