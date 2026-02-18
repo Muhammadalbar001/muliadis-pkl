@@ -148,8 +148,7 @@
                                 </p>
                             </div>
                             <h3 class="text-3xl font-black tracking-tighter drop-shadow-sm">
-                                {{ number_format($totalOa) }}
-                                <span class="text-sm font-bold opacity-60">Toko</span>
+                                {{ number_format($totalOa) }} <span class="text-sm font-bold opacity-60">Toko</span>
                             </h3>
                         </div>
                     </div>
@@ -164,12 +163,10 @@
                                     <i class="fas fa-check-double text-xs"></i>
                                 </div>
                                 <p class="text-[10px] font-black uppercase tracking-widest opacity-80">Nota Terbentuk
-                                    (EC)
-                                </p>
+                                    (EC)</p>
                             </div>
                             <h3 class="text-3xl font-black tracking-tighter drop-shadow-sm">
-                                {{ number_format($totalEc) }}
-                                <span class="text-sm font-bold opacity-60">Nota</span>
+                                {{ number_format($totalEc) }} <span class="text-sm font-bold opacity-60">Nota</span>
                             </h3>
                         </div>
                     </div>
@@ -214,7 +211,8 @@
             </div>
 
             {{-- 2. TAB PERINGKAT --}}
-            <div x-show="activeTab === 'ranking'" x-transition.opacity class="grid grid-cols-1 gap-8" wire:ignore>
+            <div x-show="activeTab === 'ranking'" x-transition.opacity class="grid grid-cols-1 gap-8">
+                {{-- Widget Produk Terlaris (Filter Sales) --}}
                 <div
                     class="rounded-[2.5rem] border overflow-hidden transition-all dark:bg-neutral-900/40 dark:border-white/5 bg-white border-blue-100 shadow-sm">
                     <div
@@ -222,70 +220,17 @@
                         <div class="flex items-center gap-4">
                             <div
                                 class="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white shadow-inner">
-                                <i class="fas fa-box text-xl"></i>
-                            </div>
+                                <i class="fas fa-box text-xl"></i></div>
                             <div>
                                 <h4 class="font-black text-sm uppercase tracking-wider text-white">Produk Terlaris</h4>
                                 <p class="text-[10px] text-blue-100 font-bold uppercase tracking-widest">Berdasarkan
-                                    Jumlah
-                                    (Qty)
-                                </p>
+                                    Jumlah (Qty)</p>
                             </div>
                         </div>
                         <div class="relative w-full md:w-72"
-                            x-data="{ open: false, search: '', selected: @entangle('filterSupplierTopProduk').live, items: {{ json_encode($optSupplierList) }} }">
+                            x-data="{ open: false, search: '', selected: @entangle('filterSalesTopProduk').live, items: {{ json_encode($optSales) }} }">
                             <button @click="open = !open" @click.outside="open = false" type="button"
-                                class="w-full pl-4 pr-10 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider border-none bg-white text-blue-600 shadow-lg flex items-center justify-between transition-transform active:scale-95">
-                                <span
-                                    x-text="selected.length > 0 ? selected.length + ' Supplier Dipilih' : 'Filter Supplier...'"></span><i
-                                    class="fas fa-chevron-down text-xs opacity-50"></i>
-                            </button>
-                            <div x-show="open" x-transition
-                                class="absolute z-50 mt-2 w-full bg-white dark:bg-slate-900 rounded-xl shadow-2xl p-2 border border-slate-100 dark:border-white/10 text-slate-800 dark:text-slate-200">
-                                <div class="p-2 border-b border-slate-100 dark:border-white/5"><input x-model="search"
-                                        type="text" placeholder="Cari..."
-                                        class="w-full px-3 py-1.5 rounded-lg text-xs bg-slate-50 dark:bg-white/5 border-none focus:ring-2 focus:ring-blue-500 uppercase font-bold">
-                                </div>
-                                <div class="max-h-48 overflow-y-auto p-1 custom-scrollbar"><template
-                                        x-for="item in items.filter(i => i.toLowerCase().includes(search.toLowerCase()))"
-                                        :key="item"><label
-                                            class="flex items-center gap-3 px-2 py-2 hover:bg-blue-50 dark:hover:bg-white/10 rounded-lg cursor-pointer"><input
-                                                type="checkbox" :value="item" x-model="selected"
-                                                class="rounded border-slate-300 text-blue-500 focus:ring-blue-500 w-3.5 h-3.5"><span
-                                                class="text-[10px] font-bold uppercase"
-                                                x-text="item"></span></label></template></div>
-                                <div class="p-2 border-t border-slate-100 dark:border-white/5 text-center"><button
-                                        @click="selected = []"
-                                        class="text-[9px] text-red-500 font-bold hover:underline">Reset Filter</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="p-6">
-                        <div id="chart-top-produk" style="min-height: 400px;"></div>
-                    </div>
-                </div>
-
-                <div
-                    class="rounded-[2.5rem] border overflow-hidden transition-all dark:bg-neutral-900/40 dark:border-white/5 bg-white border-purple-100 shadow-sm">
-                    <div
-                        class="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 flex flex-col md:flex-row justify-between items-center gap-4">
-                        <div class="flex items-center gap-4">
-                            <div
-                                class="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white shadow-inner">
-                                <i class="fas fa-users text-xl"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-black text-sm uppercase tracking-wider text-white">Pelanggan Utama</h4>
-                                <p class="text-[10px] text-purple-100 font-bold uppercase tracking-widest">Berdasarkan
-                                    Omzet
-                                </p>
-                            </div>
-                        </div>
-                        <div class="relative w-full md:w-72"
-                            x-data="{ open: false, search: '', selected: @entangle('filterSalesTopCust').live, items: {{ json_encode($optSales) }} }">
-                            <button @click="open = !open" @click.outside="open = false" type="button"
-                                class="w-full pl-4 pr-10 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider border-none bg-white text-purple-600 shadow-lg flex items-center justify-between transition-transform active:scale-95">
+                                class="w-full pl-4 pr-10 py-2.5 rounded-xl text-[10px] font-black bg-white text-blue-600 shadow-lg flex items-center justify-between transition-transform active:scale-95">
                                 <span
                                     x-text="selected.length > 0 ? selected.length + ' Sales Dipilih' : 'Filter Sales...'"></span><i
                                     class="fas fa-chevron-down text-xs opacity-50"></i>
@@ -293,17 +238,21 @@
                             <div x-show="open" x-transition
                                 class="absolute z-50 mt-2 w-full bg-white dark:bg-slate-900 rounded-xl shadow-2xl p-2 border border-slate-100 dark:border-white/10 text-slate-800 dark:text-slate-200">
                                 <div class="p-2 border-b border-slate-100 dark:border-white/5"><input x-model="search"
-                                        type="text" placeholder="Cari..."
-                                        class="w-full px-3 py-1.5 rounded-lg text-xs bg-slate-50 dark:bg-white/5 border-none focus:ring-2 focus:ring-purple-500 uppercase font-bold">
+                                        type="text" placeholder="Cari Sales..."
+                                        class="w-full px-3 py-1.5 rounded-lg text-xs bg-slate-50 dark:bg-white/5 border-none focus:ring-2 focus:ring-blue-500 uppercase font-bold">
                                 </div>
-                                <div class="max-h-48 overflow-y-auto p-1 custom-scrollbar"><template
+                                <div class="max-h-48 overflow-y-auto p-1 custom-scrollbar">
+                                    <template
                                         x-for="item in items.filter(i => i.toLowerCase().includes(search.toLowerCase()))"
-                                        :key="item"><label
-                                            class="flex items-center gap-3 px-2 py-2 hover:bg-purple-50 dark:hover:bg-white/10 rounded-lg cursor-pointer"><input
-                                                type="checkbox" :value="item" x-model="selected"
-                                                class="rounded border-slate-300 text-purple-500 focus:ring-purple-500 w-3.5 h-3.5"><span
-                                                class="text-[10px] font-bold uppercase truncate"
-                                                x-text="item"></span></label></template></div>
+                                        :key="item">
+                                        <label
+                                            class="flex items-center gap-3 px-2 py-2 hover:bg-blue-50 dark:hover:bg-white/10 rounded-lg cursor-pointer">
+                                            <input type="checkbox" :value="item" x-model="selected"
+                                                class="rounded border-slate-300 text-blue-500 focus:ring-blue-500 w-3.5 h-3.5">
+                                            <span class="text-[10px] font-bold uppercase" x-text="item"></span>
+                                        </label>
+                                    </template>
+                                </div>
                                 <div class="p-2 border-t border-slate-100 dark:border-white/5 text-center"><button
                                         @click="selected = []"
                                         class="text-[9px] text-red-500 font-bold hover:underline">Reset Filter</button>
@@ -311,11 +260,65 @@
                             </div>
                         </div>
                     </div>
-                    <div class="p-6">
+                    <div class="p-6" wire:ignore>
+                        <div id="chart-top-produk" style="min-height: 400px;"></div>
+                    </div>
+                </div>
+
+                {{-- Widget Pelanggan Utama (Filter Sales) --}}
+                <div
+                    class="rounded-[2.5rem] border overflow-hidden transition-all dark:bg-neutral-900/40 dark:border-white/5 bg-white border-purple-100 shadow-sm">
+                    <div
+                        class="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="flex items-center gap-4">
+                            <div
+                                class="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white shadow-inner">
+                                <i class="fas fa-users text-xl"></i></div>
+                            <div>
+                                <h4 class="font-black text-sm uppercase tracking-wider text-white">Pelanggan Utama</h4>
+                                <p class="text-[10px] text-purple-100 font-bold uppercase tracking-widest">Berdasarkan
+                                    Omzet</p>
+                            </div>
+                        </div>
+                        <div class="relative w-full md:w-72"
+                            x-data="{ open: false, search: '', selected: @entangle('filterSalesTopCust').live, items: {{ json_encode($optSales) }} }">
+                            <button @click="open = !open" @click.outside="open = false" type="button"
+                                class="w-full pl-4 pr-10 py-2.5 rounded-xl text-[10px] font-black bg-white text-purple-600 shadow-lg flex items-center justify-between transition-transform active:scale-95">
+                                <span
+                                    x-text="selected.length > 0 ? selected.length + ' Sales Dipilih' : 'Filter Sales...'"></span><i
+                                    class="fas fa-chevron-down text-xs opacity-50"></i>
+                            </button>
+                            <div x-show="open" x-transition
+                                class="absolute z-50 mt-2 w-full bg-white dark:bg-slate-900 rounded-xl shadow-2xl p-2 border border-slate-100 dark:border-white/10 text-slate-800 dark:text-slate-200">
+                                <div class="p-2 border-b border-slate-100 dark:border-white/5"><input x-model="search"
+                                        type="text" placeholder="Cari Sales..."
+                                        class="w-full px-3 py-1.5 rounded-lg text-xs bg-slate-50 dark:bg-white/5 border-none focus:ring-2 focus:ring-purple-500 uppercase font-bold">
+                                </div>
+                                <div class="max-h-48 overflow-y-auto p-1 custom-scrollbar">
+                                    <template
+                                        x-for="item in items.filter(i => i.toLowerCase().includes(search.toLowerCase()))"
+                                        :key="item">
+                                        <label
+                                            class="flex items-center gap-3 px-2 py-2 hover:bg-purple-50 dark:hover:bg-white/10 rounded-lg cursor-pointer">
+                                            <input type="checkbox" :value="item" x-model="selected"
+                                                class="rounded border-slate-300 text-purple-500 focus:ring-purple-500 w-3.5 h-3.5">
+                                            <span class="text-[10px] font-bold uppercase truncate" x-text="item"></span>
+                                        </label>
+                                    </template>
+                                </div>
+                                <div class="p-2 border-t border-slate-100 dark:border-white/5 text-center"><button
+                                        @click="selected = []"
+                                        class="text-[9px] text-red-500 font-bold hover:underline">Reset Filter</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6" wire:ignore>
                         <div id="chart-top-customer" style="min-height: 400px;"></div>
                     </div>
                 </div>
 
+                {{-- Widget Supplier Utama (Filter Sales) --}}
                 <div
                     class="rounded-[2.5rem] border overflow-hidden transition-all dark:bg-neutral-900/40 dark:border-white/5 bg-white border-pink-100 shadow-sm">
                     <div
@@ -323,37 +326,39 @@
                         <div class="flex items-center gap-4">
                             <div
                                 class="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white shadow-inner">
-                                <i class="fas fa-truck text-xl"></i>
-                            </div>
+                                <i class="fas fa-truck text-xl"></i></div>
                             <div>
                                 <h4 class="font-black text-sm uppercase tracking-wider text-white">Supplier Utama</h4>
                                 <p class="text-[10px] text-pink-100 font-bold uppercase tracking-widest">Berdasarkan
-                                    Omzet
-                                </p>
+                                    Omzet</p>
                             </div>
                         </div>
                         <div class="relative w-full md:w-72"
-                            x-data="{ open: false, search: '', selected: @entangle('filterKategoriTopSupp').live, items: {{ json_encode($optKategoriList) }} }">
+                            x-data="{ open: false, search: '', selected: @entangle('filterSalesTopSupp').live, items: {{ json_encode($optSales) }} }">
                             <button @click="open = !open" @click.outside="open = false" type="button"
-                                class="w-full pl-4 pr-10 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider border-none bg-white text-pink-600 shadow-lg flex items-center justify-between transition-transform active:scale-95">
+                                class="w-full pl-4 pr-10 py-2.5 rounded-xl text-[10px] font-black bg-white text-pink-600 shadow-lg flex items-center justify-between transition-transform active:scale-95">
                                 <span
-                                    x-text="selected.length > 0 ? selected.length + ' Kategori' : 'Filter Kategori...'"></span><i
+                                    x-text="selected.length > 0 ? selected.length + ' Sales Dipilih' : 'Filter Sales...'"></span><i
                                     class="fas fa-chevron-down text-xs opacity-50"></i>
                             </button>
                             <div x-show="open" x-transition
                                 class="absolute z-50 mt-2 w-full bg-white dark:bg-slate-900 rounded-xl shadow-2xl p-2 border border-slate-100 dark:border-white/10 text-slate-800 dark:text-slate-200">
                                 <div class="p-2 border-b border-slate-100 dark:border-white/5"><input x-model="search"
-                                        type="text" placeholder="Cari..."
+                                        type="text" placeholder="Cari Sales..."
                                         class="w-full px-3 py-1.5 rounded-lg text-xs bg-slate-50 dark:bg-white/5 border-none focus:ring-2 focus:ring-pink-500 uppercase font-bold">
                                 </div>
-                                <div class="max-h-48 overflow-y-auto p-1 custom-scrollbar"><template
+                                <div class="max-h-48 overflow-y-auto p-1 custom-scrollbar">
+                                    <template
                                         x-for="item in items.filter(i => i.toLowerCase().includes(search.toLowerCase()))"
-                                        :key="item"><label
-                                            class="flex items-center gap-3 px-2 py-2 hover:bg-pink-50 dark:hover:bg-white/10 rounded-lg cursor-pointer"><input
-                                                type="checkbox" :value="item" x-model="selected"
-                                                class="rounded border-slate-300 text-pink-500 focus:ring-pink-500 w-3.5 h-3.5"><span
-                                                class="text-[10px] font-bold uppercase truncate"
-                                                x-text="item"></span></label></template></div>
+                                        :key="item">
+                                        <label
+                                            class="flex items-center gap-3 px-2 py-2 hover:bg-pink-50 dark:hover:bg-white/10 rounded-lg cursor-pointer">
+                                            <input type="checkbox" :value="item" x-model="selected"
+                                                class="rounded border-slate-300 text-pink-500 focus:ring-pink-500 w-3.5 h-3.5">
+                                            <span class="text-[10px] font-bold uppercase truncate" x-text="item"></span>
+                                        </label>
+                                    </template>
+                                </div>
                                 <div class="p-2 border-t border-slate-100 dark:border-white/5 text-center"><button
                                         @click="selected = []"
                                         class="text-[9px] text-red-500 font-bold hover:underline">Reset Filter</button>
@@ -361,14 +366,47 @@
                             </div>
                         </div>
                     </div>
-                    <div class="p-6">
+                    <div class="p-6" wire:ignore>
                         <div id="chart-top-supplier" style="min-height: 400px;"></div>
                     </div>
                 </div>
             </div>
 
             {{-- 3. TAB KINERJA SALES --}}
-            <div x-show="activeTab === 'salesman'" x-transition.opacity class="space-y-8" wire:ignore>
+            <div x-show="activeTab === 'salesman'" x-transition.opacity class="space-y-8">
+
+                {{-- Filter Mandiri Bulan & Tahun khusus Kinerja Sales --}}
+                <div
+                    class="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-100">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-black text-xs uppercase tracking-widest text-slate-800">Periode Evaluasi
+                                Sales</h4>
+                            <p class="text-[9px] text-slate-400 font-bold uppercase">Data target & realisasi di tab ini
+                                hanya mengikuti bulan pilihan</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <select wire:model.live="selectedMonth"
+                            class="bg-slate-50 border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest focus:ring-indigo-500 flex-1 md:w-40">
+                            @foreach(range(1, 12) as $m)
+                            <option value="{{ $m }}">{{ Carbon\Carbon::create(null, $m)->translatedFormat('F') }}
+                            </option>
+                            @endforeach
+                        </select>
+                        <select wire:model.live="selectedYear"
+                            class="bg-slate-50 border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest focus:ring-indigo-500 flex-1 md:w-32">
+                            @foreach(range(date('Y')-1, date('Y')+1) as $y)
+                            <option value="{{ $y }}">{{ $y }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                     <div
@@ -377,8 +415,7 @@
                                 class="fas fa-bullseye text-7xl"></i></div>
                         <p class="text-[10px] font-black uppercase tracking-widest opacity-80">Target Global</p>
                         <h3 class="text-2xl font-black mt-1">Rp
-                            {{ $this->formatCompact($chartData['total_target'] ?? 0) }}
-                        </h3>
+                            {{ $this->formatCompact($chartData['total_target'] ?? 0) }}</h3>
                     </div>
                     <div
                         class="relative p-6 rounded-[2.5rem] bg-gradient-to-r from-emerald-600 to-emerald-500 shadow-xl shadow-emerald-500/20 overflow-hidden text-white group">
@@ -386,8 +423,7 @@
                                 class="fas fa-coins text-7xl"></i></div>
                         <p class="text-[10px] font-black uppercase tracking-widest opacity-80">Total Realisasi</p>
                         <h3 class="text-2xl font-black mt-1">Rp
-                            {{ $this->formatCompact($chartData['total_real'] ?? 0) }}
-                        </h3>
+                            {{ $this->formatCompact($chartData['total_real'] ?? 0) }}</h3>
                     </div>
                     @php
                     $tTarget = $chartData['total_target'] ?? 0;
@@ -412,17 +448,15 @@
                     <div class="bg-gradient-to-r from-indigo-500 to-blue-600 p-6 flex items-center gap-3">
                         <div
                             class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white backdrop-blur-sm">
-                            <i class="fas fa-chart-bar text-lg"></i>
-                        </div>
+                            <i class="fas fa-chart-bar text-lg"></i></div>
                         <div>
                             <h4 class="font-black text-sm uppercase tracking-wider text-white">10 Kinerja Sales Terbaik
                             </h4>
                             <p class="text-[10px] text-indigo-100 font-bold uppercase tracking-widest">Realisasi vs
-                                Target
-                            </p>
+                                Target</p>
                         </div>
                     </div>
-                    <div class="p-6">
+                    <div class="p-6" wire:ignore>
                         <div id="chart-sales-perf" style="min-height: 450px;"></div>
                     </div>
                 </div>
@@ -433,8 +467,7 @@
                         class="bg-slate-50 dark:bg-white/5 p-6 border-b border-slate-100 dark:border-white/5 flex justify-between items-center">
                         <h4
                             class="font-black text-xs uppercase tracking-widest text-slate-600 dark:text-slate-300 flex items-center gap-2">
-                            <i class="fas fa-list-ol text-blue-500"></i> Klasemen Sales Lengkap
-                        </h4>
+                            <i class="fas fa-list-ol text-blue-500"></i> Klasemen Sales Lengkap</h4>
                         <span
                             class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400 text-[10px] font-bold uppercase">{{ count($chartData['sales_details'] ?? []) }}
                             Personil</span>
@@ -663,7 +696,6 @@
             });
             charts.ac.render();
 
-            // Ranking Helper
             const rankingOpts = (id, seriesName, seriesData, categories, color) => ({
                 ...baseOptions,
                 series: [{
@@ -715,7 +747,7 @@
                 "#chart-top-supplier", 'Omzet', data.top_supp_val, data.top_supp_lbl, '#ec4899'));
             charts.ts.render();
 
-            // 6. Sales Performance (Side by Side)
+            // 6. Sales Performance
             if (charts.sp) charts.sp.destroy();
             charts.sp = new ApexCharts(document.querySelector("#chart-sales-perf"), {
                 ...baseOptions,
@@ -763,12 +795,10 @@
         };
 
         if (initData) renderCharts(initData);
-
         Livewire.on('update-charts', (event) => {
             const newData = event.data || (event[0] && event[0].data) || event;
             if (newData) renderCharts(newData);
         });
-
         const observer = new MutationObserver(() => {
             if (initData) renderCharts(initData);
         });

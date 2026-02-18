@@ -3,7 +3,7 @@
         x-data="{ filterOpen: false }">
 
         <div class="sticky top-0 z-40 backdrop-blur-xl border-b transition-all duration-300 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-4 mb-6
-        dark:bg-[#0a0a0a]/90 dark:border-white/10 bg-white/95 border-slate-300 shadow-md">
+        dark:bg-[#0a0a0a]/80 dark:border-white/10 bg-white/95 border-slate-300 shadow-md">
 
             <div class="flex flex-col xl:flex-row gap-6 items-center justify-between">
                 <div class="flex items-center gap-4 w-full xl:w-auto shrink-0">
@@ -36,7 +36,7 @@
                     </div>
 
                     {{-- FILTER GROUP --}}
-                    <div class="flex items-center gap-2 w-full sm:w-auto overflow-x-auto sm:overflow-visible">
+                    <div class="flex items-center gap-2 w-full sm:w-auto overflow-visible">
 
                         {{-- FILTER KATEGORI --}}
                         <div class="relative shrink-0"
@@ -48,11 +48,12 @@
                                 <i class="fas fa-filter opacity-60 text-[9px] transition-transform"
                                     :class="open ? 'rotate-180' : ''"></i>
                             </button>
-                            <div x-show="open" x-transition
-                                class="absolute right-0 z-50 mt-2 min-w-[180px] border-2 rounded-2xl shadow-2xl p-2 dark:bg-slate-900 bg-white dark:border-white/10 border-slate-200"
+                            <div x-show="open" x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="transform opacity-0 scale-95"
+                                class="absolute left-0 z-[60] mt-2 min-w-[200px] border-2 rounded-2xl shadow-2xl p-2 dark:bg-slate-900 bg-white dark:border-white/10 border-slate-200"
                                 style="display: none;">
                                 <div @click="selected = []"
-                                    class="px-3 py-2 text-[10px] text-rose-600 font-black uppercase tracking-widest cursor-pointer hover:bg-rose-50 rounded-xl mb-1 flex items-center gap-2 border-b dark:border-white/5 border-slate-100">
+                                    class="px-3 py-2 text-[10px] text-rose-600 dark:text-rose-400 font-black uppercase tracking-widest cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl mb-1 flex items-center gap-2 border-b dark:border-white/5 border-slate-100">
                                     <i class="fas fa-times-circle"></i> Reset
                                 </div>
                                 <div class="max-h-60 overflow-y-auto custom-scrollbar">
@@ -79,11 +80,12 @@
                                 <i class="fas fa-map-marker-alt opacity-60 text-[9px] transition-transform"
                                     :class="open ? 'rotate-180' : ''"></i>
                             </button>
-                            <div x-show="open" x-transition
-                                class="absolute right-0 z-50 mt-2 min-w-[180px] border-2 rounded-2xl shadow-2xl p-2 dark:bg-slate-900 bg-white dark:border-white/10 border-slate-200"
+                            <div x-show="open" x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="transform opacity-0 scale-95"
+                                class="absolute left-0 z-[60] mt-2 min-w-[200px] border-2 rounded-2xl shadow-2xl p-2 dark:bg-slate-900 bg-white dark:border-white/10 border-slate-200"
                                 style="display: none;">
                                 <div @click="selected = []"
-                                    class="px-3 py-2 text-[10px] text-rose-600 font-black uppercase tracking-widest cursor-pointer hover:bg-rose-50 rounded-xl mb-1 flex items-center gap-2 border-b dark:border-white/5 border-slate-100">
+                                    class="px-3 py-2 text-[10px] text-rose-600 dark:text-rose-400 font-black uppercase tracking-widest cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl mb-1 flex items-center gap-2 border-b dark:border-white/5 border-slate-100">
                                     <i class="fas fa-times-circle"></i> Reset
                                 </div>
                                 <div class="max-h-60 overflow-y-auto custom-scrollbar">
@@ -116,8 +118,6 @@
 
                     {{-- BUTTON GROUP --}}
                     <div class="flex items-center gap-2 shrink-0 ml-0 sm:ml-2 w-full sm:w-auto justify-end">
-
-                        {{-- 1. TOMBOL HAPUS DATA --}}
                         <button wire:click="resetDatabase"
                             wire:confirm="PERINGATAN FATAL:\n\nApakah Anda YAKIN ingin menghapus SEMUA DATA SUPPLIER?\n\nData yang dihapus tidak dapat dikembalikan."
                             class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-600/20 transition-all active:scale-95 flex items-center gap-2">
@@ -125,14 +125,12 @@
                             <span class="hidden 2xl:inline">Hapus</span>
                         </button>
 
-                        {{-- 2. TOMBOL SINKRON --}}
                         <button wire:click="syncFromProducts"
                             class="px-4 py-2.5 bg-slate-800 dark:bg-white dark:text-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg flex items-center gap-2">
                             <i class="fas fa-sync-alt" wire:loading.class="fa-spin" wire:target="syncFromProducts"></i>
                             <span class="hidden xl:inline">Sinkron</span>
                         </button>
 
-                        {{-- 3. TOMBOL BARU --}}
                         <button wire:click="create"
                             class="px-4 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-cyan-600/30 transition-all active:scale-95 flex items-center gap-2">
                             <i class="fas fa-plus"></i>
@@ -238,8 +236,8 @@
                                             class="w-9 h-9 rounded-xl dark:bg-white/5 bg-white border-2 border-blue-100 dark:border-white/10 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white transition-all shadow-sm"><i
                                                 class="fas fa-edit text-xs"></i></button>
                                         <button wire:click="delete({{ $item->id }})"
-                                            onclick="confirm('Hapus?') || event.stopImmediatePropagation()"
-                                            class="w-9 h-9 rounded-xl dark:bg-white/5 bg-white border-2 border-rose-100 dark:border-white/10 text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white transition-all shadow-sm"><i
+                                            class="w-9 h-9 rounded-xl dark:bg-white/5 bg-white border-2 border-rose-100 dark:border-white/10 text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white transition-all shadow-sm"
+                                            onclick="confirm('Hapus?') || event.stopImmediatePropagation()"><i
                                                 class="fas fa-trash-alt text-xs"></i></button>
                                     </div>
                                 </td>
@@ -291,7 +289,6 @@
                             <div class="group">
                                 <label
                                     class="block text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Cabang</label>
-                               
                                 <div class="relative">
                                     <select wire:model="cabang"
                                         class="w-full px-5 py-4 rounded-2xl border-2 dark:bg-black/40 bg-slate-50 dark:border-white/10 border-slate-200 text-xs font-black uppercase focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-600 dark:text-white text-slate-900 shadow-inner appearance-none">
@@ -380,5 +377,4 @@
         border-radius: 10px;
     }
     </style>
-
 </div>
