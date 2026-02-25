@@ -2,8 +2,10 @@
 
 use Illuminate\Support\Facades\Route;
 
-// --- 1. IMPORT DASHBOARD ---
-use App\Livewire\Admin\Dashboard as AdminDashboard;
+// --- 1. IMPORT DASHBOARD BERDASARKAN ROLE ---
+use App\Livewire\DashboardIndex; // Dashboard Pimpinan (yang ada grafiknya)
+use App\Livewire\Admin\Dashboard as AdminDashboard; // Dashboard Admin Operasional
+use App\Livewire\Supervisor\Dashboard as SupervisorDashboard; // Dashboard Supervisor
 
 // --- 2. MASTER DATA ---
 use App\Livewire\Master\SalesIndex;
@@ -27,7 +29,7 @@ use App\Livewire\Laporan\KinerjaSalesIndex;
 // --- 5. ANALISA & PIMPINAN ---
 use App\Livewire\Pimpinan\StockAnalysis;
 use App\Livewire\Pimpinan\ProfitAnalysis;
-use App\Livewire\Laporan\PusatCetak; // <--- WAJIB ADA INI
+use App\Livewire\Laporan\PusatCetak; 
 
 // --- PROFILE ---
 use App\Http\Controllers\ProfileController;
@@ -38,41 +40,79 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    // REDIRECT DASHBOARD
+    // ====================================================
+    // 0. REDIRECT DASHBOARD DINAMIS
+    // ====================================================
     Route::get('/dashboard', function () {
-        return redirect()->route('admin.dashboard');
+        $role = auth()->user()->role;
+        
+        // Cek Role dan arahkan ke dashboard yang sesuai
+        if (in_array($role, ['supervisor'])) {
+            return redirect()->route('supervisor.dashboard');
+        } elseif (in_array($role, ['admin'])) {
+            return redirect()->route('admin.dashboard');
+        }
+        
+        // Default: Pimpinan & Super Admin diarahkan ke dashboard eksekutif
+        return redirect()->route('pimpinan.dashboard');
     })->name('dashboard');
 
+    // ====================================================
+    // PROFILE ROUTES
+    // ====================================================
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // ====================================================
-    // AREA CENTRAL (Semua Role: super_admin, pimpinan, supervisor, admin)
+    // 1. DASHBOARD PIMPINAN & SUPERADMIN
     // ====================================================
-    Route::middleware(['role:super_admin,pimpinan,supervisor,admin'])->prefix('admin')->group(function () {
-        
+    Route::middleware(['role:super_admin,superadmin,pimpinan'])->prefix('pimpinan')->group(function () {
+        Route::get('/dashboard', DashboardIndex::class)->name('pimpinan.dashboard');
+    });
+
+    // ====================================================
+    // 2. DASHBOARD ADMIN (Operasional)
+    // ====================================================
+    Route::middleware(['role:super_admin,superadmin,admin'])->prefix('admin')->group(function () {
         Route::get('/dashboard', AdminDashboard::class)->name('admin.dashboard');
+    });
 
-        // MASTER DATA
-        Route::prefix('master')->name('master.')->group(function () {
-            Route::get('/sales', SalesIndex::class)->name('sales');
-            Route::get('/produk', ProdukIndex::class)->name('produk');
-            Route::get('/supplier', SupplierIndex::class)->name('supplier');
-            
-            // User tetap dibatasi hanya Super Admin agar aman
-            Route::middleware(['role:super_admin'])->get('/user', UserIndex::class)->name('user'); 
-        });
+    // ====================================================
+    // 3. DASHBOARD SUPERVISOR
+    // ====================================================
+    Route::middleware(['role:super_admin,superadmin,supervisor'])->prefix('supervisor')->group(function () {
+        Route::get('/dashboard', SupervisorDashboard::class)->name('supervisor.dashboard');
+    });
 
-        // TRANSAKSI
-        Route::prefix('transaksi')->name('transaksi.')->group(function () {
-            Route::get('/penjualan', PenjualanIndex::class)->name('penjualan');
-            Route::get('/retur', ReturIndex::class)->name('retur');
-            Route::get('/ar', ArIndex::class)->name('ar');
-            Route::get('/collection', CollectionIndex::class)->name('collection');
-        });
+    // ====================================================
+    // 4. MASTER DATA (Hanya Supervisor & Superadmin)
+    // ====================================================
+    Route::middleware(['role:super_admin,superadmin,supervisor'])->prefix('admin/master')->name('master.')->group(function () {
+        Route::get('/sales', SalesIndex::class)->name('sales');
+        Route::get('/produk', ProdukIndex::class)->name('produk');
+        Route::get('/supplier', SupplierIndex::class)->name('supplier');
+        
+        // Data Pengguna TETAP dibatasi hanya untuk Super Admin
+        Route::middleware(['role:super_admin,superadmin'])->get('/user', UserIndex::class)->name('user'); 
+    });
 
-        // LAPORAN REKAP
+    // ====================================================
+    // 5. OPERASIONAL / TRANSAKSI (Hanya Admin & Superadmin)
+    // ====================================================
+    Route::middleware(['role:super_admin,superadmin,admin'])->prefix('admin/transaksi')->name('transaksi.')->group(function () {
+        Route::get('/penjualan', PenjualanIndex::class)->name('penjualan');
+        Route::get('/retur', ReturIndex::class)->name('retur');
+        Route::get('/ar', ArIndex::class)->name('ar');
+        Route::get('/collection', CollectionIndex::class)->name('collection');
+    });
+
+    // ====================================================
+    // 6. ANALISA & LAPORAN (Hanya Pimpinan & Superadmin)
+    // ====================================================
+    Route::middleware(['role:super_admin,superadmin,pimpinan'])->prefix('admin')->group(function () {
+        
+        // LAPORAN REKAPITULASI
         Route::prefix('laporan')->name('laporan.')->group(function () {
             Route::get('/rekap-penjualan', RekapPenjualanIndex::class)->name('rekap-penjualan');
             Route::get('/rekap-retur', RekapReturIndex::class)->name('rekap-retur');
@@ -81,12 +121,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/kinerja-sales', KinerjaSalesIndex::class)->name('kinerja-sales');
         });
 
-        // ANALISA PIMPINAN
+        // ANALISA PIMPINAN (Strategis)
         Route::get('/stock-analysis', StockAnalysis::class)->name('pimpinan.stock-analysis');
         Route::get('/profit-analysis', ProfitAnalysis::class)->name('pimpinan.profit-analysis');
 
-        // PUSAT CETAK (Ditaruh diluar prefix 'laporan.' agar namanya pas 'pusat-cetak')
-        // Ini sinkron dengan sidebar: route('pusat-cetak')
+        // PUSAT CETAK
         Route::get('/laporan/pusat-cetak', PusatCetak::class)->name('pusat-cetak');
     });
 

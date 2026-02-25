@@ -45,21 +45,21 @@
     <div class="flex-1 overflow-y-auto py-6 space-y-2 custom-scrollbar overflow-x-hidden"
         :class="isSidebarExpanded ? 'px-4' : 'px-2'">
 
-        {{-- DASHBOARD --}}
+        {{-- DASHBOARD (Semua Role Punya Akses, Menyesuaikan route *.dashboard) --}}
         <a href="{{ route('dashboard') }}"
             class="flex items-center py-3.5 rounded-xl transition-all duration-300 group text-[11px] font-black relative uppercase tracking-widest mb-4
-            {{ request()->routeIs('dashboard') 
+            {{ request()->routeIs('*.dashboard') || request()->routeIs('dashboard')
                 ? 'bg-blue-50 text-blue-600 dark:bg-gradient-to-r dark:from-blue-600 dark:to-indigo-600 dark:text-white shadow-sm ring-1 ring-blue-100 dark:ring-white/20' 
                 : 'text-slate-500 hover:bg-slate-50 hover:text-blue-600 dark:hover:bg-white/5 dark:hover:text-white' }}"
             :class="isSidebarExpanded ? 'px-5' : 'justify-center'">
 
-            @if(request()->routeIs('dashboard'))
+            @if(request()->routeIs('*.dashboard') || request()->routeIs('dashboard'))
             <div class="absolute left-0 h-8 w-1 bg-blue-600 rounded-r-full hidden lg:block" x-show="isSidebarExpanded">
             </div>
             @endif
 
             <i
-                class="fas fa-chart-pie w-5 text-center text-base {{ request()->routeIs('dashboard') ? 'text-blue-600 dark:text-white' : 'group-hover:text-blue-500 dark:group-hover:text-blue-400' }}"></i>
+                class="fas fa-chart-pie w-5 text-center text-base {{ request()->routeIs('*.dashboard') || request()->routeIs('dashboard') ? 'text-blue-600 dark:text-white' : 'group-hover:text-blue-500 dark:group-hover:text-blue-400' }}"></i>
             <span x-show="isSidebarExpanded" class="ml-4">Dashboard</span>
 
             {{-- Tooltip Collapsed --}}
@@ -69,8 +69,10 @@
             </div>
         </a>
 
-        {{-- MASTER DATA --}}
-        @if(in_array(auth()->user()->role, ['super_admin', 'pimpinan', 'supervisor']))
+        {{-- ================================================== --}}
+        {{-- MASTER DATA (Hanya untuk Superadmin & Supervisor)  --}}
+        {{-- ================================================== --}}
+        @if(in_array(auth()->user()->role, ['super_admin', 'superadmin', 'supervisor']))
         <div x-data="{ open: {{ request()->routeIs('master.*') ? 'true' : 'false' }} }" class="w-full relative group">
             <button @click="isSidebarExpanded ? open = !open : isSidebarExpanded = true"
                 class="flex items-center w-full py-3 rounded-xl transition-all duration-300 group text-[11px] font-black relative uppercase tracking-widest
@@ -119,7 +121,7 @@
                     Salesman
                 </a>
 
-                @if(auth()->user()->role === 'super_admin')
+                @if(in_array(auth()->user()->role, ['super_admin', 'superadmin']))
                 <a href="{{ route('master.user') }}"
                     class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-colors
                     {{ request()->routeIs('master.user') ? 'text-rose-500 bg-rose-50/50 dark:text-rose-300 dark:bg-white/5' : 'text-slate-500 hover:text-rose-500 dark:hover:text-rose-300' }}">
@@ -138,7 +140,10 @@
         </div>
         @endif
 
-        {{-- OPERASIONAL --}}
+        {{-- ================================================== --}}
+        {{-- OPERASIONAL (Hanya untuk Superadmin & Admin)       --}}
+        {{-- ================================================== --}}
+        @if(in_array(auth()->user()->role, ['super_admin', 'superadmin', 'admin']))
         <div x-data="{ open: {{ request()->routeIs('transaksi.*') ? 'true' : 'false' }} }"
             class="w-full relative group">
             <button @click="isSidebarExpanded ? open = !open : isSidebarExpanded = true"
@@ -201,14 +206,17 @@
                 Operasional
             </div>
         </div>
+        @endif
 
-        {{-- ANALISA & LAPORAN --}}
-        @if(in_array(auth()->user()->role, ['super_admin', 'pimpinan', 'supervisor']))
-        <div x-data="{ open: {{ (request()->routeIs('pimpinan.*') || request()->routeIs('laporan.*')) ? 'true' : 'false' }} }"
+        {{-- ================================================== --}}
+        {{-- ANALISA & LAPORAN (Hanya untuk Superadmin & Pimpinan) --}}
+        {{-- ================================================== --}}
+        @if(in_array(auth()->user()->role, ['super_admin', 'superadmin', 'pimpinan']))
+        <div x-data="{ open: {{ (request()->routeIs('pimpinan.*') || request()->routeIs('laporan.*') || request()->routeIs('pusat-cetak')) ? 'true' : 'false' }} }"
             class="w-full relative group">
             <button @click="isSidebarExpanded ? open = !open : isSidebarExpanded = true"
                 class="flex items-center w-full py-3 rounded-xl transition-all duration-300 group text-[11px] font-black relative uppercase tracking-widest
-                {{ (request()->routeIs('pimpinan.*') || request()->routeIs('laporan.*')) 
+                {{ (request()->routeIs('pimpinan.*') || request()->routeIs('laporan.*') || request()->routeIs('pusat-cetak')) 
                     ? 'text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-400/10' 
                     : 'text-slate-500 hover:bg-slate-50 hover:text-amber-600 dark:hover:bg-white/5 dark:hover:text-white' }}"
                 :class="isSidebarExpanded ? 'px-5 justify-between' : 'justify-center'">
@@ -216,7 +224,7 @@
                 <div class="flex items-center">
                     <span class="w-5 flex justify-center">
                         <i
-                            class="fas fa-file-contract text-base {{ (request()->routeIs('pimpinan.*') || request()->routeIs('laporan.*')) ? 'text-amber-500 dark:text-amber-400' : 'group-hover:text-amber-500 dark:group-hover:text-amber-400' }}"></i>
+                            class="fas fa-file-contract text-base {{ (request()->routeIs('pimpinan.*') || request()->routeIs('laporan.*') || request()->routeIs('pusat-cetak')) ? 'text-amber-500 dark:text-amber-400' : 'group-hover:text-amber-500 dark:group-hover:text-amber-400' }}"></i>
                     </span>
                     <span x-show="isSidebarExpanded" class="ml-4">Analisa</span>
                 </div>
@@ -228,7 +236,7 @@
             <div x-show="open && isSidebarExpanded" x-cloak x-transition.origin.top
                 class="mt-1 space-y-0.5 ml-4 border-l-[1.5px] border-slate-200 pl-3 dark:border-white/10">
 
-                {{-- [MENU BARU] PUSAT CETAK --}}
+                {{-- PUSAT CETAK --}}
                 <a href="{{ route('pusat-cetak') }}"
                     class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-colors mb-2
                     {{ request()->routeIs('pusat-cetak') ? 'text-white bg-amber-500 shadow-lg shadow-amber-500/20' : 'text-slate-500 hover:text-amber-600 dark:hover:text-amber-300' }}">
@@ -239,7 +247,8 @@
                 {{-- ANALISA STRATEGIS --}}
                 <div
                     class="text-[9px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest mt-3 mb-1 px-3">
-                    Strategis</div>
+                    Strategis
+                </div>
 
                 <a href="{{ route('pimpinan.profit-analysis') }}"
                     class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-colors
@@ -268,7 +277,8 @@
                 {{-- REKAPITULASI --}}
                 <div
                     class="text-[9px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest mt-3 mb-1 px-3">
-                    Rekapitulasi</div>
+                    Rekapitulasi
+                </div>
 
                 <a href="{{ route('laporan.rekap-penjualan') }}"
                     class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-colors

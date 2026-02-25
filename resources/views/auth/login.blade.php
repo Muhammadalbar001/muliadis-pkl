@@ -64,12 +64,12 @@
                     class="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all active:scale-95 shadow-lg shadow-blue-900/40">MASUK
                     SEKARANG</button>
             </form>
-            <div class="mt-8 pt-6 border-t border-white/5 text-center">
+            <!-- <div class="mt-8 pt-6 border-t border-white/5 text-center">
                 <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Belum Punya Akun? <a
                         href="{{ route('register') }}"
                         class="text-blue-400 hover:text-white transition-colors ml-1 underline decoration-2 underline-offset-4">Daftar
                         Disini</a></p>
-            </div>
+            </div> -->
         </div>
     </div>
 </body>
