@@ -21,7 +21,6 @@ class Dashboard extends Component
     {
         $request = DeletionRequest::findOrFail($id);
 
-        // Eksekusi Hard Delete berdasarkan modul dan rentang tanggal
         if ($request->tipe_modul == 'penjualan') {
             Penjualan::whereBetween('tgl_penjualan', [$request->tanggal_mulai, $request->tanggal_selesai])->delete();
         } elseif ($request->tipe_modul == 'retur') {
@@ -32,7 +31,6 @@ class Dashboard extends Component
             Collection::whereBetween('tanggal', [$request->tanggal_mulai, $request->tanggal_selesai])->delete();
         }
 
-        // Ubah status pengajuan menjadi 'approved'
         $request->update([
             'status' => 'approved',
             'approved_by' => auth()->id(),
@@ -77,7 +75,7 @@ class Dashboard extends Component
             ->distinct()
             ->count('sku');
 
-        // 4. DAFTAR PENGAJUAN HAPUS (PENDING) DARI ADMIN
+        // 4. DAFTAR PENGAJUAN HAPUS (PENDING)
         $pendingRequests = DeletionRequest::with('requester')
             ->where('status', 'pending')
             ->orderBy('created_at', 'asc')
@@ -106,6 +104,44 @@ class Dashboard extends Component
             ->take(3)
             ->get();
 
+        // ========================================================
+        // 6. SMART ALERTS (SISTEM PERINGATAN DINI UNTUK SUPERVISOR)
+        // ========================================================
+        $alerts = collect();
+
+        // Alert 1: Otorisasi Tertunda (Prioritas Tertinggi)
+        if ($pendingRequests->count() > 0) {
+            $alerts->push([
+                'type' => 'danger',
+                'icon' => 'fas fa-clipboard-check',
+                'title' => 'Otorisasi Tindakan Diperlukan',
+                'message' => "Terdapat <strong>{$pendingRequests->count()} pengajuan hapus data</strong> operasional dari Admin yang menumpuk. Harap segera eksekusi pengajuan tersebut pada Tab Otorisasi untuk menjaga kebersihan database.",
+                'action_tab' => 'persetujuan' // Untuk trigger tombol ke tab persetujuan
+            ]);
+        }
+
+        // Alert 2: Anomali Data (SKU Siluman)
+        if ($anomaliProdukCount > 0) {
+            $alerts->push([
+                'type' => 'warning',
+                'icon' => 'fas fa-exclamation-triangle',
+                'title' => 'Peringatan Integritas Master Data',
+                'message' => "Sistem mendeteksi <strong>{$anomaliProdukCount} SKU produk</strong> pada riwayat transaksi penjualan yang tidak terdaftar di database Master Produk. Segera sinkronisasikan Master Produk agar analisa sistem tidak keliru.",
+                'link' => route('master.produk')
+            ]);
+        }
+
+        // Alert 3: Peringatan Stok Kosong
+        if ($produkKosong > 0) {
+            $alerts->push([
+                'type' => 'info',
+                'icon' => 'fas fa-box-open',
+                'title' => 'Peringatan Ketersediaan Stok',
+                'message' => "Terdapat <strong>{$produkKosong} jenis produk</strong> yang saat ini berstatus kehabisan stok fisik (Stok = 0). Silakan lakukan pengecekan master data dan koordinasikan dengan Supplier terkait.",
+                'link' => route('master.produk')
+            ]);
+        }
+
         return view('livewire.supervisor.dashboard', [
             'totalProduk' => $totalProduk,
             'produkKosong' => $produkKosong,
@@ -116,7 +152,8 @@ class Dashboard extends Component
             'topRetur' => $topRetur,
             'piutangKritis' => $piutangKritis,
             'bottomSales' => $bottomSales,
-            'pendingRequests' => $pendingRequests, // Kirim data pengajuan ke view
+            'pendingRequests' => $pendingRequests,
+            'alerts' => $alerts, // Kirim Notifikasi Cerdas ke View
         ])->layout('layouts.app');
     }
 }

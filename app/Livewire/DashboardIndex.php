@@ -5,6 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use Livewire\Attributes\Computed;
 use App\Models\Master\SalesTarget;
+use App\Models\Master\Produk;
 use App\Models\Transaksi\Penjualan;
 use App\Models\Transaksi\Retur;
 use App\Models\Keuangan\AccountReceivable;
@@ -26,7 +27,6 @@ class DashboardIndex extends Component
         $this->endDate   = date('Y-m-d');
     }
 
-    // Hook ini WAJIB ada untuk update chart otomatis saat filter berubah
     public function updated($propertyName) 
     { 
         $this->dispatch('update-charts', data: $this->chartData);
@@ -42,7 +42,6 @@ class DashboardIndex extends Component
     #[Computed]
     public function kpiStats()
     {
-        // ... (Logika KPI sama seperti sebelumnya) ...
         $salesSum = $this->baseFilter(Penjualan::query(), 'tgl_penjualan')->sum(DB::raw('CAST(total_grand AS DECIMAL(20,2))'));
         $returSum = $this->baseFilter(Retur::query(), 'tgl_retur')->sum(DB::raw('CAST(total_grand AS DECIMAL(20,2))'));
         $arSum    = $this->baseFilter(AccountReceivable::query(), 'tgl_penjualan')->sum(DB::raw('CAST(nilai AS DECIMAL(20,2))'));
@@ -58,7 +57,6 @@ class DashboardIndex extends Component
     #[Computed]
     public function chartData()
     {
-        // ... (Logika Chart sama seperti sebelumnya) ...
         $dates = [];
         $start = $this->startDate ? Carbon::parse($this->startDate) : Carbon::now()->startOfMonth();
         $end   = $this->endDate ? Carbon::parse($this->endDate) : Carbon::now();
@@ -139,6 +137,73 @@ class DashboardIndex extends Component
         ];
     }
 
+    // FUNGSI UNTUK MENDAPATKAN SMART ALERTS (SUDAH DIPERBAIKI)
+    #[Computed]
+    public function smartAlerts()
+    {
+        $alerts = collect();
+
+        // 1. Alert: Piutang Kritis (> 30 Hari)
+        $piutangKritis = AccountReceivable::where('umur_piutang', '>', 30)
+                                          ->where('status', '!=', 'Lunas')
+                                          ->count();
+        if ($piutangKritis > 0) {
+            $totalNilaiKritis = AccountReceivable::where('umur_piutang', '>', 30)
+                                                 ->where('status', '!=', 'Lunas')
+                                                 ->sum(DB::raw('CAST(nilai AS DECIMAL(20,2))'));
+            $alerts->push([
+                'type' => 'danger',
+                'icon' => 'fas fa-exclamation-triangle',
+                'title' => 'Peringatan Piutang Macet!',
+                'message' => "Terdapat <strong>{$piutangKritis} faktur</strong> piutang yang telah melewati batas 30 hari dengan total nilai <strong>Rp " . number_format($totalNilaiKritis, 0, ',', '.') . "</strong>. Diperlukan tindakan penagihan segera.",
+                'link' => route('laporan.rekap-ar')
+            ]);
+        }
+
+        // 2. Alert: Stok Kosong (Produk Master)
+        $stokKosong = Produk::where('stok', '<=', 0)->count();
+        if ($stokKosong > 0) {
+            $alerts->push([
+                'type' => 'warning',
+                'icon' => 'fas fa-box-open',
+                'title' => 'Perhatian Ketersediaan Stok',
+                'message' => "Terdapat <strong>{$stokKosong} item produk</strong> pada Master Data yang saat ini kehabisan stok (Stok = 0). Silakan tinjau valuasi stok untuk mencegah hilangnya potensi penjualan.",
+                'link' => route('pimpinan.stock-analysis')
+            ]);
+        }
+
+        // 3. Alert: Penurunan Penjualan (Menggunakan tgl_penjualan dan membandingkan dengan bulan dari startDate)
+        $start = $this->startDate ? Carbon::parse($this->startDate) : Carbon::now();
+        $bulanIni = $start->month;
+        $tahunIni = $start->year;
+
+        $bulanLalu = $start->copy()->subMonth();
+
+        $omzetBulanLalu = Penjualan::whereMonth('tgl_penjualan', $bulanLalu->month)
+                                   ->whereYear('tgl_penjualan', $bulanLalu->year)
+                                   ->sum(DB::raw('CAST(total_grand AS DECIMAL(20,2))'));
+                                   
+        $omzetBulanIni = Penjualan::whereMonth('tgl_penjualan', $bulanIni)
+                                  ->whereYear('tgl_penjualan', $tahunIni)
+                                  ->sum(DB::raw('CAST(total_grand AS DECIMAL(20,2))'));
+        
+        // Jangan beri alert jika yang dipilih adalah bulan berjalan (karena omzet belum final sampai akhir bulan)
+        if ($omzetBulanLalu > 0 && $omzetBulanIni < $omzetBulanLalu && $bulanIni != Carbon::now()->month) {
+            $selisih = $omzetBulanLalu - $omzetBulanIni;
+            $persentaseTurun = round(($selisih / $omzetBulanLalu) * 100, 1);
+            
+            $alerts->push([
+                'type' => 'info',
+                'icon' => 'fas fa-chart-line',
+                'title' => 'Evaluasi Kinerja Penjualan',
+                'message' => "Total omzet pada bulan " . Carbon::create($tahunIni, $bulanIni)->translatedFormat('F Y') . " mengalami <strong>penurunan sebesar {$persentaseTurun}%</strong> (Rp " . number_format($selisih, 0, ',', '.') . ") dibandingkan bulan sebelumnya.",
+                'link' => route('pimpinan.profit-analysis')
+            ]);
+        }
+
+        return $alerts;
+    }
+
     public function render()
     {
         $optCabang = Cache::remember('dash_cabang', 3600, fn() => Penjualan::select('cabang')->distinct()->whereNotNull('cabang')->pluck('cabang'));
@@ -146,10 +211,11 @@ class DashboardIndex extends Component
 
         $stats = $this->kpiStats;
         $chartData = $this->chartData;
+        $alerts = $this->smartAlerts; // Mengambil koleksi alert
 
         return view('livewire.dashboard-index', array_merge(
             $stats, 
-            compact('optCabang', 'optSales', 'chartData')
+            compact('optCabang', 'optSales', 'chartData', 'alerts')
         ))->layout('layouts.app', ['header' => 'Executive Dashboard']);
     }
 
@@ -163,5 +229,4 @@ class DashboardIndex extends Component
             return number_format($val, 0, ',', '.');
         }
     }
-    
 }

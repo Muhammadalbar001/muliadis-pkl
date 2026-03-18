@@ -7,7 +7,7 @@ use App\Models\Transaksi\Penjualan;
 use App\Models\Transaksi\Retur;
 use App\Models\Keuangan\AccountReceivable;
 use App\Models\Keuangan\Collection;
-use App\Models\DeletionRequest; // Model baru yang kita buat tadi
+use App\Models\DeletionRequest; // Model Pengajuan
 use Carbon\Carbon;
 
 class Dashboard extends Component
@@ -85,11 +85,59 @@ class Dashboard extends Component
             $statusUploadCabang[$cabang] = $isUploaded;
         }
 
-        // 4. Data Riwayat Pengajuan Hapus milik Admin ini (Max 4 terbaru)
+        // 4. Data Riwayat Pengajuan Hapus milik Admin ini
         $riwayatPengajuan = DeletionRequest::where('requested_by', auth()->id())
                             ->orderBy('created_at', 'desc')
                             ->take(4)
                             ->get();
+
+        // ========================================================
+        // 5. SMART ALERTS (PENGINGAT TUGAS HARIAN & NOTIFIKASI)
+        // ========================================================
+        $alerts = collect();
+
+        // Alert 1: Lupa Import Penjualan Hari Ini
+        if ($jualHariIni == 0) {
+            $alerts->push([
+                'type' => 'warning',
+                'icon' => 'fas fa-file-excel',
+                'title' => 'Pengingat: Sinkronisasi Penjualan',
+                'message' => "Anda belum melakukan *import* data <strong>Penjualan</strong> untuk transaksi tanggal hari ini ({$hariIni->translatedFormat('d F Y')}). Segera unggah file operasional harian agar Pimpinan dapat memantau data terbaru.",
+                'link' => route('transaksi.penjualan')
+            ]);
+        }
+
+        // Alert 2: Lupa Import Retur Hari Ini
+        if ($returHariIni == 0) {
+            $alerts->push([
+                'type' => 'warning',
+                'icon' => 'fas fa-file-excel',
+                'title' => 'Pengingat: Sinkronisasi Retur',
+                'message' => "Anda belum melakukan *import* data <strong>Retur Barang</strong> untuk tanggal hari ini. Pastikan tidak ada dokumen retur gudang yang belum diinput.",
+                'link' => route('transaksi.retur')
+            ]);
+        }
+
+        // Alert 3: Hasil Pengajuan Hapus Data (Maksimal 2 Hari Terakhir)
+        $recentUpdates = DeletionRequest::where('requested_by', auth()->id())
+                            ->whereIn('status', ['approved', 'rejected'])
+                            ->where('updated_at', '>=', Carbon::now()->subDays(2))
+                            ->orderBy('updated_at', 'desc')
+                            ->take(2) // Maksimal 2 notif saja agar tidak penuh
+                            ->get();
+
+        foreach ($recentUpdates as $update) {
+            $statusText = $update->status == 'approved' ? 'DISETUJUI' : 'DITOLAK';
+            $type = $update->status == 'approved' ? 'success' : 'danger';
+            $icon = $update->status == 'approved' ? 'fas fa-check-circle' : 'fas fa-times-circle';
+            
+            $alerts->push([
+                'type' => $type,
+                'icon' => $icon,
+                'title' => "Respon Supervisor: {$statusText}",
+                'message' => "Pengajuan penghapusan data <strong>" . strtoupper($update->tipe_modul) . "</strong> untuk rentang periode " . Carbon::parse($update->tanggal_mulai)->format('d/m/Y') . " s.d " . Carbon::parse($update->tanggal_selesai)->format('d/m/Y') . " telah <strong>{$statusText}</strong>.",
+            ]);
+        }
 
         return view('livewire.admin.dashboard', [
             'jualHariIni' => $jualHariIni,
@@ -100,6 +148,7 @@ class Dashboard extends Component
             'recentRetur' => $recentRetur,
             'statusUploadCabang' => $statusUploadCabang,
             'riwayatPengajuan' => $riwayatPengajuan,
+            'alerts' => $alerts, // Kirim ke View
             'hariIni' => $hariIni->translatedFormat('l, d F Y')
         ])->layout('layouts.app');
     }

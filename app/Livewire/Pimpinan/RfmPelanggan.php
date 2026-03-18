@@ -12,6 +12,9 @@ class RfmPelanggan extends Component
     public $bulan;
     public $tahun;
 
+    public $isModalOpen = false;
+    public $selectedDetail = null;
+
     public function mount()
     {
         $this->bulan = Carbon::now()->month;
@@ -20,11 +23,8 @@ class RfmPelanggan extends Component
 
     public function hitungRFM()
     {
-        // 1. Tentukan tanggal evaluasi (Akhir dari bulan yang dipilih)
         $tanggalEvaluasi = Carbon::create($this->tahun, $this->bulan)->endOfMonth();
 
-        // 2. Ambil data penjualan dari AWAL TAHUN sampai BULAN YANG DIPILIH
-        // (RFM butuh rentang waktu yang agak panjang agar Frequency-nya akurat)
         $dataPenjualan = Penjualan::selectRaw('
                 nama_pelanggan, 
                 MAX(tgl_penjualan) as last_order, 
@@ -40,87 +40,90 @@ class RfmPelanggan extends Component
 
         $rfmData = [];
 
-        // 3. Hitung Nilai Mentah (Raw Values)
         foreach ($dataPenjualan as $p) {
             $lastOrderDate = Carbon::parse($p->last_order);
-            // Recency: Selisih hari dari transaksi terakhir ke tanggal evaluasi
-            $recencyDays = $lastOrderDate->diffInDays($tanggalEvaluasi);
+            $recencyDays = (int) $lastOrderDate->diffInDays($tanggalEvaluasi);
             
             $rfmData[] = [
                 'nama' => $p->nama_pelanggan,
                 'r_raw' => $recencyDays,
                 'f_raw' => $p->total_orders,
                 'm_raw' => $p->total_spent,
+                'm_fmt' => number_format($p->total_spent, 0, ',', '.'),
                 'r_score' => 0, 'f_score' => 0, 'm_score' => 0,
             ];
         }
 
         $totalData = count($rfmData);
-        $chunkSize = ceil($totalData / 5); // Dibagi jadi 5 kelompok (Quantile 1-5)
+        $chunkSize = ceil($totalData / 5); 
 
-        // 4. SCORING RECENCY (Semakin KECIL hari, semakin BESAR skornya)
+        // R (Keterbaruan)
         usort($rfmData, fn($a, $b) => $a['r_raw'] <=> $b['r_raw']);
         foreach ($rfmData as $index => &$item) {
             $score = 5 - floor($index / $chunkSize);
-            $item['r_score'] = max(1, min(5, $score));
+            $item['r_score'] = max(1, min(5, (int)$score));
+            $item['r_rank_info'] = "Kelompok " . (5 - $item['r_score'] + 1) . " (Terbaru)";
         }
 
-        // 5. SCORING FREQUENCY (Semakin BESAR total order, semakin BESAR skornya)
+        // F (Frekuensi)
         usort($rfmData, fn($a, $b) => $b['f_raw'] <=> $a['f_raw']);
         foreach ($rfmData as $index => &$item) {
             $score = 5 - floor($index / $chunkSize);
-            $item['f_score'] = max(1, min(5, $score));
+            $item['f_score'] = max(1, min(5, (int)$score));
         }
 
-        // 6. SCORING MONETARY (Semakin BESAR total belanja, semakin BESAR skornya)
+        // M (Moneter)
         usort($rfmData, fn($a, $b) => $b['m_raw'] <=> $a['m_raw']);
         foreach ($rfmData as $index => &$item) {
             $score = 5 - floor($index / $chunkSize);
-            $item['m_score'] = max(1, min(5, $score));
+            $item['m_score'] = max(1, min(5, (int)$score));
         }
 
-        // 7. PENENTUAN SEGMENTASI (Berdasarkan Kombinasi R dan F)
+        // Segmentasi
         foreach ($rfmData as &$item) {
             $r = $item['r_score'];
             $f = $item['f_score'];
-            $m = $item['m_score'];
-            $item['rfm_concat'] = $r . $f . $m;
+            $item['rfm_concat'] = $r . $f . $item['m_score'];
 
             if ($r >= 4 && $f >= 4) {
-                $item['segment'] = 'Champions'; // Pelanggan terbaik
-                $item['color'] = 'emerald';
+                $item['segment'] = 'Pelanggan Utama'; $item['color'] = 'emerald';
             } elseif ($r >= 3 && $f >= 3) {
-                $item['segment'] = 'Loyal Customers'; // Sering beli
-                $item['color'] = 'blue';
+                $item['segment'] = 'Pelanggan Setia'; $item['color'] = 'blue';
             } elseif ($r >= 4 && $f <= 2) {
-                $item['segment'] = 'New / Promising'; // Baru beli, tapi baru sedikit
-                $item['color'] = 'cyan';
+                $item['segment'] = 'Pelanggan Potensial'; $item['color'] = 'cyan';
             } elseif ($r <= 2 && $f >= 3) {
-                $item['segment'] = 'At Risk'; // Dulu sering beli, sekarang menghilang
-                $item['color'] = 'orange';
+                $item['segment'] = 'Berisiko Pindah'; $item['color'] = 'orange';
             } elseif ($r <= 2 && $f <= 2) {
-                $item['segment'] = 'Lost Customers'; // Sudah lama hilang dan jaranga beli
-                $item['color'] = 'rose';
+                $item['segment'] = 'Pelanggan Pasif'; $item['color'] = 'rose';
             } else {
-                $item['segment'] = 'Regular Customers'; // Rata-rata
-                $item['color'] = 'slate';
+                $item['segment'] = 'Pelanggan Reguler'; $item['color'] = 'slate';
             }
         }
 
-        // Urutkan berdasarkan Segment terbaik
         usort($rfmData, function($a, $b) {
-            $segmentOrder = ['Champions' => 1, 'Loyal Customers' => 2, 'New / Promising' => 3, 'Regular Customers' => 4, 'At Risk' => 5, 'Lost Customers' => 6];
-            return $segmentOrder[$a['segment']] <=> $segmentOrder[$b['segment']];
+            $order = ['Pelanggan Utama' => 1, 'Pelanggan Setia' => 2, 'Pelanggan Potensial' => 3, 'Pelanggan Reguler' => 4, 'Berisiko Pindah' => 5, 'Pelanggan Pasif' => 6];
+            return $order[$a['segment']] <=> $order[$b['segment']];
         });
 
         return $rfmData;
     }
 
+    public function openDetail($nama)
+    {
+        $hasil = $this->hitungRFM();
+        $this->selectedDetail = collect($hasil)->firstWhere('nama', $nama);
+        $this->isModalOpen = true;
+    }
+
+    public function closeModal()
+    {
+        $this->isModalOpen = false;
+        $this->selectedDetail = null;
+    }
+
     public function render()
     {
         $hasilRFM = $this->hitungRFM();
-
-        // Hitung Summary untuk Statistik di Atas
         $summary = collect($hasilRFM)->countBy('segment')->toArray();
 
         return view('livewire.pimpinan.rfm-pelanggan', [

@@ -1,5 +1,5 @@
 <div class="p-6 max-w-7xl mx-auto space-y-5 animate-fade-in" x-data="{ activeTab: 'overview' }">
-    {{-- CSS Animasi --}}
+    {{-- CSS Animasi & Scrollbar --}}
     <style>
     .animate-fade-in {
         animation: fadeIn 0.5s ease-out forwards;
@@ -36,7 +36,7 @@
     }
     </style>
 
-    {{-- ALERT NOTIFIKASI --}}
+    {{-- ALERT NOTIFIKASI SESSION --}}
     @if (session()->has('message'))
     <div
         class="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-between shadow-sm animate-fade-in">
@@ -54,7 +54,7 @@
     </div>
     @endif
 
-    {{-- 1. WELCOME HERO SECTION (KINI LEBIH RAMPING & COMPACT) --}}
+    {{-- 1. WELCOME HERO SECTION --}}
     <div
         class="bg-white dark:bg-[#121212] rounded-2xl px-6 py-5 border border-slate-200 dark:border-white/10 shadow-sm relative overflow-hidden">
         <div
@@ -130,7 +130,73 @@
     {{-- ISI TAB 1: RINGKASAN MASTER (OVERVIEW)     --}}
     {{-- ========================================== --}}
     <div x-show="activeTab === 'overview'" x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" x-cloak>
+        x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" x-cloak
+        class="space-y-5">
+
+        {{-- SMART ALERTS: RADAR KEAMANAN DATA (KHUSUS SUPERVISOR) --}}
+        @if(count($alerts) > 0)
+        <div class="space-y-3" x-data="{ show: true }" x-show="show" x-transition.duration.500ms>
+            <div class="flex items-center justify-between px-2 mb-2">
+                <h3
+                    class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                    <i class="fas fa-satellite-dish text-rose-500 animate-pulse"></i> Radar Keamanan Data Master
+                </h3>
+                <button @click="show = false"
+                    class="text-[10px] font-bold text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest">Tutup
+                    Semua</button>
+            </div>
+
+            @foreach($alerts as $alert)
+            @php
+            $bgClass = $alert['type'] == 'danger' ? 'bg-rose-50 dark:bg-rose-500/10 border-rose-200
+            dark:border-rose-500/30' :
+            ($alert['type'] == 'warning' ? 'bg-orange-50 dark:bg-orange-500/10 border-orange-200
+            dark:border-orange-500/30' :
+            'bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30');
+
+            $textClass = $alert['type'] == 'danger' ? 'text-rose-700 dark:text-rose-400' :
+            ($alert['type'] == 'warning' ? 'text-orange-700 dark:text-orange-400' :
+            'text-blue-700 dark:text-blue-400');
+
+            $iconClass = $alert['type'] == 'danger' ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-400'
+            :
+            ($alert['type'] == 'warning' ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400' :
+            'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400');
+            @endphp
+
+            <div
+                class="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border {{ $bgClass }} shadow-sm gap-4 transition-transform hover:-translate-y-0.5">
+                <div class="flex items-start gap-4">
+                    <div
+                        class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 {{ $iconClass }} shadow-inner">
+                        <i
+                            class="{{ $alert['icon'] }} text-lg {{ $alert['type'] == 'danger' ? 'animate-pulse' : '' }}"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-black text-sm uppercase tracking-widest mb-1 {{ $textClass }}">
+                            {{ $alert['title'] }}</h4>
+                        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{!! $alert['message'] !!}
+                        </p>
+                    </div>
+                </div>
+
+                @if(isset($alert['link']))
+                <a href="{{ $alert['link'] }}"
+                    class="shrink-0 px-4 py-2 bg-white dark:bg-[#18181b] border border-slate-200 dark:border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest {{ $textClass }} hover:bg-slate-50 dark:hover:bg-white/5 transition-colors shadow-sm self-start sm:self-center text-center">
+                    Tinjau Master <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+                @elseif(isset($alert['action_tab']))
+                <button @click="activeTab = '{{ $alert['action_tab'] }}'"
+                    class="shrink-0 px-4 py-2 bg-white dark:bg-[#18181b] border border-slate-200 dark:border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest {{ $textClass }} hover:bg-slate-50 dark:hover:bg-white/5 transition-colors shadow-sm self-start sm:self-center text-center">
+                    Buka Otorisasi <i class="fas fa-unlock-alt ml-1"></i>
+                </button>
+                @endif
+            </div>
+            @endforeach
+        </div>
+        @endif
+
+        {{-- 4 KARTU OVERVIEW --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
             <div
                 class="bg-white dark:bg-[#121212] rounded-2xl p-5 border {{ $anomaliProdukCount > 0 ? 'border-rose-400 dark:border-rose-600 shadow-rose-500/10' : 'border-slate-200 dark:border-white/10' }} shadow-sm relative overflow-hidden group">

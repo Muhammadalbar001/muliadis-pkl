@@ -8,11 +8,16 @@ use App\Models\Transaksi\Penjualan;
 use App\Models\Transaksi\Retur;
 use App\Models\Keuangan\AccountReceivable;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class SpkSales extends Component
 {
     public $bulan;
     public $tahun;
+    
+    // Variabel untuk kendali Modal Pop-up via Livewire
+    public $isModalOpen = false;
+    public $selectedDetail = null;
     
     public function mount()
     {
@@ -22,110 +27,106 @@ class SpkSales extends Component
 
     public function hitungSAW()
     {
-        // 1. Ambil semua Sales
         $salesList = Sales::all();
         $dataKinerja = [];
 
-        // 2. Kumpulkan Nilai Mentah (Matriks Keputusan)
+        // 1. Kumpulkan Nilai Mentah
         foreach ($salesList as $sales) {
-            // C1: Total Omzet (Benefit)
             $omzet = Penjualan::where('sales_name', $sales->sales_name)
                         ->whereMonth('tgl_penjualan', $this->bulan)
                         ->whereYear('tgl_penjualan', $this->tahun)
-                        ->sum(\DB::raw('CAST(total_grand AS UNSIGNED)'));
+                        ->sum(DB::raw('CAST(total_grand AS UNSIGNED)'));
 
-            // C2: Total Transaksi / Nota (Benefit)
             $transaksi = Penjualan::where('sales_name', $sales->sales_name)
                         ->whereMonth('tgl_penjualan', $this->bulan)
                         ->whereYear('tgl_penjualan', $this->tahun)
                         ->count();
 
-            // C3: Total Retur (Cost - Semakin kecil semakin baik)
             $retur = Retur::where('sales_name', $sales->sales_name)
                         ->whereMonth('tgl_retur', $this->bulan)
                         ->whereYear('tgl_retur', $this->tahun)
-                        ->sum(\DB::raw('CAST(total_grand AS UNSIGNED)'));
+                        ->sum(DB::raw('CAST(total_grand AS UNSIGNED)'));
 
-            // C4: Piutang Belum Lunas (Cost - Semakin kecil semakin baik)
-            // PERBAIKAN DI SINI: Kolomnya adalah 'sales_name', bukan 'sales'
             $piutang = AccountReceivable::where('sales_name', $sales->sales_name)
                         ->where('status', '!=', 'Lunas')
-                        ->sum(\DB::raw('CAST(nilai AS UNSIGNED)'));
+                        ->sum(DB::raw('CAST(nilai AS UNSIGNED)'));
 
-            // Hanya masukkan sales yang punya aktivitas di bulan ini (omzet/retur/piutang)
             if ($omzet > 0 || $retur > 0 || $piutang > 0) {
                 $dataKinerja[] = [
                     'nama' => $sales->sales_name,
                     'cabang' => $sales->cabang,
-                    'c1_omzet' => $omzet,
-                    'c2_transaksi' => $transaksi,
-                    'c3_retur' => $retur,
-                    'c4_piutang' => $piutang,
+                    'k1_omzet' => $omzet,
+                    'k2_transaksi' => $transaksi,
+                    'k3_retur' => $retur,
+                    'k4_piutang' => $piutang,
                 ];
             }
         }
 
-        // Jika tidak ada data di bulan tersebut, kembalikan array kosong
         if (empty($dataKinerja)) return [];
 
-        // 3. Cari Nilai Max (untuk Benefit) dan Min (untuk Cost)
-        $maxC1 = max(array_column($dataKinerja, 'c1_omzet'));
-        $maxC2 = max(array_column($dataKinerja, 'c2_transaksi'));
-        
-        // Atasi nilai 0 pada array_column untuk Cost agar tidak division by zero.
-        // Jika nilai terendah adalah 0, kita beri nilai 1 agar rumus pembagian SAW tidak Error (Undefined Division).
-        $minC3 = min(array_filter(array_column($dataKinerja, 'c3_retur'))) ?: 1; 
-        $minC4 = min(array_filter(array_column($dataKinerja, 'c4_piutang'))) ?: 1;
+        // 2. Cari Nilai Max (Keuntungan) dan Min (Biaya)
+        $maxK1 = max(array_column($dataKinerja, 'k1_omzet'));
+        $maxK2 = max(array_column($dataKinerja, 'k2_transaksi'));
+        $minK3 = min(array_filter(array_column($dataKinerja, 'k3_retur'))) ?: 1; 
+        $minK4 = min(array_filter(array_column($dataKinerja, 'k4_piutang'))) ?: 1;
 
-        // Bobot Kriteria (Total harus 1 atau 100%)
-        $w1 = 0.40; // Omzet (40%)
-        $w2 = 0.20; // Frekuensi Nota (20%)
-        $w3 = 0.20; // Retur (20%)
-        $w4 = 0.20; // Piutang Macet (20%)
+        // Bobot Kriteria
+        $w1 = 0.40; $w2 = 0.20; $w3 = 0.20; $w4 = 0.20;
 
         $hasilAkhir = [];
 
-        // 4. Normalisasi Matriks & Hitung Nilai Akhir (Preferensi)
+        // 3. Normalisasi
         foreach ($dataKinerja as $row) {
-            // Normalisasi Benefit (Nilai / Max)
-            $n1 = $maxC1 > 0 ? ($row['c1_omzet'] / $maxC1) : 0;
-            $n2 = $maxC2 > 0 ? ($row['c2_transaksi'] / $maxC2) : 0;
-            
-            // Normalisasi Cost (Min / Nilai)
-            // Jika Cost (Retur/Piutang) = 0, artinya kinerjanya SEMPURNA, kita beri nilai Max yaitu 1.
-            $n3 = $row['c3_retur'] > 0 ? ($minC3 / $row['c3_retur']) : 1;
-            $n4 = $row['c4_piutang'] > 0 ? ($minC4 / $row['c4_piutang']) : 1;
+            $n1 = $maxK1 > 0 ? ($row['k1_omzet'] / $maxK1) : 0;
+            $n2 = $maxK2 > 0 ? ($row['k2_transaksi'] / $maxK2) : 0;
+            $n3 = $row['k3_retur'] > 0 ? ($minK3 / $row['k3_retur']) : 1;
+            $n4 = $row['k4_piutang'] > 0 ? ($minK4 / $row['k4_piutang']) : 1;
 
-            // Hitung Vektor V (Nilai Akhir Total SAW)
             $nilaiSAW = ($n1 * $w1) + ($n2 * $w2) + ($n3 * $w3) + ($n4 * $w4);
 
             $hasilAkhir[] = [
                 'nama' => $row['nama'],
                 'cabang' => $row['cabang'],
-                'omzet' => $row['c1_omzet'],
-                'retur' => $row['c3_retur'],
-                'n1' => round($n1, 2),
-                'n2' => round($n2, 2),
-                'n3' => round($n3, 2),
-                'n4' => round($n4, 2),
+                'omzet' => $row['k1_omzet'],
+                'retur' => $row['k3_retur'],
+                'omzet_fmt' => number_format($row['k1_omzet'], 0, ',', '.'),
+                'trans_fmt' => number_format($row['k2_transaksi'], 0, ',', '.'),
+                'retur_fmt' => number_format($row['k3_retur'], 0, ',', '.'),
+                'piutang_fmt' => number_format($row['k4_piutang'], 0, ',', '.'),
+                'max_k1_fmt' => number_format($maxK1, 0, ',', '.'),
+                'max_k2_fmt' => number_format($maxK2, 0, ',', '.'),
+                'min_k3_fmt' => number_format($minK3, 0, ',', '.'),
+                'min_k4_fmt' => number_format($minK4, 0, ',', '.'),
+                'n1' => round($n1, 3), 'n2' => round($n2, 3),
+                'n3' => round($n3, 3), 'n4' => round($n4, 3),
                 'skor_akhir' => round($nilaiSAW, 3),
             ];
         }
 
-        // 5. Urutkan Ranking (dari skor tertinggi ke terendah)
-        usort($hasilAkhir, function($a, $b) {
-            return $b['skor_akhir'] <=> $a['skor_akhir'];
-        });
-
+        usort($hasilAkhir, fn($a, $b) => $b['skor_akhir'] <=> $a['skor_akhir']);
         return $hasilAkhir;
+    }
+
+    // FUNGSI UNTUK MEMBUKA MODAL
+    public function openDetail($nama)
+    {
+        $hasil = $this->hitungSAW();
+        // Cari data spesifik dari salesman yang diklik
+        $this->selectedDetail = collect($hasil)->firstWhere('nama', $nama);
+        $this->isModalOpen = true;
+    }
+
+    public function closeModal()
+    {
+        $this->isModalOpen = false;
+        $this->selectedDetail = null;
     }
 
     public function render()
     {
-        $hasilSPK = $this->hitungSAW();
-
         return view('livewire.pimpinan.spk-sales', [
-            'hasilSPK' => $hasilSPK
+            'hasilSPK' => $this->hitungSAW()
         ])->layout('layouts.app');
     }
 }

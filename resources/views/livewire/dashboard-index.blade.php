@@ -1,6 +1,7 @@
 <div class="min-h-screen space-y-6 font-jakarta pb-10 transition-colors duration-300 dark:bg-[#0a0a0a]"
     x-data="{ activeTab: 'overview' }">
 
+    {{-- HEADER & FILTER AREA --}}
     <div
         class="sticky top-0 z-40 backdrop-blur-md bg-slate-50/90 dark:bg-[#0a0a0a]/90 p-4 rounded-b-2xl shadow-sm border-b border-slate-200 dark:border-white/5 transition-all duration-300 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-6">
         <div class="flex flex-col xl:flex-row gap-4 items-center justify-between">
@@ -37,7 +38,6 @@
             </div>
 
             <div class="flex flex-wrap sm:flex-nowrap gap-2 items-center w-full xl:w-auto justify-end">
-
                 <div
                     class="flex items-center gap-1 bg-white dark:bg-[#121212] border border-slate-200 dark:border-white/10 rounded-lg px-2 py-1 shadow-sm h-[38px]">
                     <input type="date" wire:model.live="startDate"
@@ -73,14 +73,75 @@
                     class="px-3 py-2 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-lg shadow-sm flex items-center justify-center">
                     <i class="fas fa-circle-notch fa-spin"></i>
                 </div>
-
             </div>
         </div>
     </div>
 
+    {{-- KONTEN UTAMA --}}
     <div wire:loading.class="opacity-50 pointer-events-none" class="transition-opacity duration-200">
 
+        {{-- TAB OVERVIEW --}}
         <div x-show="activeTab === 'overview'" x-transition.opacity.duration.300ms class="space-y-6">
+
+            {{-- SMART ALERTS: RADAR PERINGATAN DINI --}}
+            @if(count($alerts) > 0)
+            <div class="mb-6 space-y-3" x-data="{ show: true }" x-show="show" x-transition.duration.500ms>
+                <div class="flex items-center justify-between px-2 mb-2">
+                    <h3
+                        class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                        <i class="fas fa-satellite-dish text-rose-500 animate-pulse"></i> Radar Peringatan Dini
+                    </h3>
+                    <button @click="show = false"
+                        class="text-[10px] font-bold text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest">Tutup
+                        Semua</button>
+                </div>
+
+                @foreach($alerts as $alert)
+                @php
+                $bgClass = $alert['type'] == 'danger' ? 'bg-rose-50 dark:bg-rose-500/10 border-rose-200
+                dark:border-rose-500/30' :
+                ($alert['type'] == 'warning' ? 'bg-orange-50 dark:bg-orange-500/10 border-orange-200
+                dark:border-orange-500/30' :
+                'bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30');
+
+                $textClass = $alert['type'] == 'danger' ? 'text-rose-700 dark:text-rose-400' :
+                ($alert['type'] == 'warning' ? 'text-orange-700 dark:text-orange-400' :
+                'text-blue-700 dark:text-blue-400');
+
+                $iconClass = $alert['type'] == 'danger' ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/40
+                dark:text-rose-400' :
+                ($alert['type'] == 'warning' ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/40
+                dark:text-orange-400' :
+                'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400');
+                @endphp
+
+                <div
+                    class="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border {{ $bgClass }} shadow-sm gap-4 transition-transform hover:-translate-y-0.5">
+                    <div class="flex items-start gap-4">
+                        <div
+                            class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 {{ $iconClass }} shadow-inner">
+                            <i
+                                class="{{ $alert['icon'] }} text-lg {{ $alert['type'] == 'danger' ? 'animate-pulse' : '' }}"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-black text-sm uppercase tracking-widest mb-1 {{ $textClass }}">
+                                {{ $alert['title'] }}</h4>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{!! $alert['message']
+                                !!}</p>
+                        </div>
+                    </div>
+                    @if(isset($alert['link']))
+                    <a href="{{ $alert['link'] }}"
+                        class="shrink-0 px-4 py-2 bg-white dark:bg-[#18181b] border border-slate-200 dark:border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest {{ $textClass }} hover:bg-slate-50 dark:hover:bg-white/5 transition-colors shadow-sm self-start sm:self-center text-center">
+                        Tinjau Data <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                    @endif
+                </div>
+                @endforeach
+            </div>
+            @endif
+
+            {{-- 4 KARTU KPI --}}
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div
                     class="bg-gradient-to-br from-emerald-500 to-teal-600 p-4 rounded-2xl shadow-lg shadow-emerald-500/20 text-white relative overflow-hidden group">
@@ -160,6 +221,7 @@
             </div>
         </div>
 
+        {{-- TAB RANKING --}}
         <div x-show="activeTab === 'ranking'" x-transition.opacity.duration.300ms class="grid grid-cols-1 gap-6"
             wire:ignore>
             <div
@@ -188,6 +250,7 @@
             </div>
         </div>
 
+        {{-- TAB SALESMAN --}}
         <div x-show="activeTab === 'salesman'" x-transition.opacity.duration.300ms class="grid grid-cols-1 gap-6"
             wire:ignore>
             <div
