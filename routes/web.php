@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 // --- 1. IMPORT DASHBOARD BERDASARKAN ROLE ---
-use App\Livewire\DashboardIndex; // Dashboard Pimpinan (yang ada grafiknya)
+use App\Livewire\DashboardIndex; // Dashboard Pimpinan
 use App\Livewire\Admin\Dashboard as AdminDashboard; // Dashboard Admin Operasional
 use App\Livewire\Supervisor\Dashboard as SupervisorDashboard; // Dashboard Supervisor
 
@@ -26,10 +26,14 @@ use App\Livewire\Laporan\RekapArIndex;
 use App\Livewire\Laporan\RekapCollectionIndex;
 use App\Livewire\Laporan\KinerjaSalesIndex;
 
-// --- 5. ANALISA & PIMPINAN ---
+// --- 5. ANALISA PIMPINAN (Strategis & Keuangan) ---
 use App\Livewire\Pimpinan\StockAnalysis;
 use App\Livewire\Pimpinan\ProfitAnalysis;
 use App\Livewire\Laporan\PusatCetak; 
+
+// --- 6. SPK & DATA MINING  ---
+use App\Livewire\Pimpinan\SpkSales; 
+use App\Livewire\Pimpinan\RfmPelanggan;
 
 // --- PROFILE ---
 use App\Http\Controllers\ProfileController;
@@ -112,7 +116,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ====================================================
     Route::middleware(['role:super_admin,superadmin,pimpinan'])->prefix('admin')->group(function () {
         
-        // LAPORAN REKAPITULASI
+        // LAPORAN REKAPITULASI (8 Laporan Awal)
         Route::prefix('laporan')->name('laporan.')->group(function () {
             Route::get('/rekap-penjualan', RekapPenjualanIndex::class)->name('rekap-penjualan');
             Route::get('/rekap-retur', RekapReturIndex::class)->name('rekap-retur');
@@ -127,6 +131,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // PUSAT CETAK
         Route::get('/laporan/pusat-cetak', PusatCetak::class)->name('pusat-cetak');
+        
+        // ====================================================
+        // FITUR UTAMA (INTELLIGENT REPORTS)
+        // ====================================================
+        Route::prefix('keputusan')->name('keputusan.')->group(function () {
+            
+            Route::get('/spk-sales', SpkSales::class)->name('spk-sales');
+            Route::get('/rfm-pelanggan', RfmPelanggan::class)->name('rfm-pelanggan');
+            
+        });
     });
 
 });

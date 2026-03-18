@@ -45,7 +45,7 @@
     <div class="flex-1 overflow-y-auto py-6 space-y-2 custom-scrollbar overflow-x-hidden"
         :class="isSidebarExpanded ? 'px-4' : 'px-2'">
 
-        {{-- DASHBOARD (Semua Role Punya Akses, Menyesuaikan route *.dashboard) --}}
+        {{-- DASHBOARD --}}
         <a href="{{ route('dashboard') }}"
             class="flex items-center py-3.5 rounded-xl transition-all duration-300 group text-[11px] font-black relative uppercase tracking-widest mb-4
             {{ request()->routeIs('*.dashboard') || request()->routeIs('dashboard')
@@ -62,12 +62,65 @@
                 class="fas fa-chart-pie w-5 text-center text-base {{ request()->routeIs('*.dashboard') || request()->routeIs('dashboard') ? 'text-blue-600 dark:text-white' : 'group-hover:text-blue-500 dark:group-hover:text-blue-400' }}"></i>
             <span x-show="isSidebarExpanded" class="ml-4">Dashboard</span>
 
-            {{-- Tooltip Collapsed --}}
             <div x-show="!isSidebarExpanded"
                 class="absolute left-14 bg-slate-800 text-white text-[10px] px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap shadow-xl font-bold tracking-wider uppercase transform translate-x-2 group-hover:translate-x-0">
                 Dashboard
             </div>
         </a>
+
+        {{-- ================================================== --}}
+        {{-- MENU (SPK & DATA MINING)                           --}}
+        {{-- ================================================== --}}
+
+        @if(in_array(auth()->user()->role, ['super_admin', 'superadmin', 'pimpinan']))
+        <div x-data="{ open: {{ request()->routeIs('keputusan.*') ? 'true' : 'false' }} }"
+            class="w-full relative group mb-4">
+            <button @click="isSidebarExpanded ? open = !open : isSidebarExpanded = true"
+                class="flex items-center w-full py-3 rounded-xl transition-all duration-300 group text-[11px] font-black relative uppercase tracking-widest
+                {{ request()->routeIs('keputusan.*') 
+                    ? 'text-fuchsia-600 bg-fuchsia-50 dark:text-fuchsia-400 dark:bg-fuchsia-400/10 border border-fuchsia-200 dark:border-fuchsia-500/20 shadow-sm' 
+                    : 'text-slate-500 hover:bg-fuchsia-50 hover:text-fuchsia-600 dark:hover:bg-fuchsia-500/5 dark:hover:text-fuchsia-400 border border-transparent' }}"
+                :class="isSidebarExpanded ? 'px-5 justify-between' : 'justify-center'">
+
+                <div class="flex items-center">
+                    <span class="w-5 flex justify-center">
+                        <i
+                            class="fas fa-brain text-base {{ request()->routeIs('keputusan.*') ? 'text-fuchsia-500 dark:text-fuchsia-400 animate-pulse' : 'group-hover:text-fuchsia-500 dark:group-hover:text-fuchsia-400' }}"></i>
+                    </span>
+                    <span x-show="isSidebarExpanded" class="ml-4">Analisa Cerdas</span>
+                </div>
+                <i x-show="isSidebarExpanded"
+                    class="fas fa-chevron-right text-[9px] transition-transform duration-300 opacity-70"
+                    :class="{'rotate-90': open}"></i>
+            </button>
+
+            <div x-show="open && isSidebarExpanded" x-cloak x-transition.origin.top
+                class="mt-1 space-y-0.5 ml-4 border-l-[1.5px] border-slate-200 pl-3 dark:border-white/10">
+                <a href="{{ route('keputusan.spk-sales') }}"
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-colors
+                    {{ request()->routeIs('keputusan.spk-sales') ? 'text-fuchsia-600 bg-fuchsia-50/50 dark:text-fuchsia-300 dark:bg-fuchsia-500/10' : 'text-slate-500 hover:text-fuchsia-600 dark:hover:text-fuchsia-300' }}">
+                    <span
+                        class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('keputusan.spk-sales') ? 'bg-fuchsia-500' : 'bg-slate-300 dark:bg-slate-600' }}"></span>
+                    SPK Sales (SAW)
+                </a>
+
+                <a href="{{ route('keputusan.rfm-pelanggan') }}"
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-colors
+    {{ request()->routeIs('keputusan.rfm-pelanggan') ? 'text-fuchsia-600 bg-fuchsia-50/50 dark:text-fuchsia-300 dark:bg-fuchsia-500/10' : 'text-slate-500 hover:text-fuchsia-600 dark:hover:text-fuchsia-300' }}">
+                    <span
+                        class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('keputusan.rfm-pelanggan') ? 'bg-fuchsia-500' : 'bg-slate-300 dark:bg-slate-600' }}"></span>
+                    Segmentasi (RFM)
+                </a>
+            </div>
+
+
+
+            <div x-show="!isSidebarExpanded"
+                class="absolute left-14 top-1 bg-slate-800 text-white text-[10px] px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap shadow-xl font-bold tracking-wider uppercase transform translate-x-2 group-hover:translate-x-0">
+                Analisa Cerdas
+            </div>
+        </div>
+        @endif
 
         {{-- ================================================== --}}
         {{-- MASTER DATA (Hanya untuk Superadmin & Supervisor)  --}}
@@ -226,7 +279,7 @@
                         <i
                             class="fas fa-file-contract text-base {{ (request()->routeIs('pimpinan.*') || request()->routeIs('laporan.*') || request()->routeIs('pusat-cetak')) ? 'text-amber-500 dark:text-amber-400' : 'group-hover:text-amber-500 dark:group-hover:text-amber-400' }}"></i>
                     </span>
-                    <span x-show="isSidebarExpanded" class="ml-4">Analisa</span>
+                    <span x-show="isSidebarExpanded" class="ml-4">Laporan</span>
                 </div>
                 <i x-show="isSidebarExpanded"
                     class="fas fa-chevron-right text-[9px] transition-transform duration-300 opacity-70"
