@@ -6,10 +6,9 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\WithFileUploads;
 use App\Models\Keuangan\AccountReceivable;
+use App\Models\DeletionRequest;
 use App\Services\Import\ArImportService;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
 
 class ArIndex extends Component
 {
@@ -24,42 +23,60 @@ class ArIndex extends Component
     public $file;
     public $resetData = false;
 
-    // PROPERTI HAPUS PERIODE
+    // --- PROPERTI PENGAJUAN HAPUS ---
+    public $isDeletePeriodModalOpen = false;
     public $deleteStartDate;
     public $deleteEndDate;
+    public $deleteReason;
 
     public function updatedSearch() { $this->resetPage(); }
     public function updatedFilterCabang() { $this->resetPage(); }
     
     public function resetFilter() 
     { 
-        $this->reset(['search', 'filterCabang', 'filterUmur', 'deleteStartDate', 'deleteEndDate']); 
+        $this->reset(['search', 'filterCabang', 'filterUmur']); 
         $this->resetPage(); 
     }
 
-    // FUNGSI HAPUS PERIODE (Berdasarkan Tgl Faktur / Penjualan)
-    public function deleteByPeriod()
+    // --- FUNGSI PENGAJUAN HAPUS ---
+    public function openDeletePeriodModal()
+    {
+        $this->resetValidation();
+        $this->reset(['deleteStartDate', 'deleteEndDate', 'deleteReason']);
+        $this->isDeletePeriodModalOpen = true;
+    }
+
+    public function closeDeletePeriodModal()
+    {
+        $this->isDeletePeriodModalOpen = false;
+    }
+
+    public function submitDeletionRequest()
     {
         $this->validate([
             'deleteStartDate' => 'required|date',
-            'deleteEndDate' => 'required|date|after_or_equal:deleteStartDate',
+            'deleteEndDate'   => 'required|date|after_or_equal:deleteStartDate',
+            'deleteReason'    => 'required|string|min:10',
+        ], [
+            'deleteEndDate.after_or_equal' => 'Tanggal akhir tidak boleh lebih kecil dari tanggal awal.',
+            'deleteReason.min' => 'Berikan alasan minimal 10 karakter.',
         ]);
 
-        try {
-            $query = AccountReceivable::whereBetween('tgl_penjualan', [$this->deleteStartDate, $this->deleteEndDate]);
-            $count = $query->count();
+        DeletionRequest::create([
+            'tipe_modul'      => 'ar',
+            'tanggal_mulai'   => $this->deleteStartDate,
+            'tanggal_selesai' => $this->deleteEndDate,
+            'alasan'          => $this->deleteReason,
+            'status'          => 'pending',
+            'requested_by'    => auth()->id(),
+        ]);
 
-            if ($count > 0) {
-                $query->delete();
-                $this->dispatch('show-toast', ['type' => 'success', 'message' => "$count data Piutang berhasil dihapus."]);
-                Cache::forget('opt_cabang_ar');
-            } else {
-                $this->dispatch('show-toast', ['type' => 'warning', 'message' => "Tidak ada data pada periode tersebut."]);
-            }
-            $this->reset(['deleteStartDate', 'deleteEndDate']);
-        } catch (\Exception $e) {
-            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal menghapus: ' . $e->getMessage()]);
-        }
+        $this->closeDeletePeriodModal();
+        
+        $this->dispatch('show-toast', [
+            'type' => 'success', 
+            'message' => 'Pengajuan hapus periode Piutang berhasil dikirim ke Supervisor!'
+        ]);
     }
 
     public function render()
@@ -103,7 +120,7 @@ class ArIndex extends Component
     public function import() {
         $this->validate(['file' => 'required|file|mimes:xlsx,xls,csv|max:153600']);
         
-        $path = $this->file->getRealPath(); // Fix untuk Laragon/Windows
+        $path = $this->file->getRealPath();
         try {
             $stats = (new ArImportService)->handle($path, $this->resetData);
             Cache::forget('opt_cabang_ar');
@@ -112,10 +129,5 @@ class ArIndex extends Component
         } catch (\Exception $e) {
             $this->dispatch('show-toast', ['type' => 'error', 'message' => $e->getMessage()]);
         }
-    }
-
-    public function delete($id) { 
-        AccountReceivable::destroy($id); 
-        $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Data dihapus']); 
     }
 }

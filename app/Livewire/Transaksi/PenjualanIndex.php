@@ -114,52 +114,49 @@ class PenjualanIndex extends Component
         }
     }
 
-    // --- DELETE PER TANGGAL ---
-    public function openDeleteDateModal() { $this->resetErrorBag(); $this->isDeleteDateOpen = true; }
-    public function closeDeleteDateModal() { $this->isDeleteDateOpen = false; $this->deleteDateInput = null; }
+    // --- PROPERTY PENGAJUAN HAPUS ---
+    public $isDeletePeriodModalOpen = false;
+    public $deleteStartDate;
+    public $deleteEndDate;
+    public $deleteReason;
 
-    public function deleteByDate()
+    public function openDeletePeriodModal()
     {
-        $this->validate(['deleteDateInput' => 'required|date']);
-        $date = $this->deleteDateInput;
+        $this->resetValidation();
+        $this->reset(['deleteStartDate', 'deleteEndDate', 'deleteReason']);
+        $this->isDeletePeriodModalOpen = true;
+    }
+
+    public function closeDeletePeriodModal()
+    {
+        $this->isDeletePeriodModalOpen = false;
+    }
+
+    public function submitDeletionRequest()
+    {
+        $this->validate([
+            'deleteStartDate' => 'required|date',
+            'deleteEndDate'   => 'required|date|after_or_equal:deleteStartDate',
+            'deleteReason'    => 'required|string|min:10',
+        ], [
+            'deleteEndDate.after_or_equal' => 'Tanggal akhir tidak boleh lebih kecil dari tanggal awal.',
+            'deleteReason.min' => 'Berikan alasan minimal 10 karakter.',
+        ]);
+
+        \App\Models\DeletionRequest::create([
+            'tipe_modul'      => 'penjualan', // UBAH INI SESUAI HALAMAN: 'retur', 'ar', atau 'collection'
+            'tanggal_mulai'   => $this->deleteStartDate,
+            'tanggal_selesai' => $this->deleteEndDate,
+            'alasan'          => $this->deleteReason,
+            'status'          => 'pending',
+            'requested_by'    => auth()->id(),
+        ]);
+
+        $this->closeDeletePeriodModal();
         
-        $count = Penjualan::whereDate('tgl_penjualan', $date)->count();
-        if ($count == 0) {
-            $this->addError('deleteDateInput', 'Tidak ada data pada tanggal ini.');
-            return;
-        }
-
-        Penjualan::whereDate('tgl_penjualan', $date)->delete();
-        $this->closeDeleteDateModal();
-        $this->dispatch('show-toast', ['type' => 'success', 'message' => "$count Data tanggal $date dihapus."]);
-        Cache::forget('opt_cabang_jual');
+        $this->dispatch('show-toast', [
+            'type' => 'success', 
+            'message' => 'Pengajuan hapus periode berhasil dikirim ke Supervisor!'
+        ]);
     }
-
-    public function delete($id) {
-        Penjualan::destroy($id);
-        $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Data berhasil dihapus']);
-    }
-    public $deleteStartDate, $deleteEndDate;
-    public function deleteByPeriod()
-{
-    $this->validate([
-        'deleteStartDate' => 'required|date',
-        'deleteEndDate' => 'required|date|after_or_equal:deleteStartDate',
-    ]);
-
-    try {
-        $query = \App\Models\Transaksi\Penjualan::whereBetween('tgl_penjualan', [$this->deleteStartDate, $this->deleteEndDate]);
-        $count = $query->count();
-
-        if ($count > 0) {
-            $query->delete();
-            $this->dispatch('show-toast', ['type' => 'success', 'message' => "$count data Penjualan berhasil dihapus."]);
-        } else {
-            $this->dispatch('show-toast', ['type' => 'warning', 'message' => "Data tidak ditemukan."]);
-        }
-        $this->reset(['deleteStartDate', 'deleteEndDate']);
-    } catch (\Exception $e) {
-        $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal: ' . $e->getMessage()]);
-    }
-}
 }

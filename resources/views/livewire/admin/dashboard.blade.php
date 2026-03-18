@@ -1,8 +1,8 @@
-<div class="p-6 max-w-7xl mx-auto space-y-6 animate-fade-in">
+<div class="p-6 max-w-7xl mx-auto space-y-6 animate-fade-in relative">
     {{-- CSS Animasi --}}
     <style>
     .animate-fade-in {
-        animation: fadeIn 0.5s ease-out forwards;
+        animation: fadeIn 0.4s ease-out forwards;
     }
 
     @keyframes fadeIn {
@@ -18,7 +18,19 @@
     }
     </style>
 
-    {{-- 1. HEADER & QUICK UPLOAD ACTIONS --}}
+    {{-- ALERT SUKSES PENGAJUAN --}}
+    @if (session()->has('message'))
+    <div
+        class="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-between shadow-sm animate-fade-in mb-4">
+        <div class="flex items-center gap-2">
+            <i class="fas fa-check-circle text-lg"></i> {{ session('message') }}
+        </div>
+        <button type="button" class="opacity-50 hover:opacity-100" onclick="this.parentElement.remove()"><i
+                class="fas fa-times"></i></button>
+    </div>
+    @endif
+
+    {{-- 1. HEADER & QUICK ACTIONS --}}
     <div
         class="bg-white dark:bg-[#121212] rounded-2xl p-8 border border-slate-200 dark:border-white/10 shadow-sm relative overflow-hidden">
         <div
@@ -34,188 +46,229 @@
                     Halo, {{ explode(' ', auth()->user()->name)[0] }}! 👋
                 </h1>
                 <p class="text-slate-500 dark:text-slate-400 mt-2 text-sm max-w-xl leading-relaxed">
-                    Hari ini adalah <strong>{{ $hariIni }}</strong>. Pastikan Anda telah mengunggah (import) semua file
-                    Excel operasional terbaru agar data sistem tetap terbarui.
+                    Hari ini adalah <strong>{{ $hariIni }}</strong>. Pastikan Anda mengunggah file Excel operasional
+                    terbaru. Gunakan fitur pengajuan hapus jika terjadi salah *import*.
                 </p>
             </div>
 
-            {{-- TOMBOL UPLOAD LENGKAP & RAPI --}}
-            <div class="grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-end gap-2 shrink-0">
+            {{-- TOMBOL UPLOAD LENGKAP & AJUKAN HAPUS --}}
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
                 <a href="{{ route('transaksi.penjualan') }}"
                     class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-xs font-bold transition-all shadow-sm shadow-blue-600/20 hover:-translate-y-0.5">
                     <i class="fas fa-shopping-cart w-4 text-center"></i> Penjualan
                 </a>
-
                 <a href="{{ route('transaksi.retur') }}"
-                    class="flex items-center justify-center gap-2 bg-white dark:bg-[#1e1e1e] text-rose-600 dark:text-rose-400 border border-slate-200 dark:border-white/10 hover:border-rose-300 dark:hover:border-rose-500/50 hover:bg-rose-50 dark:hover:bg-rose-500/10 px-4 py-2.5 rounded-lg text-xs font-bold transition-all shadow-sm hover:-translate-y-0.5">
+                    class="flex items-center justify-center gap-2 bg-white dark:bg-[#1e1e1e] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 px-4 py-2.5 rounded-lg text-xs font-bold transition-all shadow-sm hover:-translate-y-0.5">
                     <i class="fas fa-undo-alt w-4 text-center"></i> Retur
                 </a>
-
                 <a href="{{ route('transaksi.ar') }}"
-                    class="flex items-center justify-center gap-2 bg-white dark:bg-[#1e1e1e] text-amber-600 dark:text-amber-400 border border-slate-200 dark:border-white/10 hover:border-amber-300 dark:hover:border-amber-500/50 hover:bg-amber-50 dark:hover:bg-amber-500/10 px-4 py-2.5 rounded-lg text-xs font-bold transition-all shadow-sm hover:-translate-y-0.5">
+                    class="flex items-center justify-center gap-2 bg-white dark:bg-[#1e1e1e] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 px-4 py-2.5 rounded-lg text-xs font-bold transition-all shadow-sm hover:-translate-y-0.5">
                     <i class="fas fa-file-invoice-dollar w-4 text-center"></i> Piutang
                 </a>
-
                 <a href="{{ route('transaksi.collection') }}"
-                    class="flex items-center justify-center gap-2 bg-white dark:bg-[#1e1e1e] text-emerald-600 dark:text-emerald-400 border border-slate-200 dark:border-white/10 hover:border-emerald-300 dark:hover:border-emerald-500/50 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 px-4 py-2.5 rounded-lg text-xs font-bold transition-all shadow-sm hover:-translate-y-0.5">
+                    class="flex items-center justify-center gap-2 bg-white dark:bg-[#1e1e1e] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 px-4 py-2.5 rounded-lg text-xs font-bold transition-all shadow-sm hover:-translate-y-0.5">
                     <i class="fas fa-money-bill-wave w-4 text-center"></i> Pelunasan
                 </a>
+
+                <button wire:click="openModal"
+                    class="flex items-center justify-center gap-2 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 hover:bg-rose-100 dark:hover:bg-rose-500/20 px-4 py-2.5 rounded-lg text-xs font-bold transition-all shadow-sm hover:-translate-y-0.5 ml-2">
+                    <i class="fas fa-trash-alt text-center"></i> Ajukan Hapus Data
+                </button>
             </div>
         </div>
     </div>
 
-    {{-- [BARU] CHECKLIST UPLOAD CABANG HARI INI --}}
-    <div class="bg-white dark:bg-[#121212] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-6">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                <i class="fas fa-tasks text-blue-500"></i> Status Import Penjualan Hari Ini
-            </h3>
-            <span class="text-xs font-medium text-slate-500">Berdasarkan tanggal transaksi</span>
-        </div>
+    {{-- CHECKLIST UPLOAD CABANG HARI INI (Kode Tetap Sama) --}}
+    {{-- 2. METRIK DATA MASUK HARI INI (Kode Tetap Sama) --}}
+    {{-- 3. SPLIT PANEL: RECENT ACTIVITY & RIWAYAT PENGAJUAN --}}
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
-            @foreach($statusUploadCabang as $cabang => $isUploaded)
-            <div
-                class="flex items-center justify-between p-3 rounded-xl border {{ $isUploaded ? 'border-emerald-200 bg-emerald-50 dark:border-emerald-900/50 dark:bg-emerald-900/10' : 'border-slate-200 bg-slate-50 dark:border-white/5 dark:bg-white/5' }} transition-colors">
-                <span
-                    class="text-sm font-semibold {{ $isUploaded ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-400' }}">
-                    {{ $cabang }}
-                </span>
-                @if($isUploaded)
-                <i class="fas fa-check-circle text-emerald-500 text-lg"></i>
-                @else
-                <i class="far fa-clock text-slate-400 text-lg"></i>
-                @endif
-            </div>
-            @endforeach
-        </div>
-    </div>
-
-    {{-- 2. METRIK DATA MASUK HARI INI --}}
-    <div>
-        <h2 class="text-lg font-bold text-slate-800 dark:text-white mb-4">Ringkasan Data Masuk (Transaksi Hari Ini)</h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-
-            <div
-                class="bg-white dark:bg-[#121212] rounded-xl p-5 border border-slate-200 dark:border-white/10 shadow-sm flex items-center gap-4">
-                <div
-                    class="w-12 h-12 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                    <i class="fas fa-shopping-cart text-xl"></i>
-                </div>
-                <div>
-                    <p class="text-xs font-semibold text-slate-500 uppercase">Faktur Jual</p>
-                    <h3 class="text-2xl font-black text-slate-800 dark:text-white">{{ number_format($jualHariIni) }}
-                        <span class="text-[10px] text-slate-400 font-normal">Baris</span></h3>
-                </div>
-            </div>
-
-            <div
-                class="bg-white dark:bg-[#121212] rounded-xl p-5 border border-slate-200 dark:border-white/10 shadow-sm flex items-center gap-4">
-                <div
-                    class="w-12 h-12 rounded-lg bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center text-rose-600 dark:text-rose-400">
-                    <i class="fas fa-undo-alt text-xl"></i>
-                </div>
-                <div>
-                    <p class="text-xs font-semibold text-slate-500 uppercase">Faktur Retur</p>
-                    <h3 class="text-2xl font-black text-slate-800 dark:text-white">{{ number_format($returHariIni) }}
-                        <span class="text-[10px] text-slate-400 font-normal">Baris</span></h3>
-                </div>
-            </div>
-
-            <div
-                class="bg-white dark:bg-[#121212] rounded-xl p-5 border border-slate-200 dark:border-white/10 shadow-sm flex items-center gap-4">
-                <div
-                    class="w-12 h-12 rounded-lg bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
-                    <i class="fas fa-hand-holding-usd text-xl"></i>
-                </div>
-                <div>
-                    <p class="text-xs font-semibold text-slate-500 uppercase">Piutang Baru</p>
-                    <h3 class="text-2xl font-black text-slate-800 dark:text-white">{{ number_format($piutangHariIni) }}
-                        <span class="text-[10px] text-slate-400 font-normal">Toko</span></h3>
-                </div>
-            </div>
-
-            <div
-                class="bg-white dark:bg-[#121212] rounded-xl p-5 border border-slate-200 dark:border-white/10 shadow-sm flex items-center gap-4">
-                <div
-                    class="w-12 h-12 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                    <i class="fas fa-money-bill-wave text-xl"></i>
-                </div>
-                <div>
-                    <p class="text-xs font-semibold text-slate-500 uppercase">Lunas (BKM)</p>
-                    <h3 class="text-2xl font-black text-slate-800 dark:text-white">
-                        {{ number_format($pelunasanHariIni) }} <span
-                            class="text-[10px] text-slate-400 font-normal">Slip</span></h3>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    {{-- 3. RECENT ACTIVITY (DATA TERBARU DI DATABASE) --}}
-    <div
-        class="bg-white dark:bg-[#121212] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm overflow-hidden">
         <div
-            class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/20 flex justify-between items-center">
-            <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                <i class="fas fa-history text-slate-400"></i> Riwayat Input Terakhir di Sistem
-            </h3>
+            class="xl:col-span-2 bg-white dark:bg-[#121212] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm overflow-hidden flex flex-col">
+            <div
+                class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/20 flex justify-between items-center">
+                <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2 text-sm">
+                    <i class="fas fa-history text-slate-400"></i> Log Import Terakhir
+                </h3>
+            </div>
+            <div class="p-0 overflow-x-auto flex-1">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead
+                        class="text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-transparent">
+                        <tr>
+                            <th class="px-6 py-3 font-semibold text-xs uppercase tracking-wider">Modul</th>
+                            <th class="px-6 py-3 font-semibold text-xs uppercase tracking-wider">No. Dokumen</th>
+                            <th class="px-6 py-3 font-semibold text-xs uppercase tracking-wider">Cabang</th>
+                            <th class="px-6 py-3 font-semibold text-xs uppercase tracking-wider text-right">Waktu Import
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        @foreach($recentPenjualan as $jual)
+                        <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                            <td class="px-6 py-4"><span
+                                    class="inline-flex items-center gap-1 text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded dark:bg-blue-900/30 dark:text-blue-400">Penjualan</span>
+                            </td>
+                            <td class="px-6 py-4 font-semibold text-slate-700 dark:text-slate-200">
+                                {{ $jual->no_penjualan }}</td>
+                            <td class="px-6 py-4 text-slate-500">{{ $jual->cabang }}</td>
+                            <td class="px-6 py-4 text-right text-xs text-slate-400">
+                                {{ $jual->created_at->diffForHumans() }}</td>
+                        </tr>
+                        @endforeach
+                        @foreach($recentRetur as $ret)
+                        <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                            <td class="px-6 py-4"><span
+                                    class="inline-flex items-center gap-1 text-xs font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded dark:bg-rose-900/30 dark:text-rose-400">Retur</span>
+                            </td>
+                            <td class="px-6 py-4 font-semibold text-slate-700 dark:text-slate-200">{{ $ret->no_retur }}
+                            </td>
+                            <td class="px-6 py-4 text-slate-500">{{ $ret->cabang }}</td>
+                            <td class="px-6 py-4 text-right text-xs text-slate-400">
+                                {{ $ret->created_at->diffForHumans() }}</td>
+                        </tr>
+                        @endforeach
+                        @if($recentPenjualan->isEmpty() && $recentRetur->isEmpty())
+                        <tr>
+                            <td colspan="4" class="px-6 py-8 text-center text-slate-500">Belum ada data.</td>
+                        </tr>
+                        @endif
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div class="p-0 overflow-x-auto">
-            <table class="w-full text-left text-sm whitespace-nowrap">
-                <thead class="text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800">
-                    <tr>
-                        <th class="px-6 py-3 font-semibold text-xs uppercase tracking-wider">Jenis Data</th>
-                        <th class="px-6 py-3 font-semibold text-xs uppercase tracking-wider">No. Dokumen / Invoice</th>
-                        <th class="px-6 py-3 font-semibold text-xs uppercase tracking-wider">Cabang</th>
-                        <th class="px-6 py-3 font-semibold text-xs uppercase tracking-wider text-right">Waktu Import
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
 
-                    {{-- Loop Penjualan --}}
-                    @foreach($recentPenjualan as $jual)
-                    <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                        <td class="px-6 py-4">
-                            <span
-                                class="inline-flex items-center gap-1 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 px-2 py-1 rounded dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400">
-                                <i class="fas fa-shopping-cart text-[10px]"></i> Penjualan
+        <div
+            class="xl:col-span-1 bg-white dark:bg-[#121212] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm overflow-hidden flex flex-col">
+            <div
+                class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/20 flex justify-between items-center">
+                <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2 text-sm">
+                    <i class="fas fa-file-signature text-rose-500"></i> Status Pengajuan Anda
+                </h3>
+            </div>
+            <div class="p-0 overflow-y-auto flex-1">
+                <ul class="divide-y divide-slate-100 dark:divide-slate-800">
+                    @forelse($riwayatPengajuan as $pengajuan)
+                    <li class="p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-xs font-black uppercase text-slate-700 dark:text-slate-300">
+                                {{ strtoupper($pengajuan->tipe_modul) }}
                             </span>
-                        </td>
-                        <td class="px-6 py-4 font-semibold text-slate-700 dark:text-slate-200">{{ $jual->no_penjualan }}
-                        </td>
-                        <td class="px-6 py-4 text-slate-500">{{ $jual->cabang }}</td>
-                        <td class="px-6 py-4 text-right text-xs text-slate-400">{{ $jual->created_at->diffForHumans() }}
-                        </td>
-                    </tr>
-                    @endforeach
-
-                    {{-- Loop Retur --}}
-                    @foreach($recentRetur as $ret)
-                    <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                        <td class="px-6 py-4">
+                            @if($pengajuan->status == 'pending')
                             <span
-                                class="inline-flex items-center gap-1 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 px-2 py-1 rounded dark:bg-rose-900/30 dark:border-rose-800 dark:text-rose-400">
-                                <i class="fas fa-undo text-[10px]"></i> Retur
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 font-semibold text-slate-700 dark:text-slate-200">{{ $ret->no_retur }}</td>
-                        <td class="px-6 py-4 text-slate-500">{{ $ret->cabang }}</td>
-                        <td class="px-6 py-4 text-right text-xs text-slate-400">{{ $ret->created_at->diffForHumans() }}
-                        </td>
-                    </tr>
-                    @endforeach
+                                class="bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 text-[9px] font-bold px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-500/30 animate-pulse">Menunggu
+                                ACC</span>
+                            @elseif($pengajuan->status == 'approved')
+                            <span
+                                class="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 text-[9px] font-bold px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-500/30">Disetujui</span>
+                            @else
+                            <span
+                                class="bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400 text-[9px] font-bold px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-500/30">Ditolak</span>
+                            @endif
+                        </div>
+                        <p class="text-[11px] text-slate-500 mb-1">
+                            <i class="far fa-calendar-alt w-3"></i>
+                            {{ \Carbon\Carbon::parse($pengajuan->tanggal_mulai)->format('d/m/Y') }} -
+                            {{ \Carbon\Carbon::parse($pengajuan->tanggal_selesai)->format('d/m/Y') }}
+                        </p>
+                        <p class="text-[10px] text-slate-400 italic truncate" title="{{ $pengajuan->alasan }}">
+                            "{{ $pengajuan->alasan }}"</p>
+                    </li>
+                    @empty
+                    <div class="p-8 text-center text-slate-500">
+                        <i class="fas fa-check-circle text-3xl mb-2 text-emerald-500 opacity-50"></i>
+                        <p class="text-xs font-medium">Belum ada pengajuan hapus.</p>
+                    </div>
+                    @endforelse
+                </ul>
+            </div>
+        </div>
 
-                    @if($recentPenjualan->isEmpty() && $recentRetur->isEmpty())
-                    <tr>
-                        <td colspan="4" class="px-6 py-8 text-center text-slate-500">
-                            Belum ada data yang diunggah baru-baru ini.
-                        </td>
-                    </tr>
-                    @endif
-                </tbody>
-            </table>
+    </div>
+
+    {{-- MODAL POP-UP PENGAJUAN HAPUS --}}
+    @if($showModal)
+    <div
+        class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto overflow-x-hidden bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm p-4">
+        <div
+            class="relative w-full max-w-md bg-white dark:bg-[#18181b] rounded-2xl shadow-2xl ring-1 ring-slate-200 dark:ring-white/10 overflow-hidden animate-fade-in transform scale-100">
+            <div
+                class="bg-rose-50 dark:bg-rose-900/20 px-6 py-4 border-b border-rose-100 dark:border-rose-800/30 flex items-center justify-between">
+                <h3 class="text-lg font-black text-rose-700 dark:text-rose-400 flex items-center gap-2">
+                    <i class="fas fa-exclamation-triangle"></i> Form Pengajuan Hapus
+                </h3>
+                <button wire:click="$set('showModal', false)"
+                    class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+
+            <form wire:submit.prevent="submitDeletionRequest" class="p-6 space-y-5">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Pilih Modul Data
+                        <span class="text-rose-500">*</span></label>
+                    <select wire:model="tipe_modul"
+                        class="w-full rounded-xl border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-[#121212] text-slate-800 dark:text-white text-sm focus:ring-rose-500 focus:border-rose-500 cursor-pointer">
+                        <option value="">-- Klik untuk Pilih Modul --</option>
+                        <option value="penjualan">Tabel Penjualan</option>
+                        <option value="retur">Tabel Retur</option>
+                        <option value="ar">Tabel Piutang (AR)</option>
+                        <option value="collection">Tabel Pelunasan (Collection)</option>
+                    </select>
+                    @error('tipe_modul') <span
+                        class="text-[10px] text-rose-600 dark:text-rose-400 font-bold block mt-1"><i
+                            class="fas fa-info-circle"></i> {{ $message }}</span> @enderror
+                </div>
+
+                <div
+                    class="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-white/5 p-3 rounded-xl border border-slate-100 dark:border-transparent">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Dari
+                            Tanggal Transaksi <span class="text-rose-500">*</span></label>
+                        <input type="date" wire:model="tanggal_mulai"
+                            class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-[#121212] text-slate-800 dark:text-white text-xs font-bold focus:ring-rose-500 focus:border-rose-500 [color-scheme:light] dark:[color-scheme:dark]">
+                        @error('tanggal_mulai') <span
+                            class="text-[10px] text-rose-600 dark:text-rose-400 font-bold block mt-1">{{ $message }}</span>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Sampai
+                            Tanggal Transaksi <span class="text-rose-500">*</span></label>
+                        <input type="date" wire:model="tanggal_selesai"
+                            class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-[#121212] text-slate-800 dark:text-white text-xs font-bold focus:ring-rose-500 focus:border-rose-500 [color-scheme:light] dark:[color-scheme:dark]">
+                        @error('tanggal_selesai') <span
+                            class="text-[10px] text-rose-600 dark:text-rose-400 font-bold block mt-1">{{ $message }}</span>
+                        @enderror
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Alasan Penghapusan
+                        <span class="text-rose-500">*</span></label>
+                    <textarea wire:model="alasan" rows="3"
+                        placeholder="Contoh: Terjadi kesalahan format file Excel pada baris tanggal sehingga data yang masuk bulan lalu..."
+                        class="w-full rounded-xl border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-[#121212] text-slate-800 dark:text-white text-sm focus:ring-rose-500 focus:border-rose-500 placeholder-slate-400 dark:placeholder-slate-600"></textarea>
+                    @error('alasan') <span class="text-[10px] text-rose-600 dark:text-rose-400 font-bold block mt-1"><i
+                            class="fas fa-info-circle"></i> {{ $message }}</span> @enderror
+                    <p class="text-[10px] text-slate-500 mt-1.5 leading-tight">Jelaskan secara logis agar Supervisor
+                        dapat memahami dan menyetujui pengajuan ini. Data yang dihapus tidak dapat dikembalikan.</p>
+                </div>
+
+                <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" wire:click="$set('showModal', false)"
+                        class="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit" wire:loading.attr="disabled"
+                        class="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 active:scale-95 transition-all shadow-md shadow-rose-500/20 flex items-center gap-2">
+                        <span wire:loading.remove wire:target="submitDeletionRequest"><i class="fas fa-paper-plane"></i>
+                            Kirim Pengajuan</span>
+                        <span wire:loading wire:target="submitDeletionRequest"><i
+                                class="fas fa-circle-notch fa-spin"></i> Mengirim...</span>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
+    @endif
 </div>

@@ -95,8 +95,9 @@
                                         <i class="fas fa-chevron-down opacity-50 text-[10px]"></i>
                                     </button>
 
+                                    {{-- Diperbaiki: Menggunakan w-full agar tidak offside --}}
                                     <div x-show="open" x-transition.origin.top
-                                        class="absolute z-[100] w-[120%] -left-1 mt-2 bg-white dark:bg-[#1a1a1a] rounded-xl shadow-2xl border border-slate-200 dark:border-white/10 p-3 ring-1 ring-black/5">
+                                        class="absolute z-[100] w-full mt-2 bg-white dark:bg-[#1a1a1a] rounded-xl shadow-2xl border border-slate-200 dark:border-white/10 p-3 ring-1 ring-black/5">
                                         <input x-model="search" type="text" placeholder="Cari sales..."
                                             class="w-full mb-2 pl-3 pr-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-xs font-bold uppercase">
                                         <div class="max-h-60 overflow-y-auto custom-scrollbar space-y-1">
@@ -291,17 +292,18 @@
             <div class="h-px bg-slate-200 dark:bg-white/10 flex-1"></div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-40">
 
-            {{-- CARD: VALUASI STOK --}}
+            {{-- CARD 1: VALUASI STOK (Z-40) --}}
             <div
-                class="bg-white dark:bg-[#121212] rounded-[2rem] border border-slate-200 dark:border-white/5 p-1 shadow-lg group hover:shadow-xl transition-all h-full relative z-10">
+                class="bg-white dark:bg-[#121212] rounded-[2rem] border border-slate-200 dark:border-white/5 p-1 shadow-lg group hover:shadow-xl transition-all h-full relative z-40">
                 <div
                     class="p-6 bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/10 dark:to-[#121212] rounded-[1.8rem] h-full flex flex-col relative">
                     <div class="flex items-center gap-4 mb-6 relative z-10">
                         <div
-                            class="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-xl shadow-lg">
-                            <i class="fas fa-cubes"></i></div>
+                            class="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-xl shadow-lg border border-transparent dark:border-blue-500/30">
+                            <i class="fas fa-cubes"></i>
+                        </div>
                         <h3 class="text-lg font-black text-slate-800 dark:text-white uppercase">Valuasi Stok</h3>
                     </div>
 
@@ -309,34 +311,34 @@
                         <div class="space-y-1">
                             <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Cabang</label>
                             <select wire:model.live="selectedCabangStok"
-                                class="w-full px-4 py-2.5 rounded-xl border-slate-200 dark:bg-black/20 dark:border-white/10 text-xs font-bold uppercase focus:ring-blue-500">
+                                class="w-full px-4 py-2.5 rounded-xl border-slate-200 dark:bg-[#18181b] dark:border-white/10 text-slate-800 dark:text-white text-xs font-bold uppercase focus:ring-blue-500 cursor-pointer">
                                 @foreach($cabangOptions as $c) <option value="{{ $c }}">{{ $c }}</option> @endforeach
                             </select>
                         </div>
 
                         {{-- Multi-Select Supplier --}}
-                        <div class="space-y-1 relative z-30"
+                        <div class="space-y-1 relative transition-all" :class="open ? 'z-[60]' : 'z-40'"
                             x-data="{ open: false, selected: @entangle('selectedSupplierStok').live, options: @entangle('supplierOptionsStok'), search: '', get filtered() { if(this.search === '') return this.options; return this.options.filter(i => i.toLowerCase().includes(this.search.toLowerCase())) } }">
                             <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Pilih Supplier (Muncul
                                 Produk)</label>
                             <div class="relative">
                                 <button @click="open = !open" @click.outside="open = false" type="button"
-                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:bg-black/20 dark:border-white/10 text-left flex justify-between items-center bg-white dark:bg-transparent text-xs font-bold uppercase">
-                                    <span
-                                        x-text="selected.length > 0 ? selected.length + ' Dipilih' : 'Semua Pemasok'"></span>
-                                    <i class="fas fa-chevron-down text-[10px]"></i>
+                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:bg-[#18181b] dark:border-white/10 text-left flex justify-between items-center bg-white text-xs font-bold uppercase">
+                                    <span x-text="selected.length > 0 ? selected.length + ' Dipilih' : 'Semua Pemasok'"
+                                        class="truncate text-slate-800 dark:text-white"></span>
+                                    <i class="fas fa-chevron-down text-slate-400 text-[10px]"></i>
                                 </button>
                                 <div x-show="open" x-transition
-                                    class="absolute z-50 mt-1 w-full bg-white dark:bg-[#1a1a1a] rounded-xl shadow-2xl border border-slate-100 dark:border-white/10 p-2 max-h-60 overflow-y-auto custom-scrollbar">
+                                    class="absolute z-[100] mt-1 w-full bg-white dark:bg-[#27272a] rounded-xl shadow-2xl border border-slate-100 dark:border-white/10 p-2 max-h-60 overflow-y-auto custom-scrollbar">
                                     <input x-model="search" type="text" placeholder="Cari supplier..."
-                                        class="w-full mb-2 pl-3 py-1.5 rounded-lg border-slate-200 dark:bg-white/5 text-xs font-bold uppercase">
+                                        class="w-full mb-2 pl-3 py-1.5 rounded-lg border-slate-200 dark:border-white/10 dark:bg-[#18181b] text-slate-800 dark:text-white text-xs font-bold uppercase">
                                     <template x-for="s in filtered" :key="s">
                                         <label
                                             class="flex items-center px-2 py-1.5 hover:bg-blue-50 dark:hover:bg-white/5 rounded-lg cursor-pointer">
                                             <input type="checkbox" :value="s" x-model="selected"
-                                                class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4 mr-2">
+                                                class="rounded border-slate-300 dark:border-slate-500 dark:bg-[#18181b] text-blue-600 focus:ring-blue-500 w-4 h-4 mr-2 cursor-pointer focus:ring-offset-0">
                                             <span
-                                                class="text-[10px] font-bold uppercase text-slate-700 dark:text-slate-300"
+                                                class="text-[10px] font-bold uppercase text-slate-700 dark:text-slate-200"
                                                 x-text="s"></span>
                                         </label>
                                     </template>
@@ -344,29 +346,32 @@
                             </div>
                         </div>
 
-                        {{-- Multi-Select Produk (Dependent) --}}
-                        <div class="space-y-1 relative z-20"
+                        {{-- Multi-Select Produk --}}
+                        <div class="space-y-1 relative transition-all" :class="open ? 'z-[50]' : 'z-30'"
                             x-data="{ open: false, selected: @entangle('selectedProductStok').live, options: @entangle('productOptionsStok'), search: '', get filtered() { if(!this.options) return []; if(this.search === '') return this.options.slice(0, 50); return this.options.filter(i => i.name_item.toLowerCase().includes(this.search.toLowerCase())) } }">
                             <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Pilih Produk
                                 (Multi)</label>
                             <div class="relative">
                                 <button @click="open = !open" @click.outside="open = false" type="button"
-                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:bg-black/20 dark:border-white/10 text-left flex justify-between items-center bg-white dark:bg-transparent text-xs font-bold uppercase">
+                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:bg-[#18181b] dark:border-white/10 text-left flex justify-between items-center bg-white text-xs font-bold uppercase">
                                     <span
-                                        x-text="selected.length > 0 ? selected.length + ' Produk Dipilih' : 'Semua Produk'"></span>
-                                    <i class="fas fa-chevron-down text-[10px]"></i>
+                                        x-text="selected.length > 0 ? selected.length + ' Produk Dipilih' : 'Semua Produk'"
+                                        class="truncate text-slate-800 dark:text-white"></span>
+                                    <i class="fas fa-chevron-down text-slate-400 text-[10px]"></i>
                                 </button>
+
+                                {{-- Diperbaiki: Menggunakan w-full agar tidak offside --}}
                                 <div x-show="open" x-transition
-                                    class="absolute z-50 mt-1 w-[120%] -left-2 bg-white dark:bg-[#1a1a1a] rounded-xl shadow-2xl border border-slate-100 dark:border-white/10 p-3 max-h-64 overflow-y-auto custom-scrollbar">
+                                    class="absolute z-[100] mt-1 w-full bg-white dark:bg-[#27272a] rounded-xl shadow-2xl border border-slate-100 dark:border-white/10 p-3 max-h-64 overflow-y-auto custom-scrollbar">
                                     <input x-model="search" type="text" placeholder="Cari produk..."
-                                        class="w-full mb-2 pl-3 py-1.5 rounded-lg border-slate-200 dark:bg-white/5 text-xs font-bold uppercase">
+                                        class="w-full mb-2 pl-3 py-1.5 rounded-lg border-slate-200 dark:border-white/10 dark:bg-[#18181b] text-slate-800 dark:text-white text-xs font-bold uppercase">
                                     <template x-for="item in filtered" :key="item.sku">
                                         <label
                                             class="flex items-center px-2 py-1.5 hover:bg-blue-50 dark:hover:bg-white/5 rounded-lg cursor-pointer">
                                             <input type="checkbox" :value="item.sku" x-model="selected"
-                                                class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4 mr-2">
+                                                class="rounded border-slate-300 dark:border-slate-500 dark:bg-[#18181b] text-blue-600 focus:ring-blue-500 w-4 h-4 mr-2 cursor-pointer focus:ring-offset-0">
                                             <span
-                                                class="text-[10px] font-bold uppercase text-slate-700 dark:text-slate-300"
+                                                class="text-[10px] font-bold uppercase text-slate-700 dark:text-slate-200"
                                                 x-text="item.name_item"></span>
                                         </label>
                                     </template>
@@ -387,15 +392,16 @@
                 </div>
             </div>
 
-            {{-- CARD: ANALISA MARGIN --}}
+            {{-- CARD 2: ANALISA MARGIN (Z-30) --}}
             <div
-                class="bg-white dark:bg-[#121212] rounded-[2rem] border border-slate-200 dark:border-white/5 p-1 shadow-lg group hover:shadow-xl transition-all h-full relative z-10">
+                class="bg-white dark:bg-[#121212] rounded-[2rem] border border-slate-200 dark:border-white/5 p-1 shadow-lg group hover:shadow-xl transition-all h-full relative z-30">
                 <div
                     class="p-6 bg-gradient-to-br from-rose-50 to-white dark:from-rose-900/10 dark:to-[#121212] rounded-[1.8rem] h-full flex flex-col relative">
                     <div class="flex items-center gap-4 mb-6 relative z-10">
                         <div
-                            class="w-12 h-12 rounded-2xl bg-rose-600 text-white flex items-center justify-center text-xl shadow-lg">
-                            <i class="fas fa-coins"></i></div>
+                            class="w-12 h-12 rounded-2xl bg-rose-600 text-white flex items-center justify-center text-xl shadow-lg border border-transparent dark:border-rose-500/30">
+                            <i class="fas fa-coins"></i>
+                        </div>
                         <h3 class="text-lg font-black text-slate-800 dark:text-white uppercase">Analisa Margin</h3>
                     </div>
 
@@ -403,32 +409,32 @@
                         <div class="space-y-1">
                             <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Cabang</label>
                             <select wire:model.live="selectedCabangProfit"
-                                class="w-full px-4 py-2.5 rounded-xl border-slate-200 dark:bg-black/20 dark:border-white/10 text-xs font-bold uppercase focus:ring-rose-500">
+                                class="w-full px-4 py-2.5 rounded-xl border-slate-200 dark:bg-[#18181b] dark:border-white/10 text-slate-800 dark:text-white text-xs font-bold uppercase focus:ring-rose-500 cursor-pointer">
                                 @foreach($cabangOptions as $c) <option value="{{ $c }}">{{ $c }}</option> @endforeach
                             </select>
                         </div>
 
-                        <div class="space-y-1 relative z-30"
+                        <div class="space-y-1 relative transition-all" :class="open ? 'z-[60]' : 'z-40'"
                             x-data="{ open: false, selected: @entangle('selectedSupplierProfit').live, options: @entangle('supplierOptionsProfit'), search: '', get filtered() { if(this.search === '') return this.options; return this.options.filter(i => i.toLowerCase().includes(this.search.toLowerCase())) } }">
                             <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Supplier</label>
                             <div class="relative">
                                 <button @click="open = !open" @click.outside="open = false" type="button"
-                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:bg-black/20 dark:border-white/10 text-left flex justify-between items-center bg-white dark:bg-transparent text-xs font-bold uppercase">
-                                    <span
-                                        x-text="selected.length > 0 ? selected.length + ' Dipilih' : 'Semua Pemasok'"></span>
-                                    <i class="fas fa-chevron-down text-[10px]"></i>
+                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:bg-[#18181b] dark:border-white/10 text-left flex justify-between items-center bg-white text-xs font-bold uppercase">
+                                    <span x-text="selected.length > 0 ? selected.length + ' Dipilih' : 'Semua Pemasok'"
+                                        class="truncate text-slate-800 dark:text-white"></span>
+                                    <i class="fas fa-chevron-down text-slate-400 text-[10px]"></i>
                                 </button>
                                 <div x-show="open" x-transition
-                                    class="absolute z-50 mt-1 w-full bg-white dark:bg-[#1a1a1a] rounded-xl shadow-2xl border border-slate-100 dark:border-white/10 p-2 max-h-60 overflow-y-auto custom-scrollbar">
+                                    class="absolute z-[100] mt-1 w-full bg-white dark:bg-[#27272a] rounded-xl shadow-2xl border border-slate-100 dark:border-white/10 p-2 max-h-60 overflow-y-auto custom-scrollbar">
                                     <input x-model="search" type="text" placeholder="Cari supplier..."
-                                        class="w-full mb-2 pl-3 py-1.5 rounded-lg border-slate-200 dark:bg-white/5 text-xs font-bold uppercase">
+                                        class="w-full mb-2 pl-3 py-1.5 rounded-lg border-slate-200 dark:border-white/10 dark:bg-[#18181b] text-slate-800 dark:text-white text-xs font-bold uppercase">
                                     <template x-for="s in filtered" :key="s">
                                         <label
                                             class="flex items-center px-3 py-2 hover:bg-rose-50 dark:hover:bg-white/5 rounded-lg cursor-pointer transition-colors">
                                             <input type="checkbox" :value="s" x-model="selected"
-                                                class="rounded border-slate-300 text-rose-600 focus:ring-rose-500 w-4 h-4 mr-3">
+                                                class="rounded border-slate-300 dark:border-slate-500 dark:bg-[#18181b] text-rose-600 focus:ring-rose-500 w-4 h-4 mr-3 cursor-pointer focus:ring-offset-0">
                                             <span
-                                                class="text-[10px] font-bold uppercase text-slate-700 dark:text-slate-300"
+                                                class="text-[10px] font-bold uppercase text-slate-700 dark:text-slate-200"
                                                 x-text="s"></span>
                                         </label>
                                     </template>
@@ -436,30 +442,33 @@
                             </div>
                         </div>
 
-                        <div class="space-y-1 relative z-20"
+                        <div class="space-y-1 relative transition-all" :class="open ? 'z-[50]' : 'z-30'"
                             x-data="{ open: false, selected: @entangle('selectedProductProfit').live, options: @entangle('productOptionsProfit'), search: '', get filtered() { if(!this.options) return []; if(this.search === '') return this.options.slice(0, 50); return this.options.filter(i => i.name_item.toLowerCase().includes(this.search.toLowerCase())) } }">
                             <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Pilih Produk</label>
                             <div class="relative">
                                 <button @click="open = !open" @click.outside="open = false" type="button"
-                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:bg-black/20 dark:border-white/10 text-left flex justify-between items-center bg-white dark:bg-transparent text-xs font-bold uppercase">
+                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:bg-[#18181b] dark:border-white/10 text-left flex justify-between items-center bg-white text-xs font-bold uppercase">
                                     <span
-                                        x-text="selected.length > 0 ? selected.length + ' Produk Dipilih' : 'Semua Produk'"></span>
-                                    <i class="fas fa-chevron-down text-[10px]"></i>
+                                        x-text="selected.length > 0 ? selected.length + ' Produk Dipilih' : 'Semua Produk'"
+                                        class="truncate text-slate-800 dark:text-white"></span>
+                                    <i class="fas fa-chevron-down text-slate-400 text-[10px]"></i>
                                 </button>
+
+                                {{-- Diperbaiki: Menggunakan w-full agar tidak offside --}}
                                 <div x-show="open" x-transition
-                                    class="absolute z-50 mt-1 w-[120%] -left-2 bg-white dark:bg-[#1a1a1a] rounded-xl shadow-2xl border border-slate-100 dark:border-white/10 p-3 max-h-64 overflow-y-auto custom-scrollbar">
+                                    class="absolute z-[100] mt-1 w-full bg-white dark:bg-[#27272a] rounded-xl shadow-2xl border border-slate-100 dark:border-white/10 p-3 max-h-64 overflow-y-auto custom-scrollbar">
                                     <input x-model="search" type="text" placeholder="Cari nama produk..."
-                                        class="w-full mb-2 pl-3 py-1.5 rounded-lg border-slate-200 dark:bg-white/5 text-xs font-bold uppercase">
+                                        class="w-full mb-2 pl-3 py-1.5 rounded-lg border-slate-200 dark:border-white/10 dark:bg-[#18181b] text-slate-800 dark:text-white text-xs font-bold uppercase">
                                     <template x-for="item in filtered" :key="item.sku">
                                         <label
                                             class="flex items-center px-2 py-2 hover:bg-rose-50 dark:hover:bg-white/5 rounded-lg cursor-pointer group">
                                             <input type="checkbox" :value="item.sku" x-model="selected"
-                                                class="rounded border-slate-300 text-rose-600 focus:ring-rose-500 w-4 h-4 mr-3">
-                                            <div class="text-[10px] font-bold uppercase text-slate-700 dark:text-slate-300 group-hover:text-rose-600 dark:group-hover:text-rose-400"
+                                                class="rounded border-slate-300 dark:border-slate-500 dark:bg-[#18181b] text-rose-600 focus:ring-rose-500 w-4 h-4 mr-3 cursor-pointer focus:ring-offset-0">
+                                            <div class="text-[10px] font-bold uppercase text-slate-700 dark:text-slate-200 group-hover:text-rose-600 dark:group-hover:text-rose-400"
                                                 x-text="item.name_item"></div>
                                         </label>
                                     </template>
-                                    <div x-show="filteredOptions.length === 0"
+                                    <div x-show="filtered.length === 0"
                                         class="text-center py-2 text-[10px] text-slate-400">Produk tidak ditemukan</div>
                                 </div>
                             </div>

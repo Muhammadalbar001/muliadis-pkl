@@ -6,8 +6,8 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\WithFileUploads;
 use App\Models\Keuangan\Collection;
+use App\Models\DeletionRequest;
 use App\Services\Import\CollectionImportService;
-use Illuminate\Support\Facades\DB;
 
 class CollectionIndex extends Component
 {
@@ -17,14 +17,64 @@ class CollectionIndex extends Component
     public $filterCabang = [];
     public $filterPenagih = '';
     
-    // Properti Hapus & Import
-    public $deleteStartDate, $deleteEndDate;
-    public $isImportOpen = false, $file, $resetData = false;
+    // Properti Import
+    public $isImportOpen = false;
+    public $file;
+    public $resetData = false;
+
+    // --- PROPERTI PENGAJUAN HAPUS ---
+    public $isDeletePeriodModalOpen = false;
+    public $deleteStartDate;
+    public $deleteEndDate;
+    public $deleteReason;
 
     protected $queryString = ['search', 'filterPenagih'];
 
     public function updatingSearch() { $this->resetPage(); }
+    public function resetFilter() { $this->reset(['search', 'filterCabang', 'filterPenagih']); }
 
+    // --- FUNGSI PENGAJUAN HAPUS ---
+    public function openDeletePeriodModal()
+    {
+        $this->resetValidation();
+        $this->reset(['deleteStartDate', 'deleteEndDate', 'deleteReason']);
+        $this->isDeletePeriodModalOpen = true;
+    }
+
+    public function closeDeletePeriodModal()
+    {
+        $this->isDeletePeriodModalOpen = false;
+    }
+
+    public function submitDeletionRequest()
+    {
+        $this->validate([
+            'deleteStartDate' => 'required|date',
+            'deleteEndDate'   => 'required|date|after_or_equal:deleteStartDate',
+            'deleteReason'    => 'required|string|min:10',
+        ], [
+            'deleteEndDate.after_or_equal' => 'Tanggal akhir tidak boleh lebih kecil dari tanggal awal.',
+            'deleteReason.min' => 'Berikan alasan minimal 10 karakter.',
+        ]);
+
+        DeletionRequest::create([
+            'tipe_modul'      => 'collection',
+            'tanggal_mulai'   => $this->deleteStartDate,
+            'tanggal_selesai' => $this->deleteEndDate,
+            'alasan'          => $this->deleteReason,
+            'status'          => 'pending',
+            'requested_by'    => auth()->id(),
+        ]);
+
+        $this->closeDeletePeriodModal();
+        
+        $this->dispatch('show-toast', [
+            'type' => 'success', 
+            'message' => 'Pengajuan hapus periode Pelunasan berhasil dikirim ke Supervisor!'
+        ]);
+    }
+
+    // Import Handlers
     public function openImportModal() { $this->isImportOpen = true; }
     public function closeImportModal() { $this->isImportOpen = false; $this->file = null; }
 
@@ -45,28 +95,6 @@ class CollectionIndex extends Component
         } catch (\Exception $e) {
             $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal: ' . $e->getMessage()]);
         }
-    }
-
-    public function deleteByPeriod()
-    {
-        if (!$this->deleteStartDate || !$this->deleteEndDate) {
-            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Pilih periode tanggal!']);
-            return;
-        }
-
-        Collection::whereBetween('tanggal', [$this->deleteStartDate, $this->deleteEndDate])->delete();
-        $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Data periode berhasil dihapus']);
-    }
-
-    public function delete($id)
-    {
-        Collection::destroy($id);
-        $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Data berhasil dihapus']);
-    }
-
-    public function resetFilter()
-    {
-        $this->reset(['search', 'filterCabang', 'filterPenagih']);
     }
 
     public function render()

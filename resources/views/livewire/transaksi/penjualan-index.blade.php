@@ -55,7 +55,7 @@
                             <label
                                 class="flex items-center px-3 py-2.5 hover:bg-emerald-500/10 rounded-xl cursor-pointer transition-colors group">
                                 <input type="checkbox" value="{{ $c }}" x-model="selected"
-                                    class="rounded-full border-slate-500 text-emerald-600 focus:ring-emerald-500 h-3.5 w-3.5">
+                                    class="rounded-full border-slate-500 text-emerald-600 focus:ring-emerald-500 h-3.5 w-3.5 focus:ring-offset-0 bg-transparent">
                                 <span
                                     class="ml-3 text-[10px] font-bold uppercase tracking-tight group-hover:text-emerald-400 dark:text-slate-400 text-slate-600">{{ $c }}</span>
                             </label>
@@ -63,24 +63,16 @@
                         </div>
                     </div>
 
-                    {{-- HAPUS PER PERIODE --}}
-                    <div
-                        class="flex items-center gap-1.5 p-1.5 dark:bg-rose-500/10 bg-rose-50 border dark:border-rose-500/20 border-rose-100 rounded-2xl shadow-sm">
-                        <input type="date" wire:model="deleteStartDate"
-                            class="text-[9px] rounded-lg border-none py-1.5 px-2 bg-white dark:bg-black/40 font-black uppercase text-slate-700 dark:text-slate-200 focus:ring-rose-500">
-                        <span class="text-rose-300 text-[9px] font-black uppercase">S/D</span>
-                        <input type="date" wire:model="deleteEndDate"
-                            class="text-[9px] rounded-lg border-none py-1.5 px-2 bg-white dark:bg-black/40 font-black uppercase text-slate-700 dark:text-slate-200 focus:ring-rose-500">
-                        <button onclick="confirm('Hapus data pada PERIODE ini?') || event.stopImmediatePropagation()"
-                            wire:click="deleteByPeriod"
-                            class="p-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-all shadow-lg shadow-rose-600/20">
-                            <i class="fas fa-trash-alt text-[10px]"></i>
-                        </button>
-                    </div>
+                    {{-- TOMBOL PENGAJUAN HAPUS PERIODE --}}
+                    <button wire:click="openDeletePeriodModal"
+                        class="flex items-center justify-center gap-2 px-5 py-2.5 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 hover:bg-rose-100 dark:hover:bg-rose-500/20 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm transform active:scale-95">
+                        <i class="fas fa-trash-alt"></i>
+                        <span class="hidden sm:inline">Hapus Periode</span>
+                    </button>
 
                     {{-- IMPORT --}}
                     <button wire:click="openImportModal"
-                        class="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-600/20 transition-all transform active:scale-95">
+                        class="flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-600/20 transition-all transform active:scale-95">
                         <i class="fas fa-file-excel"></i>
                         <span class="hidden sm:inline">Unggah Data</span>
                     </button>
@@ -160,9 +152,6 @@
                                 <th
                                     class="px-6 py-5 border-r dark:border-white/5 border-slate-100 text-right dark:bg-emerald-600/10 bg-emerald-50/50 text-emerald-600">
                                     Total Nilai</th>
-                                <th
-                                    class="px-6 py-5 text-center bg-slate-50/50 dark:bg-white/5 border-l dark:border-white/5 border-slate-100 sticky right-0 z-20">
-                                    Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y dark:divide-white/5 divide-slate-100">
@@ -194,18 +183,10 @@
                                     class="px-6 py-4 text-right font-black dark:text-white text-slate-900 border-r dark:border-white/5 border-slate-50 bg-emerald-500/[0.01]">
                                     {{ number_format($item->total_grand, 0, ',', '.') }}
                                 </td>
-                                <td
-                                    class="px-6 py-4 text-center bg-slate-50/30 dark:bg-[#0a0a0a] border-l dark:border-white/5 border-slate-50 sticky right-0 z-10 shadow-xl shadow-black/5">
-                                    <button wire:click="delete({{ $item->id }})"
-                                        onclick="return confirm('Hapus faktur ini?') || event.stopImmediatePropagation()"
-                                        class="w-8 h-8 rounded-xl flex items-center justify-center text-slate-300 hover:text-white hover:bg-rose-500 transition-all shadow-sm">
-                                        <i class="fas fa-trash-alt text-[10px]"></i>
-                                    </button>
-                                </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="7" class="px-6 py-24 text-center opacity-20">
+                                <td colspan="6" class="px-6 py-24 text-center opacity-20">
                                     <i class="fas fa-file-invoice text-6xl mb-4"></i>
                                     <p class="text-xs font-black tracking-[0.4em]">Belum Ada Data Penjualan</p>
                                 </td>
@@ -226,6 +207,78 @@
         {{-- MODAL UNGGAH --}}
         @if($isImportOpen)
         @include('livewire.partials.import-modal', ['title' => 'Sinkronisasi Data Penjualan', 'color' => 'emerald'])
+        @endif
+
+        {{-- MODAL PENGAJUAN HAPUS PERIODE --}}
+        @if($isDeletePeriodModalOpen)
+        <div
+            class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto overflow-x-hidden bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm p-4">
+            <div
+                class="relative w-full max-w-md bg-white dark:bg-[#18181b] rounded-3xl shadow-2xl ring-1 ring-slate-200 dark:ring-white/10 overflow-hidden animate-fade-in transform scale-100 border border-slate-200 dark:border-white/10">
+                <div
+                    class="bg-rose-50 dark:bg-rose-900/20 px-6 py-5 border-b border-rose-100 dark:border-rose-800/30 flex items-center justify-between">
+                    <h3
+                        class="text-sm font-black text-rose-700 dark:text-rose-400 flex items-center gap-2 uppercase tracking-widest">
+                        <i class="fas fa-exclamation-triangle"></i> Pengajuan Hapus Data
+                    </h3>
+                    <button wire:click="closeDeletePeriodModal"
+                        class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                        <i class="fas fa-times text-lg"></i>
+                    </button>
+                </div>
+
+                <form wire:submit.prevent="submitDeletionRequest" class="p-6 space-y-5">
+                    <div
+                        class="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-[#121212] p-4 rounded-2xl border border-slate-100 dark:border-white/5">
+                        <div>
+                            <label
+                                class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Mulai
+                                Tanggal <span class="text-rose-500">*</span></label>
+                            <input type="date" wire:model="deleteStartDate"
+                                class="w-full rounded-xl border-slate-200 dark:border-white/10 bg-white dark:bg-[#1a1a1a] text-slate-800 dark:text-white text-xs font-bold focus:ring-rose-500 focus:border-rose-500 [color-scheme:light] dark:[color-scheme:dark] shadow-sm">
+                            @error('deleteStartDate') <span
+                                class="text-[9px] text-rose-600 dark:text-rose-400 font-bold mt-1 block">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div>
+                            <label
+                                class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Sampai
+                                Tanggal <span class="text-rose-500">*</span></label>
+                            <input type="date" wire:model="deleteEndDate"
+                                class="w-full rounded-xl border-slate-200 dark:border-white/10 bg-white dark:bg-[#1a1a1a] text-slate-800 dark:text-white text-xs font-bold focus:ring-rose-500 focus:border-rose-500 [color-scheme:light] dark:[color-scheme:dark] shadow-sm">
+                            @error('deleteEndDate') <span
+                                class="text-[9px] text-rose-600 dark:text-rose-400 font-bold mt-1 block">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Alasan
+                            Penghapusan <span class="text-rose-500">*</span></label>
+                        <textarea wire:model="deleteReason" rows="3"
+                            placeholder="Jelaskan alasan menghapus data periode ini..."
+                            class="w-full rounded-2xl border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#121212] text-slate-800 dark:text-white text-sm focus:ring-rose-500 focus:border-rose-500 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm"></textarea>
+                        @error('deleteReason') <span
+                            class="text-[10px] text-rose-600 dark:text-rose-400 font-bold block mt-1"><i
+                                class="fas fa-info-circle"></i> {{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-white/5">
+                        <button type="button" wire:click="closeDeletePeriodModal"
+                            class="px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors">
+                            Batal
+                        </button>
+                        <button type="submit" wire:loading.attr="disabled"
+                            class="px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest text-white bg-rose-600 hover:bg-rose-700 active:scale-95 transition-all shadow-md shadow-rose-500/20 flex items-center gap-2">
+                            <span wire:loading.remove wire:target="submitDeletionRequest"><i
+                                    class="fas fa-paper-plane"></i> Ajukan Hapus</span>
+                            <span wire:loading wire:target="submitDeletionRequest"><i
+                                    class="fas fa-circle-notch fa-spin"></i> Memproses...</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
         @endif
     </div>
 
