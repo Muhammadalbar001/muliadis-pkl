@@ -90,19 +90,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // ====================================================
-    // 4. MASTER DATA (Hanya Supervisor & Superadmin)
+    // 4. MASTER DATA (Supervisor & Superadmin)
     // ====================================================
     Route::middleware(['role:super_admin,superadmin,supervisor'])->prefix('admin/master')->name('master.')->group(function () {
         Route::get('/sales', SalesIndex::class)->name('sales');
         Route::get('/produk', ProdukIndex::class)->name('produk');
         Route::get('/supplier', SupplierIndex::class)->name('supplier');
         
-        // Data Pengguna TETAP dibatasi hanya untuk Super Admin
-        Route::middleware(['role:super_admin,superadmin'])->get('/user', UserIndex::class)->name('user'); 
+        // Akses Data Pengguna kini telah dibuka untuk Supervisor
+        Route::get('/user', UserIndex::class)->name('user'); 
     });
 
     // ====================================================
-    // 5. OPERASIONAL / TRANSAKSI (Hanya Admin & Superadmin)
+    // 5. OPERASIONAL / TRANSAKSI (Admin & Superadmin)
     // ====================================================
     Route::middleware(['role:super_admin,superadmin,admin'])->prefix('admin/transaksi')->name('transaksi.')->group(function () {
         Route::get('/penjualan', PenjualanIndex::class)->name('penjualan');
@@ -112,7 +112,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // ====================================================
-    // 6. ANALISA & LAPORAN (Hanya Pimpinan & Superadmin)
+    // 6. ANALISA & LAPORAN (Pimpinan & Superadmin)
     // ====================================================
     Route::middleware(['role:super_admin,superadmin,pimpinan'])->prefix('admin')->group(function () {
         
@@ -131,18 +131,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // PUSAT CETAK
         Route::get('/laporan/pusat-cetak', PusatCetak::class)->name('pusat-cetak');
+        Route::get('/pdf/spk-sales', [SpkSales::class, 'generatePDF'])->name('spk-sales.pdf');
         
         // ====================================================
         // FITUR UTAMA (INTELLIGENT REPORTS)
         // ====================================================
         Route::prefix('keputusan')->name('keputusan.')->group(function () {
-            
             Route::get('/spk-sales', SpkSales::class)->name('spk-sales');
             Route::get('/rfm-pelanggan', RfmPelanggan::class)->name('rfm-pelanggan');
-            
         });
     });
-
 });
 
 require __DIR__.'/auth.php';

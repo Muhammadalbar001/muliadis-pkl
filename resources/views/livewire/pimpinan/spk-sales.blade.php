@@ -1,6 +1,6 @@
 <div class="p-6 max-w-7xl mx-auto font-jakarta animate-fade-in pb-20">
 
-    <div class="flex items-center justify-between mb-8">
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
         <div>
             <h2 class="text-3xl font-black text-slate-800 dark:text-white flex items-center gap-3 tracking-tighter">
                 <i class="fas fa-brain text-blue-600"></i> SPK Kinerja Salesman
@@ -8,16 +8,28 @@
             <p class="text-xs font-bold text-slate-500 mt-1 uppercase tracking-widest">Metode Penjumlahan Terbobot
                 (Simple Additive Weighting)</p>
         </div>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap items-center gap-2">
             <select wire:model.live="bulan"
                 class="rounded-xl border-slate-200 dark:border-white/10 dark:bg-[#121212] text-xs font-bold shadow-sm focus:ring-blue-500 cursor-pointer">
                 @for($i=1; $i<=12; $i++) <option value="{{ $i }}">
-                    {{ \Carbon\Carbon::create()->month($i)->translatedFormat('F') }}</option> @endfor
+                    {{ \Carbon\Carbon::create()->month($i)->translatedFormat('F') }}</option>
+                    @endfor
             </select>
+
             <select wire:model.live="tahun"
                 class="rounded-xl border-slate-200 dark:border-white/10 dark:bg-[#121212] text-xs font-bold shadow-sm focus:ring-blue-500 cursor-pointer">
-                @for($y=date('Y')-1; $y<=date('Y'); $y++) <option value="{{ $y }}">{{ $y }}</option> @endfor
+                @for($y=date('Y')-1; $y<=date('Y'); $y++) <option value="{{ $y }}">{{ $y }}</option>
+                    @endfor
             </select>
+
+            @if(!empty($hasilSPK))
+            <button wire:click="exportPdf" wire:loading.attr="disabled"
+                class="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm flex items-center gap-2 transition-all">
+                <i class="fas fa-file-pdf"></i>
+                <span wire:loading.remove wire:target="exportPdf">Cetak Laporan</span>
+                <span wire:loading wire:target="exportPdf">Menyiapkan...</span>
+            </button>
+            @endif
         </div>
     </div>
 

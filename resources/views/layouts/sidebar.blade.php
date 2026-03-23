@@ -71,7 +71,6 @@
         {{-- ================================================== --}}
         {{-- MENU (SPK & DATA MINING)                           --}}
         {{-- ================================================== --}}
-
         @if(in_array(auth()->user()->role, ['super_admin', 'superadmin', 'pimpinan']))
         <div x-data="{ open: {{ request()->routeIs('keputusan.*') ? 'true' : 'false' }} }"
             class="w-full relative group mb-4">
@@ -96,6 +95,7 @@
 
             <div x-show="open && isSidebarExpanded" x-cloak x-transition.origin.top
                 class="mt-1 space-y-0.5 ml-4 border-l-[1.5px] border-slate-200 pl-3 dark:border-white/10">
+
                 <a href="{{ route('keputusan.spk-sales') }}"
                     class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-colors
                     {{ request()->routeIs('keputusan.spk-sales') ? 'text-fuchsia-600 bg-fuchsia-50/50 dark:text-fuchsia-300 dark:bg-fuchsia-500/10' : 'text-slate-500 hover:text-fuchsia-600 dark:hover:text-fuchsia-300' }}">
@@ -106,14 +106,12 @@
 
                 <a href="{{ route('keputusan.rfm-pelanggan') }}"
                     class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-colors
-    {{ request()->routeIs('keputusan.rfm-pelanggan') ? 'text-fuchsia-600 bg-fuchsia-50/50 dark:text-fuchsia-300 dark:bg-fuchsia-500/10' : 'text-slate-500 hover:text-fuchsia-600 dark:hover:text-fuchsia-300' }}">
+                    {{ request()->routeIs('keputusan.rfm-pelanggan') ? 'text-fuchsia-600 bg-fuchsia-50/50 dark:text-fuchsia-300 dark:bg-fuchsia-500/10' : 'text-slate-500 hover:text-fuchsia-600 dark:hover:text-fuchsia-300' }}">
                     <span
                         class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('keputusan.rfm-pelanggan') ? 'bg-fuchsia-500' : 'bg-slate-300 dark:bg-slate-600' }}"></span>
                     Segmentasi (RFM)
                 </a>
             </div>
-
-
 
             <div x-show="!isSidebarExpanded"
                 class="absolute left-14 top-1 bg-slate-800 text-white text-[10px] px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap shadow-xl font-bold tracking-wider uppercase transform translate-x-2 group-hover:translate-x-0">
@@ -123,7 +121,7 @@
         @endif
 
         {{-- ================================================== --}}
-        {{-- MASTER DATA (Hanya untuk Superadmin & Supervisor)  --}}
+        {{-- MASTER DATA (Superadmin & Supervisor)              --}}
         {{-- ================================================== --}}
         @if(in_array(auth()->user()->role, ['super_admin', 'superadmin', 'supervisor']))
         <div x-data="{ open: {{ request()->routeIs('master.*') ? 'true' : 'false' }} }" class="w-full relative group">
@@ -174,7 +172,8 @@
                     Salesman
                 </a>
 
-                @if(in_array(auth()->user()->role, ['super_admin', 'superadmin']))
+                {{-- PERUBAHAN: AKSES MENU PENGGUNA DIIZINKAN UNTUK SUPERVISOR --}}
+                @if(in_array(auth()->user()->role, ['super_admin', 'superadmin', 'supervisor']))
                 <a href="{{ route('master.user') }}"
                     class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-colors
                     {{ request()->routeIs('master.user') ? 'text-rose-500 bg-rose-50/50 dark:text-rose-300 dark:bg-white/5' : 'text-slate-500 hover:text-rose-500 dark:hover:text-rose-300' }}">
@@ -194,7 +193,7 @@
         @endif
 
         {{-- ================================================== --}}
-        {{-- OPERASIONAL (Hanya untuk Superadmin & Admin)       --}}
+        {{-- OPERASIONAL (Superadmin & Admin)                   --}}
         {{-- ================================================== --}}
         @if(in_array(auth()->user()->role, ['super_admin', 'superadmin', 'admin']))
         <div x-data="{ open: {{ request()->routeIs('transaksi.*') ? 'true' : 'false' }} }"
@@ -262,7 +261,7 @@
         @endif
 
         {{-- ================================================== --}}
-        {{-- ANALISA & LAPORAN (Hanya untuk Superadmin & Pimpinan) --}}
+        {{-- ANALISA & LAPORAN (Superadmin & Pimpinan)          --}}
         {{-- ================================================== --}}
         @if(in_array(auth()->user()->role, ['super_admin', 'superadmin', 'pimpinan']))
         <div x-data="{ open: {{ (request()->routeIs('pimpinan.*') || request()->routeIs('laporan.*') || request()->routeIs('pusat-cetak')) ? 'true' : 'false' }} }"

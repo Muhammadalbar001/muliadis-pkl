@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Transaksi\Penjualan;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class RfmPelanggan extends Component
 {
@@ -130,5 +131,29 @@ class RfmPelanggan extends Component
             'hasilRFM' => $hasilRFM,
             'summary' => $summary
         ])->layout('layouts.app');
+    }
+    public function exportPdf()
+    {
+        $hasil = $this->hitungRFM();
+        $summary = collect($hasil)->countBy('segment')->toArray();
+        $bulanNama = Carbon::create()->month($this->bulan)->translatedFormat('F');
+
+        $data = [
+            'hasil' => $hasil,
+            'summary' => $summary,
+            'bulanNama' => $bulanNama,
+            'tahun' => $this->tahun,
+            'tanggal_cetak' => Carbon::now()->translatedFormat('d F Y H:i'),
+        ];
+
+        // Load view PDF untuk RFM
+        $pdf = Pdf::loadView('livewire.pimpinan.exports.rfm-pelanggan-pdf', $data);
+        
+        // Kertas A4 Landscape agar kolom RFM muat dengan rapi
+        $pdf->setPaper('A4', 'landscape');
+
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->stream();
+        }, 'Laporan_Segmentasi_RFM_' . $bulanNama . '_' . $this->tahun . '.pdf');
     }
 }

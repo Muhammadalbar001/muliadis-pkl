@@ -7,7 +7,7 @@
             <p class="text-xs font-bold text-slate-500 mt-1 uppercase tracking-widest">Analisis Keterbaruan, Frekuensi,
                 dan Nilai Belanja</p>
         </div>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap items-center gap-2">
             <select wire:model.live="bulan"
                 class="rounded-xl border-slate-200 dark:border-white/10 dark:bg-[#121212] text-xs font-bold focus:ring-fuchsia-500 cursor-pointer">
                 @for($i=1; $i<=12; $i++) <option value="{{ $i }}">
@@ -17,6 +17,16 @@
                 class="rounded-xl border-slate-200 dark:border-white/10 dark:bg-[#121212] text-xs font-bold focus:ring-fuchsia-500 cursor-pointer">
                 @for($y=date('Y')-1; $y<=date('Y'); $y++) <option value="{{ $y }}">{{ $y }}</option> @endfor
             </select>
+
+            {{-- Tombol Cetak Laporan PDF --}}
+            @if(!empty($hasilRFM))
+            <button wire:click="exportPdf" wire:loading.attr="disabled"
+                class="bg-fuchsia-600 hover:bg-fuchsia-700 disabled:bg-fuchsia-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm flex items-center gap-2 transition-all">
+                <i class="fas fa-file-pdf"></i>
+                <span wire:loading.remove wire:target="exportPdf">Cetak Laporan</span>
+                <span wire:loading wire:target="exportPdf">Menyiapkan...</span>
+            </button>
+            @endif
         </div>
     </div>
 

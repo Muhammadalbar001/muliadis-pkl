@@ -6,7 +6,6 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
 class UserIndex extends Component
@@ -14,106 +13,128 @@ class UserIndex extends Component
     use WithPagination;
 
     public $search = '';
-    public $isOpen = false;
-    public $isEdit = false;
+    public $userId, $name, $username, $email, $password, $role = 'admin';
+    public $isModalOpen = false;
+    public $isEditMode = false;
 
-    // Default role sekarang diset ke 'admin' (Input Transaksi)
-    public $userId, $name, $username, $email, $role = 'admin', $password;
-
-    public function render()
+    // Reset pagination ketika melakukan pencarian
+    public function updatingSearch()
     {
-        $users = User::query()
-            ->where(function($q) {
-                $q->where('name', 'like', '%'.$this->search.'%')
-                  ->orWhere('email', 'like', '%'.$this->search.'%')
-                  ->orWhere('username', 'like', '%'.$this->search.'%');
-            })
-            ->latest()
-            ->paginate(12);
-
-        return view('livewire.master.user-index', compact('users'))
-            ->layout('layouts.app', ['header' => 'Manajemen User']);
+        $this->resetPage();
     }
 
-    public function create()
+    public function openModal()
     {
-        $this->resetFields();
-        $this->isEdit = false;
-        $this->isOpen = true;
+        $this->resetInputFields();
+        $this->isEditMode = false;
+        $this->isModalOpen = true;
     }
 
-    public function edit($id)
+    public function closeModal()
     {
-        $this->resetFields();
-        $user = User::findOrFail($id);
-        $this->userId = $id;
-        $this->name = $user->name;
-        $this->username = $user->username;
-        $this->email = $user->email;
-        $this->role = $user->role; 
-        $this->isEdit = true;
-        $this->isOpen = true;
+        $this->isModalOpen = false;
+        $this->resetInputFields();
+        $this->resetValidation();
+    }
+
+    private function resetInputFields()
+    {
+        $this->userId = null;
+        $this->name = '';
+        $this->username = '';
+        $this->email = '';
+        $this->password = '';
+        $this->role = 'admin';
     }
 
     public function store()
     {
         $this->validate([
-            'name' => 'required|min:3',
-            'username' => ['required', Rule::unique('users', 'username')->ignore($this->userId)],
-            'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($this->userId)],
-            // Validasi diperbarui sesuai Role baru
-            'role' => 'required|in:super_admin,pimpinan,supervisor,admin',
-            'password' => $this->isEdit ? 'nullable|min:6' : 'required|min:6',
+            'name' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:users,username',
+            'email' => 'required|email|max:255|unique:users,email',
+            'password' => 'required|min:6',
+            'role' => 'required|in:pimpinan,supervisor,admin',
         ]);
 
-        try {
-            $data = [
-                'name' => $this->name,
-                'username' => $this->username,
-                'email' => $this->email,
-                'role' => $this->role,
-            ];
+        User::create([
+            'name' => $this->name,
+            'username' => $this->username,
+            'email' => $this->email,
+            'password' => Hash::make($this->password),
+            'role' => $this->role,
+        ]);
 
-            if ($this->password) {
-                $data['password'] = Hash::make($this->password);
-            }
+        session()->flash('message', 'Akun pengguna berhasil dibuat.');
+        $this->closeModal();
+    }
 
-            User::updateOrCreate(['id' => $this->userId], $data);
+    public function edit($id)
+    {
+        $user = User::findOrFail($id);
+        $this->userId = $user->id;
+        $this->name = $user->name;
+        $this->username = $user->username;
+        $this->email = $user->email;
+        $this->role = $user->role;
+        $this->password = ''; // Kosongkan agar tidak terubah jika tidak diisi
 
-            $this->isOpen = false;
-            $this->resetFields();
-            $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Data User & Role berhasil diperbarui.']);
-        } catch (\Exception $e) {
-            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal simpan: ' . $e->getMessage()]);
+        $this->isEditMode = true;
+        $this->isModalOpen = true;
+    }
+
+    public function update()
+    {
+        $this->validate([
+            'name' => 'required|string|max:255',
+            'username' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($this->userId)],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($this->userId)],
+            'role' => 'required|in:pimpinan,supervisor,admin',
+            'password' => 'nullable|min:6', // Password boleh kosong saat update
+        ]);
+
+        $user = User::findOrFail($this->userId);
+        
+        $dataToUpdate = [
+            'name' => $this->name,
+            'username' => $this->username,
+            'email' => $this->email,
+            'role' => $this->role,
+        ];
+
+        // Hanya update password jika form diisi
+        if (!empty($this->password)) {
+            $dataToUpdate['password'] = Hash::make($this->password);
         }
+
+        $user->update($dataToUpdate);
+
+        session()->flash('message', 'Data akun berhasil diperbarui.');
+        $this->closeModal();
     }
 
     public function delete($id)
     {
-        if ($id == Auth::id()) {
-            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Anda tidak bisa menghapus diri sendiri!']);
+        // Mencegah supervisor menghapus akunnya sendiri yang sedang dipakai
+        if (auth()->id() == $id) {
+            session()->flash('error', 'Anda tidak dapat menghapus akun Anda sendiri!');
             return;
         }
-        
-        try {
-            $user = User::findOrFail($id);
-            $user->delete();
-            $this->dispatch('show-toast', ['type' => 'success', 'message' => 'User berhasil dihapus.']);
-        } catch (\Exception $e) {
-            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal menghapus data.']);
-        }
+
+        User::findOrFail($id)->delete();
+        session()->flash('message', 'Akun pengguna telah dihapus permanen.');
     }
 
-    public function closeModal()
+    public function render()
     {
-        $this->isOpen = false;
-        $this->resetFields();
-    }
+        $users = User::where('name', 'like', '%' . $this->search . '%')
+            ->orWhere('username', 'like', '%' . $this->search . '%')
+            ->orWhere('role', 'like', '%' . $this->search . '%')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
 
-    private function resetFields()
-    {
-        $this->reset(['userId', 'name', 'username', 'email', 'role', 'password']);
-        $this->role = 'admin';
-        $this->resetErrorBag();
+        return view('livewire.master.user-index', [
+            'users' => $users
+        ])->layout('layouts.app');
     }
 }

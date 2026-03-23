@@ -9,6 +9,7 @@ use App\Models\Transaksi\Retur;
 use App\Models\Keuangan\AccountReceivable;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf; 
 
 class SpkSales extends Component
 {
@@ -68,8 +69,13 @@ class SpkSales extends Component
         // 2. Cari Nilai Max (Keuntungan) dan Min (Biaya)
         $maxK1 = max(array_column($dataKinerja, 'k1_omzet'));
         $maxK2 = max(array_column($dataKinerja, 'k2_transaksi'));
-        $minK3 = min(array_filter(array_column($dataKinerja, 'k3_retur'))) ?: 1; 
-        $minK4 = min(array_filter(array_column($dataKinerja, 'k4_piutang'))) ?: 1;
+
+        // PERBAIKAN BUG ValueError: Cek apakah array memiliki elemen sebelum dikenakan fungsi min()
+        $retur_filtered = array_filter(array_column($dataKinerja, 'k3_retur'));
+        $minK3 = count($retur_filtered) > 0 ? min($retur_filtered) : 1; 
+
+        $piutang_filtered = array_filter(array_column($dataKinerja, 'k4_piutang'));
+        $minK4 = count($piutang_filtered) > 0 ? min($piutang_filtered) : 1;
 
         // Bobot Kriteria
         $w1 = 0.40; $w2 = 0.20; $w3 = 0.20; $w4 = 0.20;
@@ -128,5 +134,30 @@ class SpkSales extends Component
         return view('livewire.pimpinan.spk-sales', [
             'hasilSPK' => $this->hitungSAW()
         ])->layout('layouts.app');
+    }
+    public function exportPdf()
+    {
+        $hasil = $this->hitungSAW();
+        
+        // Terjemahkan angka bulan ke nama bulan (misal: 3 -> Maret)
+        $bulanNama = Carbon::create()->month($this->bulan)->translatedFormat('F');
+
+        $data = [
+            'hasil' => $hasil,
+            'bulanNama' => $bulanNama,
+            'tahun' => $this->tahun,
+            'tanggal_cetak' => Carbon::now()->translatedFormat('d F Y H:i'),
+        ];
+
+        // Load view PDF
+        $pdf = Pdf::loadView('livewire.pimpinan.exports.spk-sales-pdf', $data);
+        
+        // Atur ukuran kertas menjadi A4 Landscape karena kolomnya banyak
+        $pdf->setPaper('A4', 'landscape');
+
+        // Download otomatis
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->stream();
+        }, 'Laporan_Analitik_SPK_Sales_' . $bulanNama . '_' . $this->tahun . '.pdf');
     }
 }
