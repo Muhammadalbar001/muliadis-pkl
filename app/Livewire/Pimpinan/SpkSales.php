@@ -15,6 +15,7 @@ class SpkSales extends Component
 {
     public $bulan;
     public $tahun;
+    public $search = ''; // Properti untuk fitur pencarian
     
     // Variabel untuk kendali Modal Pop-up via Livewire
     public $isModalOpen = false;
@@ -28,7 +29,12 @@ class SpkSales extends Component
 
     public function hitungSAW()
     {
-        $salesList = Sales::all();
+        // Filter daftar sales berdasarkan inputan pencarian
+        $salesList = Sales::when($this->search, function($query) {
+            $query->where('sales_name', 'like', '%' . $this->search . '%')
+                  ->orWhere('sales_code', 'like', '%' . $this->search . '%');
+        })->get();
+
         $dataKinerja = [];
 
         // 1. Kumpulkan Nilai Mentah
@@ -135,6 +141,7 @@ class SpkSales extends Component
             'hasilSPK' => $this->hitungSAW()
         ])->layout('layouts.app');
     }
+    
     public function exportPdf()
     {
         $hasil = $this->hitungSAW();

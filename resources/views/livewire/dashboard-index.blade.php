@@ -21,18 +21,18 @@
                 </div>
 
                 <div
-                    class="flex p-1 bg-white dark:bg-[#121212] border border-slate-200 dark:border-white/10 rounded-lg shadow-sm">
+                    class="flex p-1 bg-white dark:bg-[#121212] border border-slate-200 dark:border-white/10 rounded-lg shadow-sm overflow-x-auto">
                     <button @click="activeTab = 'overview'"
                         :class="activeTab === 'overview' ? 'bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5'"
-                        class="px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-2"><i
+                        class="px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap"><i
                             class="fas fa-home"></i> Overview</button>
                     <button @click="activeTab = 'ranking'"
                         :class="activeTab === 'ranking' ? 'bg-indigo-50 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5'"
-                        class="px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-2"><i
+                        class="px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap"><i
                             class="fas fa-trophy"></i> Ranking</button>
                     <button @click="activeTab = 'salesman'"
                         :class="activeTab === 'salesman' ? 'bg-purple-50 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5'"
-                        class="px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-2"><i
+                        class="px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap"><i
                             class="fas fa-user-tie"></i> Sales</button>
                 </div>
             </div>
@@ -82,7 +82,6 @@
 
         {{-- TAB OVERVIEW --}}
         <div x-show="activeTab === 'overview'" x-transition.opacity.duration.300ms class="space-y-6">
-
             {{-- SMART ALERTS: RADAR PERINGATAN DINI --}}
             @if(count($alerts) > 0)
             <div class="mb-6 space-y-3" x-data="{ show: true }" x-show="show" x-transition.duration.500ms>
@@ -99,20 +98,15 @@
                 @foreach($alerts as $alert)
                 @php
                 $bgClass = $alert['type'] == 'danger' ? 'bg-rose-50 dark:bg-rose-500/10 border-rose-200
-                dark:border-rose-500/30' :
-                ($alert['type'] == 'warning' ? 'bg-orange-50 dark:bg-orange-500/10 border-orange-200
-                dark:border-orange-500/30' :
-                'bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30');
-
-                $textClass = $alert['type'] == 'danger' ? 'text-rose-700 dark:text-rose-400' :
-                ($alert['type'] == 'warning' ? 'text-orange-700 dark:text-orange-400' :
-                'text-blue-700 dark:text-blue-400');
-
+                dark:border-rose-500/30' : ($alert['type'] == 'warning' ? 'bg-orange-50 dark:bg-orange-500/10
+                border-orange-200 dark:border-orange-500/30' : 'bg-blue-50 dark:bg-blue-500/10 border-blue-200
+                dark:border-blue-500/30');
+                $textClass = $alert['type'] == 'danger' ? 'text-rose-700 dark:text-rose-400' : ($alert['type'] ==
+                'warning' ? 'text-orange-700 dark:text-orange-400' : 'text-blue-700 dark:text-blue-400');
                 $iconClass = $alert['type'] == 'danger' ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/40
-                dark:text-rose-400' :
-                ($alert['type'] == 'warning' ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/40
-                dark:text-orange-400' :
-                'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400');
+                dark:text-rose-400' : ($alert['type'] == 'warning' ? 'bg-orange-100 text-orange-600
+                dark:bg-orange-900/40 dark:text-orange-400' : 'bg-blue-100 text-blue-600 dark:bg-blue-900/40
+                dark:text-blue-400');
                 @endphp
 
                 <div
@@ -221,33 +215,66 @@
             </div>
         </div>
 
-        {{-- TAB RANKING --}}
-        <div x-show="activeTab === 'ranking'" x-transition.opacity.duration.300ms class="grid grid-cols-1 gap-6"
-            wire:ignore>
+        {{-- TAB RANKING (DENGAN TAMBAHAN FILTER) --}}
+        <div x-show="activeTab === 'ranking'" x-transition.opacity.duration.300ms class="grid grid-cols-1 gap-6">
+
+            {{-- 1. Top Produk (Filter by Supplier) --}}
             <div
                 class="bg-white dark:bg-[#121212] p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-white/10 transition-colors">
-                <h4
-                    class="font-bold text-slate-700 dark:text-white mb-4 pb-2 border-b border-slate-100 dark:border-white/5 flex items-center gap-2">
-                    <i class="fas fa-box text-blue-500"></i> Top 10 Produk (Qty)
-                </h4>
-                <div id="chart-top-produk" style="min-height: 400px;"></div>
+                <div
+                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-2 border-b border-slate-100 dark:border-white/5">
+                    <h4 class="font-bold text-slate-700 dark:text-white flex items-center gap-2">
+                        <i class="fas fa-box text-blue-500"></i> Top 10 Produk (Qty)
+                    </h4>
+                    <select wire:model.live="rankingFilterSupplier"
+                        class="text-[10px] font-bold rounded-lg border-slate-200 dark:border-white/10 dark:bg-[#18181b] dark:text-white focus:ring-blue-500 w-full sm:w-48 py-2 px-3 uppercase tracking-wider cursor-pointer">
+                        <option value="">-- Semua Pemasok --</option>
+                        @foreach($optSupplier as $supp)
+                        <option value="{{ $supp }}">{{ Str::limit($supp, 20) }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div id="chart-top-produk" wire:ignore style="min-height: 400px;"></div>
             </div>
+
+            {{-- 2. Top Pelanggan (Filter by Salesman) --}}
             <div
                 class="bg-white dark:bg-[#121212] p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-white/10 transition-colors">
-                <h4
-                    class="font-bold text-slate-700 dark:text-white mb-4 pb-2 border-b border-slate-100 dark:border-white/5 flex items-center gap-2">
-                    <i class="fas fa-users text-purple-500 dark:text-purple-400"></i> Top 10 Pelanggan (Omzet)
-                </h4>
-                <div id="chart-top-customer" style="min-height: 400px;"></div>
+                <div
+                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-2 border-b border-slate-100 dark:border-white/5">
+                    <h4 class="font-bold text-slate-700 dark:text-white flex items-center gap-2">
+                        <i class="fas fa-users text-purple-500 dark:text-purple-400"></i> Top 10 Pelanggan (Omzet)
+                    </h4>
+                    <select wire:model.live="rankingFilterSalesCustomer"
+                        class="text-[10px] font-bold rounded-lg border-slate-200 dark:border-white/10 dark:bg-[#18181b] dark:text-white focus:ring-purple-500 w-full sm:w-48 py-2 px-3 uppercase tracking-wider cursor-pointer">
+                        <option value="">-- Semua Salesman --</option>
+                        @foreach($optSales as $s)
+                        <option value="{{ $s }}">{{ Str::limit($s, 20) }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div id="chart-top-customer" wire:ignore style="min-height: 400px;"></div>
             </div>
+
+            {{-- 3. Top Supplier (Filter by Salesman) --}}
             <div
                 class="bg-white dark:bg-[#121212] p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-white/10 transition-colors">
-                <h4
-                    class="font-bold text-slate-700 dark:text-white mb-4 pb-2 border-b border-slate-100 dark:border-white/5 flex items-center gap-2">
-                    <i class="fas fa-truck text-pink-500 dark:text-pink-400"></i> Top 10 Supplier (Omzet)
-                </h4>
-                <div id="chart-top-supplier" style="min-height: 400px;"></div>
+                <div
+                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-2 border-b border-slate-100 dark:border-white/5">
+                    <h4 class="font-bold text-slate-700 dark:text-white flex items-center gap-2">
+                        <i class="fas fa-truck text-pink-500 dark:text-pink-400"></i> Top 10 Supplier (Omzet)
+                    </h4>
+                    <select wire:model.live="rankingFilterSalesSupplier"
+                        class="text-[10px] font-bold rounded-lg border-slate-200 dark:border-white/10 dark:bg-[#18181b] dark:text-white focus:ring-pink-500 w-full sm:w-48 py-2 px-3 uppercase tracking-wider cursor-pointer">
+                        <option value="">-- Semua Salesman --</option>
+                        @foreach($optSales as $s)
+                        <option value="{{ $s }}">{{ Str::limit($s, 20) }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div id="chart-top-supplier" wire:ignore style="min-height: 400px;"></div>
             </div>
+
         </div>
 
         {{-- TAB SALESMAN --}}
@@ -278,10 +305,22 @@ document.addEventListener('livewire:init', () => {
         const themeMode = getChartTheme();
         const isDark = themeMode === 'dark';
         const font = 'Plus Jakarta Sans, sans-serif';
-        const fmtRp = (v) => "Rp " + new Intl.NumberFormat('id-ID').format(v);
-        const fmtJt = (v) => (v / 1000000).toFixed(1) + " Jt";
 
-        const textColor = isDark ? '#94a3b8' : '#64748b'; // slate-400 : slate-500
+        // FUNGSI FORMATTER (Diperbaiki agar tidak memunculkan NaN)
+        const fmtRp = (v) => {
+            if (v == null || isNaN(v)) return "Rp 0";
+            return "Rp " + new Intl.NumberFormat('id-ID').format(v);
+        };
+        const fmtJt = (v) => {
+            if (v == null || isNaN(v)) return "0 Jt";
+            return (Number(v) / 1000000).toFixed(1) + " Jt";
+        };
+        const fmtUnit = (v) => {
+            if (v == null || isNaN(v)) return "0 Unit";
+            return new Intl.NumberFormat('id-ID').format(v) + " Unit";
+        };
+
+        const textColor = isDark ? '#94a3b8' : '#64748b';
         const gridColor = isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9';
 
         const baseOptions = {
@@ -313,93 +352,117 @@ document.addEventListener('livewire:init', () => {
             },
             yaxis: {
                 labels: {
-                    formatter: fmtJt,
                     style: {
                         fontSize: '10px',
                         colors: textColor
                     }
-                }
-            },
-            tooltip: {
-                theme: themeMode,
-                y: {
-                    formatter: fmtRp
+                    // Dihapus formatter global dari sini agar nama (huruf) tidak diubah menjadi "NaN Jt"
                 }
             }
         };
 
         // 1. Sales vs Retur (Area)
-        if (charts.sr) charts.sr.destroy();
-        charts.sr = new ApexCharts(document.querySelector("#chart-sales-retur"), {
-            ...baseOptions,
-            series: [{
-                name: 'Penjualan',
-                data: data.trend_sales
-            }, {
-                name: 'Retur',
-                data: data.trend_retur
-            }],
-            chart: {
-                ...baseOptions.chart,
-                type: 'area',
-                height: 350
-            },
-            colors: ['#10b981', '#f43f5e'],
-            stroke: {
-                curve: 'smooth',
-                width: 2
-            },
-            xaxis: {
-                ...baseOptions.xaxis,
-                categories: data.dates,
-                labels: {
-                    show: false
+        if (document.querySelector("#chart-sales-retur")) {
+            if (charts.sr) charts.sr.destroy();
+            charts.sr = new ApexCharts(document.querySelector("#chart-sales-retur"), {
+                ...baseOptions,
+                series: [{
+                    name: 'Penjualan',
+                    data: data.trend_sales
+                }, {
+                    name: 'Retur',
+                    data: data.trend_retur
+                }],
+                chart: {
+                    ...baseOptions.chart,
+                    type: 'area',
+                    height: 350
+                },
+                colors: ['#10b981', '#f43f5e'],
+                stroke: {
+                    curve: 'smooth',
+                    width: 2
+                },
+                xaxis: {
+                    ...baseOptions.xaxis,
+                    categories: data.dates,
+                    labels: {
+                        show: false
+                    }
+                },
+                yaxis: {
+                    ...baseOptions.yaxis,
+                    labels: {
+                        ...baseOptions.yaxis.labels,
+                        formatter: fmtJt
+                    }
+                },
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        opacityFrom: 0.4,
+                        opacityTo: 0.05
+                    }
+                },
+                tooltip: {
+                    theme: themeMode,
+                    y: {
+                        formatter: fmtRp
+                    }
                 }
-            },
-            fill: {
-                type: 'gradient',
-                gradient: {
-                    opacityFrom: 0.4,
-                    opacityTo: 0.05
-                }
-            }
-        });
-        charts.sr.render();
+            });
+            charts.sr.render();
+        }
 
         // 2. AR vs Collection (Bar)
-        if (charts.ac) charts.ac.destroy();
-        charts.ac = new ApexCharts(document.querySelector("#chart-ar-coll"), {
-            ...baseOptions,
-            series: [{
-                name: 'Piutang Baru',
-                data: data.trend_ar
-            }, {
-                name: 'Pelunasan',
-                data: data.trend_coll
-            }],
-            chart: {
-                ...baseOptions.chart,
-                type: 'bar',
-                height: 350
-            },
-            colors: ['#f97316', '#06b6d4'],
-            plotOptions: {
-                bar: {
-                    borderRadius: 3,
-                    columnWidth: '60%'
+        if (document.querySelector("#chart-ar-coll")) {
+            if (charts.ac) charts.ac.destroy();
+            charts.ac = new ApexCharts(document.querySelector("#chart-ar-coll"), {
+                ...baseOptions,
+                series: [{
+                    name: 'Piutang Baru',
+                    data: data.trend_ar
+                }, {
+                    name: 'Pelunasan',
+                    data: data.trend_coll
+                }],
+                chart: {
+                    ...baseOptions.chart,
+                    type: 'bar',
+                    height: 350
+                },
+                colors: ['#f97316', '#06b6d4'],
+                plotOptions: {
+                    bar: {
+                        borderRadius: 3,
+                        columnWidth: '60%'
+                    }
+                },
+                xaxis: {
+                    ...baseOptions.xaxis,
+                    categories: data.dates,
+                    labels: {
+                        show: false
+                    }
+                },
+                yaxis: {
+                    ...baseOptions.yaxis,
+                    labels: {
+                        ...baseOptions.yaxis.labels,
+                        formatter: fmtJt
+                    }
+                },
+                tooltip: {
+                    theme: themeMode,
+                    y: {
+                        formatter: fmtRp
+                    }
                 }
-            },
-            xaxis: {
-                ...baseOptions.xaxis,
-                categories: data.dates,
-                labels: {
-                    show: false
-                }
-            }
-        });
-        charts.ac.render();
+            });
+            charts.ac.render();
+        }
 
-        // Config Ranking Charts
+        // Config Ranking Charts (Horizontal)
         const rankingOpts = {
             ...baseOptions,
             chart: {
@@ -431,101 +494,147 @@ document.addEventListener('livewire:init', () => {
                 labels: {
                     show: false
                 }
+            },
+            yaxis: {
+                ...baseOptions.yaxis,
+                labels: {
+                    ...baseOptions.yaxis.labels,
+                    formatter: function(val) {
+                        return val;
+                    } // Pastikan label nama tidak diubah
+                }
             }
         };
 
         // 3. Top Produk
-        if (charts.tp) charts.tp.destroy();
-        charts.tp = new ApexCharts(document.querySelector("#chart-top-produk"), {
-            ...rankingOpts,
-            series: [{
-                name: 'Qty',
-                data: data.top_produk_val
-            }],
-            xaxis: {
-                ...rankingOpts.xaxis,
-                categories: data.top_produk_lbl
-            },
-            colors: ['#3b82f6'],
-            tooltip: {
-                theme: themeMode,
-                y: {
-                    formatter: (v) => new Intl.NumberFormat('id-ID').format(v) + " Unit"
+        if (document.querySelector("#chart-top-produk")) {
+            if (charts.tp) charts.tp.destroy();
+            charts.tp = new ApexCharts(document.querySelector("#chart-top-produk"), {
+                ...rankingOpts,
+                series: [{
+                    name: 'Qty',
+                    data: data.top_produk_val
+                }],
+                xaxis: {
+                    ...rankingOpts.xaxis,
+                    categories: data.top_produk_lbl
+                },
+                colors: ['#3b82f6'],
+                dataLabels: {
+                    ...rankingOpts.dataLabels,
+                    formatter: fmtUnit
+                },
+                tooltip: {
+                    theme: themeMode,
+                    y: {
+                        formatter: fmtUnit
+                    }
                 }
-            }
-        });
-        charts.tp.render();
+            });
+            charts.tp.render();
+        }
 
         // 4. Top Customer
-        if (charts.tc) charts.tc.destroy();
-        charts.tc = new ApexCharts(document.querySelector("#chart-top-customer"), {
-            ...rankingOpts,
-            series: [{
-                name: 'Omzet',
-                data: data.top_cust_val
-            }],
-            xaxis: {
-                ...rankingOpts.xaxis,
-                categories: data.top_cust_lbl
-            },
-            colors: ['#8b5cf6'],
-            dataLabels: {
-                ...rankingOpts.dataLabels,
-                formatter: fmtJt
-            }
-        });
-        charts.tc.render();
+        if (document.querySelector("#chart-top-customer")) {
+            if (charts.tc) charts.tc.destroy();
+            charts.tc = new ApexCharts(document.querySelector("#chart-top-customer"), {
+                ...rankingOpts,
+                series: [{
+                    name: 'Omzet',
+                    data: data.top_cust_val
+                }],
+                xaxis: {
+                    ...rankingOpts.xaxis,
+                    categories: data.top_cust_lbl
+                },
+                colors: ['#8b5cf6'],
+                dataLabels: {
+                    ...rankingOpts.dataLabels,
+                    formatter: fmtJt
+                },
+                tooltip: {
+                    theme: themeMode,
+                    y: {
+                        formatter: fmtRp
+                    }
+                }
+            });
+            charts.tc.render();
+        }
 
         // 5. Top Supplier
-        if (charts.ts) charts.ts.destroy();
-        charts.ts = new ApexCharts(document.querySelector("#chart-top-supplier"), {
-            ...rankingOpts,
-            series: [{
-                name: 'Omzet',
-                data: data.top_supp_val
-            }],
-            xaxis: {
-                ...rankingOpts.xaxis,
-                categories: data.top_supp_lbl
-            },
-            colors: ['#ec4899'],
-            dataLabels: {
-                ...rankingOpts.dataLabels,
-                formatter: fmtJt
-            }
-        });
-        charts.ts.render();
+        if (document.querySelector("#chart-top-supplier")) {
+            if (charts.ts) charts.ts.destroy();
+            charts.ts = new ApexCharts(document.querySelector("#chart-top-supplier"), {
+                ...rankingOpts,
+                series: [{
+                    name: 'Omzet',
+                    data: data.top_supp_val
+                }],
+                xaxis: {
+                    ...rankingOpts.xaxis,
+                    categories: data.top_supp_lbl
+                },
+                colors: ['#ec4899'],
+                dataLabels: {
+                    ...rankingOpts.dataLabels,
+                    formatter: fmtJt
+                },
+                tooltip: {
+                    theme: themeMode,
+                    y: {
+                        formatter: fmtRp
+                    }
+                }
+            });
+            charts.ts.render();
+        }
 
         // 6. Sales Perf
-        if (charts.sp) charts.sp.destroy();
-        charts.sp = new ApexCharts(document.querySelector("#chart-sales-perf"), {
-            ...baseOptions,
-            series: [{
-                name: 'Realisasi',
-                data: data.sales_real
-            }, {
-                name: 'Target',
-                data: data.sales_target
-            }],
-            chart: {
-                ...baseOptions.chart,
-                type: 'bar',
-                height: 500
-            },
-            plotOptions: {
-                bar: {
-                    horizontal: false,
-                    columnWidth: '55%',
-                    borderRadius: 3
+        if (document.querySelector("#chart-sales-perf")) {
+            if (charts.sp) charts.sp.destroy();
+            charts.sp = new ApexCharts(document.querySelector("#chart-sales-perf"), {
+                ...baseOptions,
+                series: [{
+                    name: 'Realisasi',
+                    data: data.sales_real
+                }, {
+                    name: 'Target',
+                    data: data.sales_target
+                }],
+                chart: {
+                    ...baseOptions.chart,
+                    type: 'bar',
+                    height: 500
+                },
+                plotOptions: {
+                    bar: {
+                        horizontal: false,
+                        columnWidth: '55%',
+                        borderRadius: 3
+                    }
+                },
+                xaxis: {
+                    ...baseOptions.xaxis,
+                    categories: data.sales_names
+                },
+                yaxis: {
+                    ...baseOptions.yaxis,
+                    labels: {
+                        ...baseOptions.yaxis.labels,
+                        formatter: fmtJt
+                    }
+                },
+                colors: ['#4f46e5', isDark ? '#334155' : '#cbd5e1'],
+                tooltip: {
+                    theme: themeMode,
+                    y: {
+                        formatter: fmtRp
+                    }
                 }
-            },
-            xaxis: {
-                ...baseOptions.xaxis,
-                categories: data.sales_names
-            },
-            colors: ['#4f46e5', isDark ? '#334155' : '#cbd5e1'] // Target bar darker in dark mode
-        });
-        charts.sp.render();
+            });
+            charts.sp.render();
+        }
     };
 
     if (initData) renderCharts(initData);
@@ -535,7 +644,6 @@ document.addEventListener('livewire:init', () => {
         if (newData) renderCharts(newData);
     });
 
-    // Detect toggle dark mode automatically
     const observer = new MutationObserver(() => {
         if (initData) renderCharts(initData);
     });

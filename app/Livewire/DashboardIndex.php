@@ -21,6 +21,11 @@ class DashboardIndex extends Component
     public $filterCabang = [];
     public $filterSales = [];
 
+    // --- VARIABEL FILTER BARU UNTUK TAB RANKING ---
+    public $rankingFilterSupplier = '';
+    public $rankingFilterSalesCustomer = '';
+    public $rankingFilterSalesSupplier = '';
+
     public function mount()
     {
         $this->startDate = date('Y-m-01');
@@ -29,6 +34,7 @@ class DashboardIndex extends Component
 
     public function updated($propertyName) 
     { 
+        // Otomatis merender ulang grafik ApexCharts ketika filter diubah
         $this->dispatch('update-charts', data: $this->chartData);
     }
 
@@ -82,27 +88,36 @@ class DashboardIndex extends Component
             $dColl[]  = (float)($dailyColl[$d] ?? 0);
         }
 
-        $topProduk = $this->baseFilter(Penjualan::query(), 'tgl_penjualan')->selectRaw("nama_item, SUM(qty) as total")->groupBy('nama_item')->orderByDesc('total')->limit(10)->get();
-        $topCustomer = $this->baseFilter(Penjualan::query(), 'tgl_penjualan')->selectRaw("nama_pelanggan, SUM(total_grand) as total")->groupBy('nama_pelanggan')->orderByDesc('total')->limit(10)->get();
-        $topSupplier = $this->baseFilter(Penjualan::query(), 'tgl_penjualan')->selectRaw("supplier, SUM(total_grand) as total")->groupBy('supplier')->orderByDesc('total')->limit(10)->get();
+        // --- PENERAPAN FILTER BARU PADA QUERY RANKING ---
+        $topProduk = $this->baseFilter(Penjualan::query(), 'tgl_penjualan')
+            ->when($this->rankingFilterSupplier, fn($q) => $q->where('supplier', $this->rankingFilterSupplier))
+            ->selectRaw("nama_item, SUM(qty) as total")->groupBy('nama_item')->orderByDesc('total')->limit(10)->get();
+
+        $topCustomer = $this->baseFilter(Penjualan::query(), 'tgl_penjualan')
+            ->when($this->rankingFilterSalesCustomer, fn($q) => $q->where('sales_name', $this->rankingFilterSalesCustomer))
+            ->selectRaw("nama_pelanggan, SUM(total_grand) as total")->groupBy('nama_pelanggan')->orderByDesc('total')->limit(10)->get();
+
+        $topSupplier = $this->baseFilter(Penjualan::query(), 'tgl_penjualan')
+            ->when($this->rankingFilterSalesSupplier, fn($q) => $q->where('sales_name', $this->rankingFilterSalesSupplier))
+            ->selectRaw("supplier, SUM(total_grand) as total")->groupBy('supplier')->orderByDesc('total')->limit(10)->get();
 
         $salesPerf = $this->getSalesmanPerformance();
 
         return [
-            'dates'         => $dates,
-            'trend_sales'   => $dSales,
-            'trend_retur'   => $dRetur,
-            'trend_ar'      => $dAR,
-            'trend_coll'    => $dColl,
+            'dates'          => $dates,
+            'trend_sales'    => $dSales,
+            'trend_retur'    => $dRetur,
+            'trend_ar'       => $dAR,
+            'trend_coll'     => $dColl,
             'top_produk_lbl' => $topProduk->pluck('nama_item'),
             'top_produk_val' => $topProduk->pluck('total'),
             'top_cust_lbl'   => $topCustomer->pluck('nama_pelanggan'),
             'top_cust_val'   => $topCustomer->pluck('total'),
             'top_supp_lbl'   => $topSupplier->pluck('supplier'),
             'top_supp_val'   => $topSupplier->pluck('total'),
-            'sales_names'   => $salesPerf['names'],
-            'sales_real'    => $salesPerf['real'],
-            'sales_target'  => $salesPerf['target'],
+            'sales_names'    => $salesPerf['names'],
+            'sales_real'     => $salesPerf['real'],
+            'sales_target'   => $salesPerf['target'],
         ];
     }
 
@@ -137,7 +152,6 @@ class DashboardIndex extends Component
         ];
     }
 
-    // FUNGSI UNTUK MENDAPATKAN SMART ALERTS (SUDAH DIPERBAIKI)
     #[Computed]
     public function smartAlerts()
     {
@@ -172,7 +186,7 @@ class DashboardIndex extends Component
             ]);
         }
 
-        // 3. Alert: Penurunan Penjualan (Menggunakan tgl_penjualan dan membandingkan dengan bulan dari startDate)
+        // 3. Alert: Penurunan Penjualan
         $start = $this->startDate ? Carbon::parse($this->startDate) : Carbon::now();
         $bulanIni = $start->month;
         $tahunIni = $start->year;
@@ -187,7 +201,6 @@ class DashboardIndex extends Component
                                   ->whereYear('tgl_penjualan', $tahunIni)
                                   ->sum(DB::raw('CAST(total_grand AS DECIMAL(20,2))'));
         
-        // Jangan beri alert jika yang dipilih adalah bulan berjalan (karena omzet belum final sampai akhir bulan)
         if ($omzetBulanLalu > 0 && $omzetBulanIni < $omzetBulanLalu && $bulanIni != Carbon::now()->month) {
             $selisih = $omzetBulanLalu - $omzetBulanIni;
             $persentaseTurun = round(($selisih / $omzetBulanLalu) * 100, 1);
@@ -208,14 +221,17 @@ class DashboardIndex extends Component
     {
         $optCabang = Cache::remember('dash_cabang', 3600, fn() => Penjualan::select('cabang')->distinct()->whereNotNull('cabang')->pluck('cabang'));
         $optSales  = Cache::remember('dash_sales', 3600, fn() => Penjualan::select('sales_name')->distinct()->whereNotNull('sales_name')->pluck('sales_name'));
+        
+        // --- TAMBAHAN UNTUK DROPDOWN SUPPLIER ---
+        $optSupplier = Cache::remember('dash_supplier', 3600, fn() => Penjualan::select('supplier')->distinct()->whereNotNull('supplier')->pluck('supplier'));
 
         $stats = $this->kpiStats;
         $chartData = $this->chartData;
-        $alerts = $this->smartAlerts; // Mengambil koleksi alert
+        $alerts = $this->smartAlerts; 
 
         return view('livewire.dashboard-index', array_merge(
             $stats, 
-            compact('optCabang', 'optSales', 'chartData', 'alerts')
+            compact('optCabang', 'optSales', 'optSupplier', 'chartData', 'alerts')
         ))->layout('layouts.app', ['header' => 'Executive Dashboard']);
     }
 

@@ -12,6 +12,7 @@ class RfmPelanggan extends Component
 {
     public $bulan;
     public $tahun;
+    public $search = ''; // <-- Tambahan Filter Pencarian
 
     public $isModalOpen = false;
     public $selectedDetail = null;
@@ -26,6 +27,7 @@ class RfmPelanggan extends Component
     {
         $tanggalEvaluasi = Carbon::create($this->tahun, $this->bulan)->endOfMonth();
 
+        // Query dengan tambahan filter Search (nama_pelanggan)
         $dataPenjualan = Penjualan::selectRaw('
                 nama_pelanggan, 
                 MAX(tgl_penjualan) as last_order, 
@@ -34,6 +36,9 @@ class RfmPelanggan extends Component
             ')
             ->whereYear('tgl_penjualan', $this->tahun)
             ->whereMonth('tgl_penjualan', '<=', $this->bulan)
+            ->when($this->search, function($query) {
+                $query->where('nama_pelanggan', 'like', '%' . $this->search . '%');
+            })
             ->groupBy('nama_pelanggan')
             ->get();
 
@@ -132,8 +137,11 @@ class RfmPelanggan extends Component
             'summary' => $summary
         ])->layout('layouts.app');
     }
+    
     public function exportPdf()
     {
+        // Pada saat export, kita harus pastikan untuk mereset search 
+        // jika ingin export seluruh data, atau biarkan jika ingin mengekspor data yang dicari saja.
         $hasil = $this->hitungRFM();
         $summary = collect($hasil)->countBy('segment')->toArray();
         $bulanNama = Carbon::create()->month($this->bulan)->translatedFormat('F');
