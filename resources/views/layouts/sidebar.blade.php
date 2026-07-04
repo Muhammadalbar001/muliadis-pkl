@@ -16,7 +16,8 @@
 
         <div class="flex items-center gap-3 overflow-hidden whitespace-nowrap">
             {{-- Logo Icon --}}
-            <div class="w-11 h-11 md:w-12 md:h-12 rounded-2xl flex-none flex items-center justify-center text-white shadow-lg 
+            <div
+                class="w-11 h-11 md:w-12 md:h-12 rounded-2xl flex-none flex items-center justify-center text-white shadow-lg 
                 bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 ring-2 ring-white/10 dark:ring-white/20 group-hover:shadow-blue-500/40 transition-all duration-300">
                 <i class="fas fa-truck-fast text-xl font-bold"></i>
             </div>
@@ -25,11 +26,14 @@
             <div x-show="isSidebarExpanded" x-transition.opacity.duration.400ms class="flex-1">
                 <h1 class="font-black text-xs tracking-tighter uppercase leading-tight 
                     text-slate-900 dark:text-white">
-                    PT MULIA <span class="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent dark:from-blue-400 dark:to-cyan-400">ANUGERAH</span>
+                    PT MULIA <span
+                        class="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent dark:from-blue-400 dark:to-cyan-400">ANUGERAH</span>
                 </h1>
                 <p class="text-[7px] font-bold tracking-[0.3em] uppercase mt-1 flex items-center gap-1.5
                     text-slate-500 dark:text-slate-400">
-                    <span class="w-1.5 h-1.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full animate-pulse"></span> Distribusindo
+                    <span
+                        class="w-1.5 h-1.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full animate-pulse"></span>
+                    Distribusindo
                 </p>
             </div>
         </div>
@@ -42,19 +46,20 @@
     </div>
 
     {{-- MENU ITEMS --}}
-    <div class="flex-1 overflow-y-auto py-6 space-y-1 custom-scrollbar overflow-x-hidden"
+    <div class="flex-1 overflow-y-auto py-6 space-y-1.5 custom-scrollbar overflow-x-hidden"
         :class="isSidebarExpanded ? 'px-4' : 'px-2.5'">
 
-        {{-- DASHBOARD --}}
+        {{-- 1. DASHBOARD --}}
         <a href="{{ route('dashboard') }}"
-            class="flex items-center py-3 rounded-xl transition-all duration-300 group text-[11px] font-black relative uppercase tracking-widest mb-6
+            class="flex items-center py-3 rounded-xl transition-all duration-300 group text-[11px] font-black relative uppercase tracking-widest mb-4
             {{ request()->routeIs('*.dashboard') || request()->routeIs('dashboard')
                 ? 'bg-gradient-to-r from-blue-50 to-blue-100/50 text-blue-700 dark:from-blue-600/20 dark:to-indigo-600/20 dark:text-blue-300 shadow-sm ring-1 ring-blue-200 dark:ring-blue-500/30' 
                 : 'text-slate-600 hover:bg-blue-50 hover:text-blue-600 dark:text-slate-400 dark:hover:bg-blue-500/10 dark:hover:text-blue-300' }}"
             :class="isSidebarExpanded ? 'px-5' : 'justify-center'">
 
             @if(request()->routeIs('*.dashboard') || request()->routeIs('dashboard'))
-            <div class="absolute left-0 h-7 w-1.5 bg-gradient-to-b from-blue-600 to-blue-500 rounded-r-xl shadow-lg shadow-blue-500/20 hidden lg:block" x-show="isSidebarExpanded">
+            <div class="absolute left-0 h-7 w-1.5 bg-gradient-to-b from-blue-600 to-blue-500 rounded-r-xl shadow-lg shadow-blue-500/20 hidden lg:block"
+                x-show="isSidebarExpanded">
             </div>
             @endif
 
@@ -69,9 +74,11 @@
         </a>
 
         {{-- ================================================== --}}
-        {{-- MENU (SPK & DATA MINING)                           --}}
+        {{-- PIMPINAN & SUPERADMIN (ANALISA CERDAS, STRATEGIS, DLL) --}}
         {{-- ================================================== --}}
         @if(in_array(auth()->user()->role, ['super_admin', 'superadmin', 'pimpinan']))
+
+        {{-- 2. ANALISA CERDAS --}}
         <div x-data="{ open: {{ request()->routeIs('keputusan.*') ? 'true' : 'false' }} }"
             class="w-full relative group">
             <button @click="isSidebarExpanded ? open = !open : isSidebarExpanded = true"
@@ -80,7 +87,6 @@
                     ? 'text-fuchsia-600 bg-gradient-to-r from-fuchsia-50 to-pink-50/50 dark:from-fuchsia-600/20 dark:to-pink-600/20 dark:text-fuchsia-300 border border-fuchsia-200 dark:border-fuchsia-500/30 shadow-sm ring-1 ring-fuchsia-100 dark:ring-fuchsia-500/20' 
                     : 'text-slate-600 hover:bg-fuchsia-50 hover:text-fuchsia-600 dark:text-slate-400 dark:hover:bg-fuchsia-500/10 dark:hover:text-fuchsia-400 border border-transparent' }}"
                 :class="isSidebarExpanded ? 'px-5 justify-between' : 'justify-center'">
-
                 <div class="flex items-center">
                     <span class="w-5 flex justify-center">
                         <i
@@ -92,46 +98,230 @@
                     class="fas fa-chevron-right text-[9px] transition-all duration-300 opacity-70 group-hover:opacity-100"
                     :class="{'rotate-90': open}"></i>
             </button>
-
             <div x-show="open && isSidebarExpanded" x-cloak x-transition.origin.top
-                class="mt-2 space-y-1 ml-4 border-l-[2px] border-fuchsia-300 dark:border-fuchsia-500/30 pl-4">
-
+                class="mt-1 space-y-1 ml-4 border-l-[2px] border-fuchsia-300 dark:border-fuchsia-500/30 pl-4">
                 <a href="{{ route('keputusan.spk-sales') }}"
-                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group
-                    {{ request()->routeIs('keputusan.spk-sales') ? 'text-fuchsia-700 bg-fuchsia-100/60 dark:text-fuchsia-300 dark:bg-fuchsia-500/20 shadow-sm' : 'text-slate-600 hover:text-fuchsia-600 dark:text-slate-400 dark:hover:text-fuchsia-300 hover:bg-fuchsia-50/50 dark:hover:bg-fuchsia-500/10' }}">
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('keputusan.spk-sales') ? 'text-fuchsia-700 bg-fuchsia-100/60 dark:text-fuchsia-300 dark:bg-fuchsia-500/20 shadow-sm' : 'text-slate-600 hover:text-fuchsia-600 dark:text-slate-400 dark:hover:text-fuchsia-300 hover:bg-fuchsia-50/50 dark:hover:bg-fuchsia-500/10' }}">
                     <span
                         class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('keputusan.spk-sales') ? 'bg-fuchsia-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
                     SPK Sales (SAW)
                 </a>
-
                 <a href="{{ route('keputusan.rfm-pelanggan') }}"
-                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group
-                    {{ request()->routeIs('keputusan.rfm-pelanggan') ? 'text-fuchsia-700 bg-fuchsia-100/60 dark:text-fuchsia-300 dark:bg-fuchsia-500/20 shadow-sm' : 'text-slate-600 hover:text-fuchsia-600 dark:text-slate-400 dark:hover:text-fuchsia-300 hover:bg-fuchsia-50/50 dark:hover:bg-fuchsia-500/10' }}">
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('keputusan.rfm-pelanggan') ? 'text-fuchsia-700 bg-fuchsia-100/60 dark:text-fuchsia-300 dark:bg-fuchsia-500/20 shadow-sm' : 'text-slate-600 hover:text-fuchsia-600 dark:text-slate-400 dark:hover:text-fuchsia-300 hover:bg-fuchsia-50/50 dark:hover:bg-fuchsia-500/10' }}">
                     <span
                         class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('keputusan.rfm-pelanggan') ? 'bg-fuchsia-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
-                    Segmentasi (RFM)
+                    Segmentasi RFM
                 </a>
             </div>
-
             <div x-show="!isSidebarExpanded"
                 class="absolute left-14 bg-gradient-to-b from-slate-800 to-slate-900 text-white text-[10px] px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap shadow-xl font-bold tracking-wider uppercase transform translate-x-2 group-hover:translate-x-0">
                 Analisa Cerdas
             </div>
         </div>
+
+        {{-- 3. STRATEGIS --}}
+        <div x-data="{ open: {{ request()->routeIs('pimpinan.profit-analysis') || request()->routeIs('pimpinan.stock-analysis') ? 'true' : 'false' }} }"
+            class="w-full relative group">
+            <button @click="isSidebarExpanded ? open = !open : isSidebarExpanded = true"
+                class="flex items-center w-full py-3 rounded-xl transition-all duration-300 group text-[11px] font-black relative uppercase tracking-widest
+                {{ request()->routeIs('pimpinan.profit-analysis') || request()->routeIs('pimpinan.stock-analysis')
+                    ? 'text-amber-600 bg-gradient-to-r from-amber-50 to-yellow-50/50 dark:from-amber-600/20 dark:to-yellow-600/20 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 shadow-sm ring-1 ring-amber-100 dark:ring-amber-500/20' 
+                    : 'text-slate-600 hover:bg-amber-50 hover:text-amber-600 dark:text-slate-400 dark:hover:bg-amber-500/10 dark:hover:text-amber-400 border border-transparent' }}"
+                :class="isSidebarExpanded ? 'px-5 justify-between' : 'justify-center'">
+                <div class="flex items-center">
+                    <span class="w-5 flex justify-center">
+                        <i
+                            class="fas fa-chess-knight text-base transition-all duration-300 group-hover:scale-110 {{ request()->routeIs('pimpinan.profit-analysis') || request()->routeIs('pimpinan.stock-analysis') ? 'text-amber-600 dark:text-amber-400' : 'group-hover:text-amber-500 dark:group-hover:text-amber-400' }}"></i>
+                    </span>
+                    <span x-show="isSidebarExpanded" class="ml-4 font-bold">Strategis</span>
+                </div>
+                <i x-show="isSidebarExpanded"
+                    class="fas fa-chevron-right text-[9px] transition-all duration-300 opacity-70 group-hover:opacity-100"
+                    :class="{'rotate-90': open}"></i>
+            </button>
+            <div x-show="open && isSidebarExpanded" x-cloak x-transition.origin.top
+                class="mt-1 space-y-1 ml-4 border-l-[2px] border-amber-300 dark:border-amber-500/30 pl-4">
+                <a href="{{ route('pimpinan.profit-analysis') }}"
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('pimpinan.profit-analysis') ? 'text-amber-700 bg-amber-100/60 dark:text-amber-300 dark:bg-amber-500/20 shadow-sm' : 'text-slate-600 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-300 hover:bg-amber-50/50 dark:hover:bg-amber-500/10' }}">
+                    <span
+                        class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('pimpinan.profit-analysis') ? 'bg-amber-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
+                    Laba Rugi
+                </a>
+                <a href="{{ route('pimpinan.stock-analysis') }}"
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('pimpinan.stock-analysis') ? 'text-amber-700 bg-amber-100/60 dark:text-amber-300 dark:bg-amber-500/20 shadow-sm' : 'text-slate-600 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-300 hover:bg-amber-50/50 dark:hover:bg-amber-500/10' }}">
+                    <span
+                        class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('pimpinan.stock-analysis') ? 'bg-amber-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
+                    Analisa Stok
+                </a>
+            </div>
+            <div x-show="!isSidebarExpanded"
+                class="absolute left-14 bg-gradient-to-b from-slate-800 to-slate-900 text-white text-[10px] px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap shadow-xl font-bold tracking-wider uppercase transform translate-x-2 group-hover:translate-x-0">
+                Strategis
+            </div>
+        </div>
+
+        {{-- 4. KINERJA SALES --}}
+        <div x-data="{ open: {{ request()->routeIs('laporan.kinerja.*') ? 'true' : 'false' }} }"
+            class="w-full relative group">
+            <button @click="isSidebarExpanded ? open = !open : isSidebarExpanded = true"
+                class="flex items-center w-full py-3 rounded-xl transition-all duration-300 group text-[11px] font-black relative uppercase tracking-widest
+                {{ request()->routeIs('laporan.kinerja.*') 
+                    ? 'text-blue-600 bg-gradient-to-r from-blue-50 to-indigo-50/50 dark:from-blue-600/20 dark:to-indigo-600/20 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30 shadow-sm ring-1 ring-blue-100 dark:ring-blue-500/20' 
+                    : 'text-slate-600 hover:bg-blue-50 hover:text-blue-600 dark:text-slate-400 dark:hover:bg-blue-500/10 dark:hover:text-blue-400 border border-transparent' }}"
+                :class="isSidebarExpanded ? 'px-5 justify-between' : 'justify-center'">
+                <div class="flex items-center">
+                    <span class="w-5 flex justify-center">
+                        <i
+                            class="fas fa-user-tie text-base transition-all duration-300 group-hover:scale-110 {{ request()->routeIs('laporan.kinerja.*') ? 'text-blue-600 dark:text-blue-400' : 'group-hover:text-blue-500 dark:group-hover:text-blue-400' }}"></i>
+                    </span>
+                    <span x-show="isSidebarExpanded" class="ml-4 font-bold">Kinerja Sales</span>
+                </div>
+                <i x-show="isSidebarExpanded"
+                    class="fas fa-chevron-right text-[9px] transition-all duration-300 opacity-70 group-hover:opacity-100"
+                    :class="{'rotate-90': open}"></i>
+            </button>
+            <div x-show="open && isSidebarExpanded" x-cloak x-transition.origin.top
+                class="mt-1 space-y-1 ml-4 border-l-[2px] border-blue-300 dark:border-blue-500/30 pl-4">
+                <a href="{{ route('laporan.kinerja.pencapaian') }}"
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('laporan.kinerja.pencapaian') ? 'text-blue-700 bg-blue-100/60 dark:text-blue-300 dark:bg-blue-500/20 shadow-sm' : 'text-slate-600 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300 hover:bg-blue-50/50 dark:hover:bg-blue-500/10' }}">
+                    <span
+                        class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('laporan.kinerja.pencapaian') ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
+                    Pencapaian Target
+                </a>
+                <a href="{{ route('laporan.kinerja.ranking') }}"
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('laporan.kinerja.ranking') ? 'text-blue-700 bg-blue-100/60 dark:text-blue-300 dark:bg-blue-500/20 shadow-sm' : 'text-slate-600 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300 hover:bg-blue-50/50 dark:hover:bg-blue-500/10' }}">
+                    <span
+                        class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('laporan.kinerja.ranking') ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
+                    Ranking & Omzet
+                </a>
+                <a href="{{ route('laporan.kinerja.produktivitas') }}"
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('laporan.kinerja.produktivitas') ? 'text-blue-700 bg-blue-100/60 dark:text-blue-300 dark:bg-blue-500/20 shadow-sm' : 'text-slate-600 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300 hover:bg-blue-50/50 dark:hover:bg-blue-500/10' }}">
+                    <span
+                        class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('laporan.kinerja.produktivitas') ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
+                    Produktivitas (OA/EC)
+                </a>
+                <a href="{{ route('laporan.kinerja.supplier') }}"
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('laporan.kinerja.supplier') ? 'text-blue-700 bg-blue-100/60 dark:text-blue-300 dark:bg-blue-500/20 shadow-sm' : 'text-slate-600 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300 hover:bg-blue-50/50 dark:hover:bg-blue-500/10' }}">
+                    <span
+                        class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('laporan.kinerja.supplier') ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
+                    Kinerja per Supplier
+                </a>
+                <a href="{{ route('laporan.kinerja.segmentasi') }}"
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('laporan.kinerja.segmentasi') ? 'text-blue-700 bg-blue-100/60 dark:text-blue-300 dark:bg-blue-500/20 shadow-sm' : 'text-slate-600 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300 hover:bg-blue-50/50 dark:hover:bg-blue-500/10' }}">
+                    <span
+                        class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('laporan.kinerja.segmentasi') ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
+                    Kinerja Segmentasi
+                </a>
+                <a href="{{ route('laporan.kinerja.kualitas') }}"
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('laporan.kinerja.kualitas') ? 'text-blue-700 bg-blue-100/60 dark:text-blue-300 dark:bg-blue-500/20 shadow-sm' : 'text-slate-600 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300 hover:bg-blue-50/50 dark:hover:bg-blue-500/10' }}">
+                    <span
+                        class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('laporan.kinerja.kualitas') ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
+                    Kualitas Penjualan
+                </a>
+                <a href="{{ route('laporan.kinerja.efisiensi') }}"
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('laporan.kinerja.efisiensi') ? 'text-blue-700 bg-blue-100/60 dark:text-blue-300 dark:bg-blue-500/20 shadow-sm' : 'text-slate-600 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300 hover:bg-blue-50/50 dark:hover:bg-blue-500/10' }}">
+                    <span
+                        class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('laporan.kinerja.efisiensi') ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
+                    Efisiensi Penagihan
+                </a>
+                <a href="{{ route('laporan.kinerja.akuisisi') }}"
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('laporan.kinerja.akuisisi') ? 'text-blue-700 bg-blue-100/60 dark:text-blue-300 dark:bg-blue-500/20 shadow-sm' : 'text-slate-600 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300 hover:bg-blue-50/50 dark:hover:bg-blue-500/10' }}">
+                    <span
+                        class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('laporan.kinerja.akuisisi') ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
+                    Akuisisi Toko Baru
+                </a>
+            </div>
+            <div x-show="!isSidebarExpanded"
+                class="absolute left-14 bg-gradient-to-b from-slate-800 to-slate-900 text-white text-[10px] px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap shadow-xl font-bold tracking-wider uppercase transform translate-x-2 group-hover:translate-x-0">
+                Kinerja Sales
+            </div>
+        </div>
+
+        {{-- 5. REKAPITULASI --}}
+        <div x-data="{ open: {{ request()->routeIs('laporan.rekap-*') ? 'true' : 'false' }} }"
+            class="w-full relative group">
+            <button @click="isSidebarExpanded ? open = !open : isSidebarExpanded = true"
+                class="flex items-center w-full py-3 rounded-xl transition-all duration-300 group text-[11px] font-black relative uppercase tracking-widest
+                {{ request()->routeIs('laporan.rekap-*') 
+                    ? 'text-orange-600 bg-gradient-to-r from-orange-50 to-red-50/50 dark:from-orange-600/20 dark:to-red-600/20 dark:text-orange-300 border border-orange-200 dark:border-orange-500/30 shadow-sm ring-1 ring-orange-100 dark:ring-orange-500/20' 
+                    : 'text-slate-600 hover:bg-orange-50 hover:text-orange-600 dark:text-slate-400 dark:hover:bg-orange-500/10 dark:hover:text-orange-400 border border-transparent' }}"
+                :class="isSidebarExpanded ? 'px-5 justify-between' : 'justify-center'">
+                <div class="flex items-center">
+                    <span class="w-5 flex justify-center">
+                        <i
+                            class="fas fa-file-invoice text-base transition-all duration-300 group-hover:scale-110 {{ request()->routeIs('laporan.rekap-*') ? 'text-orange-600 dark:text-orange-400' : 'group-hover:text-orange-500 dark:group-hover:text-orange-400' }}"></i>
+                    </span>
+                    <span x-show="isSidebarExpanded" class="ml-4 font-bold">Rekapitulasi</span>
+                </div>
+                <i x-show="isSidebarExpanded"
+                    class="fas fa-chevron-right text-[9px] transition-all duration-300 opacity-70 group-hover:opacity-100"
+                    :class="{'rotate-90': open}"></i>
+            </button>
+            <div x-show="open && isSidebarExpanded" x-cloak x-transition.origin.top
+                class="mt-1 space-y-1 ml-4 border-l-[2px] border-orange-300 dark:border-orange-500/30 pl-4">
+                <a href="{{ route('laporan.rekap-penjualan') }}"
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('laporan.rekap-penjualan') ? 'text-orange-700 bg-orange-100/60 dark:text-orange-300 dark:bg-orange-500/20 shadow-sm' : 'text-slate-600 hover:text-orange-600 dark:text-slate-400 dark:hover:text-orange-300 hover:bg-orange-50/50 dark:hover:bg-orange-500/10' }}">
+                    <span
+                        class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('laporan.rekap-penjualan') ? 'bg-orange-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
+                    Rekap Penjualan
+                </a>
+                <a href="{{ route('laporan.rekap-retur') }}"
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('laporan.rekap-retur') ? 'text-orange-700 bg-orange-100/60 dark:text-orange-300 dark:bg-orange-500/20 shadow-sm' : 'text-slate-600 hover:text-orange-600 dark:text-slate-400 dark:hover:text-orange-300 hover:bg-orange-50/50 dark:hover:bg-orange-500/10' }}">
+                    <span
+                        class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('laporan.rekap-retur') ? 'bg-orange-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
+                    Rekap Retur
+                </a>
+                <a href="{{ route('laporan.rekap-ar') }}"
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('laporan.rekap-ar') ? 'text-orange-700 bg-orange-100/60 dark:text-orange-300 dark:bg-orange-500/20 shadow-sm' : 'text-slate-600 hover:text-orange-600 dark:text-slate-400 dark:hover:text-orange-300 hover:bg-orange-50/50 dark:hover:bg-orange-500/10' }}">
+                    <span
+                        class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('laporan.rekap-ar') ? 'bg-orange-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
+                    Rekap Piutang
+                </a>
+                <a href="{{ route('laporan.rekap-collection') }}"
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('laporan.rekap-collection') ? 'text-orange-700 bg-orange-100/60 dark:text-orange-300 dark:bg-orange-500/20 shadow-sm' : 'text-slate-600 hover:text-orange-600 dark:text-slate-400 dark:hover:text-orange-300 hover:bg-orange-50/50 dark:hover:bg-orange-500/10' }}">
+                    <span
+                        class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('laporan.rekap-collection') ? 'bg-orange-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
+                    Rekap Pelunasan
+                </a>
+            </div>
+            <div x-show="!isSidebarExpanded"
+                class="absolute left-14 bg-gradient-to-b from-slate-800 to-slate-900 text-white text-[10px] px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap shadow-xl font-bold tracking-wider uppercase transform translate-x-2 group-hover:translate-x-0">
+                Rekapitulasi
+            </div>
+        </div>
+
+        {{-- 6. PUSAT CETAK --}}
+        <a href="{{ route('pusat-cetak') }}"
+            class="flex items-center mt-2 py-3 rounded-xl transition-all duration-300 group text-[11px] font-black relative uppercase tracking-widest
+            {{ request()->routeIs('pusat-cetak')
+                ? 'bg-gradient-to-r from-rose-500 to-red-600 text-white shadow-lg shadow-rose-500/30 ring-2 ring-rose-500/50' 
+                : 'text-slate-600 hover:bg-rose-50 hover:text-rose-600 dark:text-slate-400 dark:hover:bg-rose-500/10 dark:hover:text-rose-400' }}"
+            :class="isSidebarExpanded ? 'px-5' : 'justify-center'">
+
+            <i
+                class="fas fa-print w-5 text-center text-base transition-transform duration-300 group-hover:scale-110 {{ request()->routeIs('pusat-cetak') ? 'text-white' : 'group-hover:text-rose-500 dark:group-hover:text-rose-400' }}"></i>
+            <span x-show="isSidebarExpanded" class="ml-4 font-bold">Pusat Cetak</span>
+
+            <div x-show="!isSidebarExpanded"
+                class="absolute left-14 bg-gradient-to-b from-slate-800 to-slate-900 text-white text-[10px] px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap shadow-xl font-bold tracking-wider uppercase transform translate-x-2 group-hover:translate-x-0">
+                Pusat Cetak
+            </div>
+        </a>
         @endif
 
+
         {{-- ================================================== --}}
-        {{-- MASTER DATA (Superadmin & Supervisor)              --}}
+        {{-- MASTER DATA (Supervisor & Superadmin)              --}}
         {{-- ================================================== --}}
         @if(in_array(auth()->user()->role, ['super_admin', 'superadmin', 'supervisor']))
-        <div x-data="{ open: {{ request()->routeIs('master.*') ? 'true' : 'false' }} }" class="w-full relative group">
+        <div x-data="{ open: {{ request()->routeIs('master.*') ? 'true' : 'false' }} }"
+            class="w-full relative group mt-4">
             <button @click="isSidebarExpanded ? open = !open : isSidebarExpanded = true"
                 class="flex items-center w-full py-3 rounded-xl transition-all duration-300 group text-[11px] font-black relative uppercase tracking-widest
                 {{ request()->routeIs('master.*') 
                     ? 'text-cyan-600 bg-gradient-to-r from-cyan-50 to-blue-50/50 dark:from-cyan-600/20 dark:to-blue-600/20 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-500/30 shadow-sm ring-1 ring-cyan-100 dark:ring-cyan-500/20' 
                     : 'text-slate-600 hover:bg-cyan-50 hover:text-cyan-600 dark:text-slate-400 dark:hover:bg-cyan-500/10 dark:hover:text-cyan-300 border border-transparent' }}"
                 :class="isSidebarExpanded ? 'px-5 justify-between' : 'justify-center'">
-
                 <div class="flex items-center">
                     <span class="w-5 flex justify-center">
                         <i
@@ -143,48 +333,33 @@
                     class="fas fa-chevron-right text-[9px] transition-all duration-300 opacity-70 group-hover:opacity-100"
                     :class="{'rotate-90': open}"></i>
             </button>
-
-            {{-- Submenu Master --}}
             <div x-show="open && isSidebarExpanded" x-cloak x-transition.origin.top
-                class="mt-2 space-y-1 ml-4 border-l-[2px] border-cyan-300 dark:border-cyan-500/30 pl-4">
-
+                class="mt-1 space-y-1 ml-4 border-l-[2px] border-cyan-300 dark:border-cyan-500/30 pl-4">
                 <a href="{{ route('master.produk') }}"
-                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group
-                    {{ request()->routeIs('master.produk') ? 'text-cyan-700 bg-cyan-100/60 dark:text-cyan-300 dark:bg-cyan-500/20 shadow-sm' : 'text-slate-600 hover:text-cyan-600 dark:text-slate-400 dark:hover:text-cyan-300 hover:bg-cyan-50/50 dark:hover:bg-cyan-500/10' }}">
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('master.produk') ? 'text-cyan-700 bg-cyan-100/60 dark:text-cyan-300 dark:bg-cyan-500/20 shadow-sm' : 'text-slate-600 hover:text-cyan-600 dark:text-slate-400 dark:hover:text-cyan-300 hover:bg-cyan-50/50 dark:hover:bg-cyan-500/10' }}">
                     <span
                         class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('master.produk') ? 'bg-cyan-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
                     Produk
                 </a>
-
                 <a href="{{ route('master.supplier') }}"
-                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group
-                    {{ request()->routeIs('master.supplier') ? 'text-cyan-700 bg-cyan-100/60 dark:text-cyan-300 dark:bg-cyan-500/20 shadow-sm' : 'text-slate-600 hover:text-cyan-600 dark:text-slate-400 dark:hover:text-cyan-300 hover:bg-cyan-50/50 dark:hover:bg-cyan-500/10' }}">
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('master.supplier') ? 'text-cyan-700 bg-cyan-100/60 dark:text-cyan-300 dark:bg-cyan-500/20 shadow-sm' : 'text-slate-600 hover:text-cyan-600 dark:text-slate-400 dark:hover:text-cyan-300 hover:bg-cyan-50/50 dark:hover:bg-cyan-500/10' }}">
                     <span
                         class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('master.supplier') ? 'bg-cyan-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
                     Supplier
                 </a>
-
                 <a href="{{ route('master.sales') }}"
-                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group
-                    {{ request()->routeIs('master.sales') ? 'text-cyan-700 bg-cyan-100/60 dark:text-cyan-300 dark:bg-cyan-500/20 shadow-sm' : 'text-slate-600 hover:text-cyan-600 dark:text-slate-400 dark:hover:text-cyan-300 hover:bg-cyan-50/50 dark:hover:bg-cyan-500/10' }}">
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('master.sales') ? 'text-cyan-700 bg-cyan-100/60 dark:text-cyan-300 dark:bg-cyan-500/20 shadow-sm' : 'text-slate-600 hover:text-cyan-600 dark:text-slate-400 dark:hover:text-cyan-300 hover:bg-cyan-50/50 dark:hover:bg-cyan-500/10' }}">
                     <span
                         class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('master.sales') ? 'bg-cyan-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
                     Salesman
                 </a>
-
-                {{-- PERUBAHAN: AKSES MENU PENGGUNA DIIZINKAN UNTUK SUPERVISOR --}}
-                @if(in_array(auth()->user()->role, ['super_admin', 'superadmin', 'supervisor']))
                 <a href="{{ route('master.user') }}"
-                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group
-                    {{ request()->routeIs('master.user') ? 'text-rose-700 bg-rose-100/60 dark:text-rose-300 dark:bg-rose-500/20 shadow-sm' : 'text-slate-600 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-300 hover:bg-rose-50/50 dark:hover:bg-rose-500/10' }}">
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('master.user') ? 'text-rose-700 bg-rose-100/60 dark:text-rose-300 dark:bg-rose-500/20 shadow-sm' : 'text-slate-600 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-300 hover:bg-rose-50/50 dark:hover:bg-rose-500/10' }}">
                     <span
                         class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('master.user') ? 'bg-rose-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
                     Pengguna
                 </a>
-                @endif
             </div>
-
-            {{-- Tooltip Collapsed --}}
             <div x-show="!isSidebarExpanded"
                 class="absolute left-14 bg-gradient-to-b from-slate-800 to-slate-900 text-white text-[10px] px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap shadow-xl font-bold tracking-wider uppercase transform translate-x-2 group-hover:translate-x-0">
                 Master Data
@@ -193,7 +368,7 @@
         @endif
 
         {{-- ================================================== --}}
-        {{-- OPERASIONAL (Superadmin & Admin)                   --}}
+        {{-- OPERASIONAL (Admin & Superadmin)                     --}}
         {{-- ================================================== --}}
         @if(in_array(auth()->user()->role, ['super_admin', 'superadmin', 'admin']))
         <div x-data="{ open: {{ request()->routeIs('transaksi.*') ? 'true' : 'false' }} }"
@@ -204,7 +379,6 @@
                     ? 'text-emerald-600 bg-gradient-to-r from-emerald-50 to-green-50/50 dark:from-emerald-600/20 dark:to-green-600/20 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 shadow-sm ring-1 ring-emerald-100 dark:ring-emerald-500/20' 
                     : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 dark:text-slate-400 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-300 border border-transparent' }}"
                 :class="isSidebarExpanded ? 'px-5 justify-between' : 'justify-center'">
-
                 <div class="flex items-center">
                     <span class="w-5 flex justify-center">
                         <i
@@ -216,43 +390,33 @@
                     class="fas fa-chevron-right text-[9px] transition-all duration-300 opacity-70 group-hover:opacity-100"
                     :class="{'rotate-90': open}"></i>
             </button>
-
             <div x-show="open && isSidebarExpanded" x-cloak x-transition.origin.top
-                class="mt-2 space-y-1 ml-4 border-l-[2px] border-emerald-300 dark:border-emerald-500/30 pl-4">
-
+                class="mt-1 space-y-1 ml-4 border-l-[2px] border-emerald-300 dark:border-emerald-500/30 pl-4">
                 <a href="{{ route('transaksi.penjualan') }}"
-                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group
-                    {{ request()->routeIs('transaksi.penjualan') ? 'text-emerald-700 bg-emerald-100/60 dark:text-emerald-300 dark:bg-emerald-500/20 shadow-sm' : 'text-slate-600 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-300 hover:bg-emerald-50/50 dark:hover:bg-emerald-500/10' }}">
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('transaksi.penjualan') ? 'text-emerald-700 bg-emerald-100/60 dark:text-emerald-300 dark:bg-emerald-500/20 shadow-sm' : 'text-slate-600 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-300 hover:bg-emerald-50/50 dark:hover:bg-emerald-500/10' }}">
                     <span
                         class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('transaksi.penjualan') ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
                     Penjualan
                 </a>
-
                 <a href="{{ route('transaksi.retur') }}"
-                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group
-                    {{ request()->routeIs('transaksi.retur') ? 'text-emerald-700 bg-emerald-100/60 dark:text-emerald-300 dark:bg-emerald-500/20 shadow-sm' : 'text-slate-600 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-300 hover:bg-emerald-50/50 dark:hover:bg-emerald-500/10' }}">
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('transaksi.retur') ? 'text-emerald-700 bg-emerald-100/60 dark:text-emerald-300 dark:bg-emerald-500/20 shadow-sm' : 'text-slate-600 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-300 hover:bg-emerald-50/50 dark:hover:bg-emerald-500/10' }}">
                     <span
                         class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('transaksi.retur') ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
                     Retur Barang
                 </a>
-
                 <a href="{{ route('transaksi.ar') }}"
-                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group
-                    {{ request()->routeIs('transaksi.ar') ? 'text-emerald-700 bg-emerald-100/60 dark:text-emerald-300 dark:bg-emerald-500/20 shadow-sm' : 'text-slate-600 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-300 hover:bg-emerald-50/50 dark:hover:bg-emerald-500/10' }}">
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('transaksi.ar') ? 'text-emerald-700 bg-emerald-100/60 dark:text-emerald-300 dark:bg-emerald-500/20 shadow-sm' : 'text-slate-600 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-300 hover:bg-emerald-50/50 dark:hover:bg-emerald-500/10' }}">
                     <span
                         class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('transaksi.ar') ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
                     Piutang (AR)
                 </a>
-
                 <a href="{{ route('transaksi.collection') }}"
-                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group
-                    {{ request()->routeIs('transaksi.collection') ? 'text-emerald-700 bg-emerald-100/60 dark:text-emerald-300 dark:bg-emerald-500/20 shadow-sm' : 'text-slate-600 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-300 hover:bg-emerald-50/50 dark:hover:bg-emerald-500/10' }}">
+                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('transaksi.collection') ? 'text-emerald-700 bg-emerald-100/60 dark:text-emerald-300 dark:bg-emerald-500/20 shadow-sm' : 'text-slate-600 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-300 hover:bg-emerald-50/50 dark:hover:bg-emerald-500/10' }}">
                     <span
                         class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('transaksi.collection') ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
                     Pelunasan
                 </a>
             </div>
-
             <div x-show="!isSidebarExpanded"
                 class="absolute left-14 bg-gradient-to-b from-slate-800 to-slate-900 text-white text-[10px] px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap shadow-xl font-bold tracking-wider uppercase transform translate-x-2 group-hover:translate-x-0">
                 Operasional
@@ -260,123 +424,13 @@
         </div>
         @endif
 
-        {{-- ================================================== --}}
-        {{-- ANALISA & LAPORAN (Superadmin & Pimpinan)          --}}
-        {{-- ================================================== --}}
-        @if(in_array(auth()->user()->role, ['super_admin', 'superadmin', 'pimpinan']))
-        <div x-data="{ open: {{ (request()->routeIs('pimpinan.*') || request()->routeIs('laporan.*') || request()->routeIs('pusat-cetak')) ? 'true' : 'false' }} }"
-            class="w-full relative group">
-            <button @click="isSidebarExpanded ? open = !open : isSidebarExpanded = true"
-                class="flex items-center w-full py-3 rounded-xl transition-all duration-300 group text-[11px] font-black relative uppercase tracking-widest
-                {{ (request()->routeIs('pimpinan.*') || request()->routeIs('laporan.*') || request()->routeIs('pusat-cetak')) 
-                    ? 'text-amber-600 bg-gradient-to-r from-amber-50 to-orange-50/50 dark:from-amber-600/20 dark:to-orange-600/20 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 shadow-sm ring-1 ring-amber-100 dark:ring-amber-500/20' 
-                    : 'text-slate-600 hover:bg-amber-50 hover:text-amber-600 dark:text-slate-400 dark:hover:bg-amber-500/10 dark:hover:text-amber-300 border border-transparent' }}"
-                :class="isSidebarExpanded ? 'px-5 justify-between' : 'justify-center'">
-
-                <div class="flex items-center">
-                    <span class="w-5 flex justify-center">
-                        <i
-                            class="fas fa-file-chart-line text-base transition-all duration-300 group-hover:scale-110 {{ (request()->routeIs('pimpinan.*') || request()->routeIs('laporan.*') || request()->routeIs('pusat-cetak')) ? 'text-amber-600 dark:text-amber-300' : 'group-hover:text-amber-500 dark:group-hover:text-amber-400' }}"></i>
-                    </span>
-                    <span x-show="isSidebarExpanded" class="ml-4 font-bold">Laporan & Analisa</span>
-                </div>
-                <i x-show="isSidebarExpanded"
-                    class="fas fa-chevron-right text-[9px] transition-all duration-300 opacity-70 group-hover:opacity-100"
-                    :class="{'rotate-90': open}"></i>
-            </button>
-
-            <div x-show="open && isSidebarExpanded" x-cloak x-transition.origin.top
-                class="mt-2 space-y-1 ml-4 border-l-[2px] border-amber-300 dark:border-amber-500/30 pl-4">
-
-                {{-- PUSAT CETAK --}}
-                <a href="{{ route('pusat-cetak') }}"
-                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group mb-3
-                    {{ request()->routeIs('pusat-cetak') ? 'text-white bg-gradient-to-r from-amber-500 to-orange-500 shadow-lg shadow-amber-500/20' : 'text-slate-600 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-300 hover:bg-amber-50/50 dark:hover:bg-amber-500/10' }}">
-                    <i class="fas fa-print w-4 text-center"></i>
-                    Pusat Cetak
-                </a>
-
-                {{-- ANALISA STRATEGIS --}}
-                <div
-                    class="text-[8.5px] font-black text-slate-500 dark:text-slate-500 uppercase tracking-wider mt-3 mb-2 px-3 pl-0">
-                    Strategis
-                </div>
-
-                <a href="{{ route('pimpinan.profit-analysis') }}"
-                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group
-                    {{ request()->routeIs('pimpinan.profit-analysis') ? 'text-amber-700 bg-amber-100/60 dark:text-amber-300 dark:bg-amber-500/20 shadow-sm' : 'text-slate-600 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-300 hover:bg-amber-50/50 dark:hover:bg-amber-500/10' }}">
-                    <span
-                        class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('pimpinan.profit-analysis') ? 'bg-amber-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
-                    Laba Rugi
-                </a>
-
-                <a href="{{ route('laporan.kinerja-sales') }}"
-                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group
-                    {{ request()->routeIs('laporan.kinerja-sales') ? 'text-amber-700 bg-amber-100/60 dark:text-amber-300 dark:bg-amber-500/20 shadow-sm' : 'text-slate-600 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-300 hover:bg-amber-50/50 dark:hover:bg-amber-500/10' }}">
-                    <span
-                        class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('laporan.kinerja-sales') ? 'bg-amber-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
-                    Kinerja Sales
-                </a>
-
-                <a href="{{ route('pimpinan.stock-analysis') }}"
-                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group
-                    {{ request()->routeIs('pimpinan.stock-analysis') ? 'text-amber-700 bg-amber-100/60 dark:text-amber-300 dark:bg-amber-500/20 shadow-sm' : 'text-slate-600 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-300 hover:bg-amber-50/50 dark:hover:bg-amber-500/10' }}">
-                    <span
-                        class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('pimpinan.stock-analysis') ? 'bg-amber-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
-                    Analisa Stok
-                </a>
-
-                {{-- REKAPITULASI --}}
-                <div
-                    class="text-[8.5px] font-black text-slate-500 dark:text-slate-500 uppercase tracking-wider mt-4 mb-2 px-3 pl-0">
-                    Rekapitulasi
-                </div>
-
-                <a href="{{ route('laporan.rekap-penjualan') }}"
-                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group
-                    {{ request()->routeIs('laporan.rekap-penjualan') ? 'text-blue-700 bg-blue-100/60 dark:text-blue-300 dark:bg-blue-500/20 shadow-sm' : 'text-slate-600 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300 hover:bg-blue-50/50 dark:hover:bg-blue-500/10' }}">
-                    <span
-                        class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('laporan.rekap-penjualan') ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
-                    Rekap Jual
-                </a>
-
-                <a href="{{ route('laporan.rekap-ar') }}"
-                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group
-                    {{ request()->routeIs('laporan.rekap-ar') ? 'text-blue-700 bg-blue-100/60 dark:text-blue-300 dark:bg-blue-500/20 shadow-sm' : 'text-slate-600 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300 hover:bg-blue-50/50 dark:hover:bg-blue-500/10' }}">
-                    <span
-                        class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('laporan.rekap-ar') ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
-                    Rekap Piutang
-                </a>
-
-                <a href="{{ route('laporan.rekap-retur') }}"
-                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group
-                    {{ request()->routeIs('laporan.rekap-retur') ? 'text-blue-700 bg-blue-100/60 dark:text-blue-300 dark:bg-blue-500/20 shadow-sm' : 'text-slate-600 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300 hover:bg-blue-50/50 dark:hover:bg-blue-500/10' }}">
-                    <span
-                        class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('laporan.rekap-retur') ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
-                    Rekap Retur
-                </a>
-
-                <a href="{{ route('laporan.rekap-collection') }}"
-                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group
-                    {{ request()->routeIs('laporan.rekap-collection') ? 'text-blue-700 bg-blue-100/60 dark:text-blue-300 dark:bg-blue-500/20 shadow-sm' : 'text-slate-600 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300 hover:bg-blue-50/50 dark:hover:bg-blue-500/10' }}">
-                    <span
-                        class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('laporan.rekap-collection') ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
-                    Rekap Lunas
-                </a>
-            </div>
-
-            <div x-show="!isSidebarExpanded"
-                class="absolute left-14 bg-gradient-to-b from-slate-800 to-slate-900 text-white text-[10px] px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap shadow-xl font-bold tracking-wider uppercase transform translate-x-2 group-hover:translate-x-0">
-                Laporan
-            </div>
-        </div>
-        @endif
     </div>
 
     {{-- FOOTER TOGGLE --}}
     <div
         class="p-4 border-t transition-all duration-300 bg-slate-50 border-slate-100 dark:bg-slate-950/50 dark:border-white/5 flex-none">
-        <button @click="toggleSidebar()" class="flex w-full items-center justify-center py-2.5 rounded-xl transition-all shadow-sm border group
+        <button @click="toggleSidebar()"
+            class="flex w-full items-center justify-center py-2.5 rounded-xl transition-all shadow-sm border group
             bg-white border-slate-200 text-slate-600 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 hover:shadow-md
             dark:bg-slate-900 dark:border-white/10 dark:text-slate-400 dark:hover:bg-blue-600/10 dark:hover:border-blue-500/30 dark:hover:text-blue-400">
             <i class="fas fa-chevron-left transition-all duration-500 group-hover:-translate-x-1"

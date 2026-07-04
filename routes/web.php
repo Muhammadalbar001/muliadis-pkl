@@ -24,7 +24,9 @@ use App\Livewire\Laporan\RekapPenjualanIndex;
 use App\Livewire\Laporan\RekapReturIndex;
 use App\Livewire\Laporan\RekapArIndex;
 use App\Livewire\Laporan\RekapCollectionIndex;
-use App\Livewire\Laporan\KinerjaSalesIndex;
+
+// --- CONTROLLER KINERJA SALES ---
+use App\Http\Controllers\KinerjaSalesController;
 
 // --- 5. ANALISA PIMPINAN (Strategis & Keuangan) ---
 use App\Livewire\Pimpinan\StockAnalysis;
@@ -50,14 +52,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function () {
         $role = auth()->user()->role;
         
-        // Cek Role dan arahkan ke dashboard yang sesuai
         if (in_array($role, ['supervisor'])) {
             return redirect()->route('supervisor.dashboard');
         } elseif (in_array($role, ['admin'])) {
             return redirect()->route('admin.dashboard');
         }
         
-        // Default: Pimpinan & Super Admin diarahkan ke dashboard eksekutif
         return redirect()->route('pimpinan.dashboard');
     })->name('dashboard');
 
@@ -96,8 +96,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/sales', SalesIndex::class)->name('sales');
         Route::get('/produk', ProdukIndex::class)->name('produk');
         Route::get('/supplier', SupplierIndex::class)->name('supplier');
-        
-        // Akses Data Pengguna kini telah dibuka untuk Supervisor
         Route::get('/user', UserIndex::class)->name('user'); 
     });
 
@@ -116,13 +114,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ====================================================
     Route::middleware(['role:super_admin,superadmin,pimpinan'])->prefix('admin')->group(function () {
         
-        // LAPORAN REKAPITULASI (8 Laporan Awal)
+        // LAPORAN REKAPITULASI
         Route::prefix('laporan')->name('laporan.')->group(function () {
             Route::get('/rekap-penjualan', RekapPenjualanIndex::class)->name('rekap-penjualan');
             Route::get('/rekap-retur', RekapReturIndex::class)->name('rekap-retur');
             Route::get('/rekap-ar', RekapArIndex::class)->name('rekap-ar');
             Route::get('/rekap-collection', RekapCollectionIndex::class)->name('rekap-collection');
-            Route::get('/kinerja-sales', KinerjaSalesIndex::class)->name('kinerja-sales');
+            
+            // --- PECAHAN LIVEWIRE KINERJA SALES (10 LAPORAN UTAMA) ---
+            Route::prefix('kinerja-sales')->name('kinerja.')->group(function () {
+                Route::get('/pencapaian', \App\Livewire\Laporan\Kinerja\Pencapaian::class)->name('pencapaian');
+                Route::get('/ranking', \App\Livewire\Laporan\Kinerja\Ranking::class)->name('ranking');
+                Route::get('/produktivitas', \App\Livewire\Laporan\Kinerja\Produktivitas::class)->name('produktivitas');
+                Route::get('/supplier', \App\Livewire\Laporan\Kinerja\Supplier::class)->name('supplier');
+                Route::get('/segmentasi', \App\Livewire\Laporan\Kinerja\Segmentasi::class)->name('segmentasi');
+                Route::get('/kualitas', \App\Livewire\Laporan\Kinerja\Kualitas::class)->name('kualitas');
+                Route::get('/efisiensi', \App\Livewire\Laporan\Kinerja\Efisiensi::class)->name('efisiensi');
+                Route::get('/akuisisi', \App\Livewire\Laporan\Kinerja\Akuisisi::class)->name('akuisisi');
+            });
         });
 
         // ANALISA PIMPINAN (Strategis)
@@ -133,9 +142,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/laporan/pusat-cetak', PusatCetak::class)->name('pusat-cetak');
         Route::get('/pdf/spk-sales', [SpkSales::class, 'generatePDF'])->name('spk-sales.pdf');
         
-        // ====================================================
         // FITUR UTAMA (INTELLIGENT REPORTS)
-        // ====================================================
         Route::prefix('keputusan')->name('keputusan.')->group(function () {
             Route::get('/spk-sales', SpkSales::class)->name('spk-sales');
             Route::get('/rfm-pelanggan', RfmPelanggan::class)->name('rfm-pelanggan');

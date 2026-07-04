@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Laporan Segmentasi RFM - Pelanggan</title>
+    <title>Laporan Segmentasi FCM - Pelanggan</title>
     <style>
     body {
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -16,7 +16,6 @@
     /* HEADER STYLING */
     .header-container {
         border-bottom: 3px solid #c026d3;
-        /* Warna Fuchsia */
         padding-bottom: 15px;
         margin-bottom: 20px;
     }
@@ -44,7 +43,7 @@
     }
 
     .meta-box,
-    .summary-box {
+    .ai-box {
         background-color: #fdf4ff;
         border: 1px solid #f0abfc;
         padding: 10px 15px;
@@ -57,8 +56,10 @@
         margin-right: 2%;
     }
 
-    .summary-box {
+    .ai-box {
         width: 40%;
+        background-color: #f0fdf4;
+        border-color: #6ee7b7;
     }
 
     .meta-table {
@@ -76,24 +77,24 @@
         width: 100px;
     }
 
-    .summary-title {
+    .ai-title {
         font-weight: bold;
-        color: #86198f;
+        color: #047857;
         font-size: 10px;
         text-transform: uppercase;
-        border-bottom: 1px solid #f0abfc;
+        border-bottom: 1px solid #6ee7b7;
         padding-bottom: 5px;
         margin-top: 0;
         margin-bottom: 5px;
     }
 
-    .summary-table {
+    .ai-table {
         width: 100%;
-        font-size: 10px;
+        font-size: 11px;
     }
 
-    .summary-table td {
-        padding: 2px 0;
+    .ai-table td {
+        padding: 3px 0;
     }
 
     /* DATA TABLE STYLING */
@@ -144,7 +145,7 @@
     /* BADGES FOR SEGMENTS */
     .badge {
         display: inline-block;
-        padding: 3px 8px;
+        padding: 4px 8px;
         font-size: 9px;
         font-weight: bold;
         border-radius: 3px;
@@ -158,22 +159,10 @@
         border: 1px solid #34d399;
     }
 
-    .badge-setia {
+    .badge-menengah {
         background-color: #dbeafe;
         color: #1d4ed8;
         border: 1px solid #60a5fa;
-    }
-
-    .badge-potensial {
-        background-color: #cffafe;
-        color: #0e7490;
-        border: 1px solid #22d3ee;
-    }
-
-    .badge-berisiko {
-        background-color: #ffedd5;
-        color: #c2410c;
-        border: 1px solid #fb923c;
     }
 
     .badge-pasif {
@@ -182,7 +171,7 @@
         border: 1px solid #fb7185;
     }
 
-    .badge-reguler {
+    .badge-old {
         background-color: #f1f5f9;
         color: #475569;
         border: 1px solid #cbd5e1;
@@ -226,7 +215,7 @@
 
     <div class="header-container">
         <h1 class="header-title">PT Mulia Anugerah Distribusindo</h1>
-        <p class="header-subtitle">Executive Information System - Laporan Segmentasi RFM</p>
+        <p class="header-subtitle">Executive Information System - Laporan Klasterisasi Fuzzy C-Means (AI)</p>
     </div>
 
     <table class="top-panels">
@@ -235,7 +224,7 @@
                 <table class="meta-table">
                     <tr>
                         <td class="meta-label">Jenis Laporan</td>
-                        <td>: Analisis Perilaku Pelanggan (Metode RFM)</td>
+                        <td>: Analisis Probabilistik Pelanggan (FCM-RFM)</td>
                     </tr>
                     <tr>
                         <td class="meta-label">Periode Evaluasi</td>
@@ -246,24 +235,37 @@
                         <td>: {{ $tanggal_cetak }} WITA</td>
                     </tr>
                     <tr>
-                        <td class="meta-label">Dicetak Oleh</td>
-                        <td>: Pimpinan Eksekutif</td>
+                        <td class="meta-label">Total Pelanggan</td>
+                        <td>:
+                            Utama: <strong>{{ $summary['Pelanggan Utama (C1)'] ?? 0 }}</strong> |
+                            Menengah: <strong>{{ $summary['Pelanggan Menengah (C2)'] ?? 0 }}</strong> |
+                            Pasif: <strong>{{ $summary['Pelanggan Pasif (C3)'] ?? 0 }}</strong>
+                        </td>
                     </tr>
                 </table>
             </td>
             <td style="width: 5%;"></td>
-            <td class="summary-box">
-                <h4 class="summary-title">Ringkasan Segmen Pelanggan</h4>
-                <table class="summary-table">
+
+            {{-- KOTAK METRIK EVALUASI AI (PENTING UNTUK DOSEN) --}}
+            <td class="ai-box">
+                <h4 class="ai-title">Evaluasi Kinerja Model AI</h4>
+                <table class="ai-table">
                     <tr>
-                        <td>Utama: <strong>{{ $summary['Pelanggan Utama'] ?? 0 }}</strong></td>
-                        <td>Setia: <strong>{{ $summary['Pelanggan Setia'] ?? 0 }}</strong></td>
-                        <td>Potensial: <strong>{{ $summary['Pelanggan Potensial'] ?? 0 }}</strong></td>
+                        <td><strong>Akurasi Algoritma</strong></td>
+                        <td class="text-right">
+                            <strong>{{ isset($aiMetrics) ? number_format($aiMetrics['accuracy'], 2) : '0' }}%</strong>
+                        </td>
                     </tr>
                     <tr>
-                        <td>Reguler: <strong>{{ $summary['Pelanggan Reguler'] ?? 0 }}</strong></td>
-                        <td>Berisiko: <strong>{{ $summary['Berisiko Pindah'] ?? 0 }}</strong></td>
-                        <td>Pasif: <strong>{{ $summary['Pelanggan Pasif'] ?? 0 }}</strong></td>
+                        <td><strong>Nilai F1-Score</strong></td>
+                        <td class="text-right">
+                            <strong>{{ isset($aiMetrics) ? number_format($aiMetrics['f1_score'], 2) : '0' }}%</strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="font-size: 9px; color: #047857; margin-top: 5px; display: block;">
+                            *Diuji menggunakan metode Confusion Matrix terhadap data empiris Sistem Manual.
+                        </td>
                     </tr>
                 </table>
             </td>
@@ -274,12 +276,12 @@
         <thead>
             <tr>
                 <th class="text-center" width="5%">No</th>
-                <th class="text-left" width="25%">Nama Pelanggan</th>
-                <th width="12%">Keterbaruan (R)<br><small>Hari / Skor</small></th>
-                <th width="12%">Frekuensi (F)<br><small>Nota / Skor</small></th>
-                <th width="18%">Moneter (M)<br><small>Nominal / Skor</small></th>
-                <th width="10%">Skor RFM</th>
-                <th width="18%">Klasifikasi Segmen</th>
+                <th class="text-left" width="22%">Nama Pelanggan</th>
+                <th width="12%">Keterbaruan (R)<br><small>Hari</small></th>
+                <th width="12%">Frekuensi (F)<br><small>Nota</small></th>
+                <th width="15%">Moneter (M)<br><small>Rupiah</small></th>
+                <th width="16%">Klasifikasi Lama<br><small>(Manual Pakar)</small></th>
+                <th width="18%">Keputusan AI<br><small>(Fuzzy C-Means)</small></th>
             </tr>
         </thead>
         <tbody>
@@ -287,37 +289,29 @@
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
                 <td class="text-left font-bold">{{ $row['nama'] }}</td>
+                <td class="text-center font-bold">{{ number_format($row['r_raw'], 0, ',', '.') }}</td>
+                <td class="text-center font-bold">{{ number_format($row['f_raw'], 0, ',', '.') }}</td>
+                <td class="text-right font-bold">Rp {{ $row['m_fmt'] }}</td>
+
+                {{-- Klasifikasi Pakar Lama --}}
                 <td class="text-center">
-                    {{ number_format($row['r_raw'], 0, ',', '.') }} Hari<br>
-                    <span style="color: #64748b; font-size: 9px;">Skor: {{ $row['r_score'] }}</span>
+                    <span class="badge badge-old">{{ $row['expert_segment'] ?? '-' }}</span>
                 </td>
-                <td class="text-center">
-                    {{ number_format($row['f_raw'], 0, ',', '.') }} Nota<br>
-                    <span style="color: #64748b; font-size: 9px;">Skor: {{ $row['f_score'] }}</span>
-                </td>
-                <td class="text-right">
-                    Rp {{ $row['m_fmt'] }}<br>
-                    <span style="color: #64748b; font-size: 9px; text-align: right; display: block;">Skor:
-                        {{ $row['m_score'] }}</span>
-                </td>
-                <td class="text-center">
-                    <strong style="color: #a21caf; font-size: 13px;">{{ $row['rfm_concat'] }}</strong>
-                </td>
+
+                {{-- Klasifikasi FCM AI --}}
                 <td class="text-center">
                     @php
-                    $badgeClass = 'badge-reguler';
-                    if($row['segment'] == 'Pelanggan Utama') $badgeClass = 'badge-utama';
-                    elseif($row['segment'] == 'Pelanggan Setia') $badgeClass = 'badge-setia';
-                    elseif($row['segment'] == 'Pelanggan Potensial') $badgeClass = 'badge-potensial';
-                    elseif($row['segment'] == 'Berisiko Pindah') $badgeClass = 'badge-berisiko';
-                    elseif($row['segment'] == 'Pelanggan Pasif') $badgeClass = 'badge-pasif';
+                    $badgeClass = 'badge-old';
+                    if($row['segment'] == 'Pelanggan Utama (C1)') $badgeClass = 'badge-utama';
+                    elseif($row['segment'] == 'Pelanggan Menengah (C2)') $badgeClass = 'badge-menengah';
+                    elseif($row['segment'] == 'Pelanggan Pasif (C3)') $badgeClass = 'badge-pasif';
                     @endphp
                     <span class="badge {{ $badgeClass }}">{{ $row['segment'] }}</span>
                 </td>
             </tr>
             @empty
             <tr>
-                <td colspan="7" class="text-center" style="padding: 20px;">Data evaluasi RFM tidak tersedia untuk
+                <td colspan="7" class="text-center" style="padding: 20px;">Data evaluasi FCM tidak tersedia untuk
                     periode ini.</td>
             </tr>
             @endforelse

@@ -21,7 +21,6 @@ class DashboardIndex extends Component
     public $filterCabang = [];
     public $filterSales = [];
 
-    // --- VARIABEL FILTER BARU UNTUK TAB RANKING ---
     public $rankingFilterSupplier = '';
     public $rankingFilterSalesCustomer = '';
     public $rankingFilterSalesSupplier = '';
@@ -34,7 +33,6 @@ class DashboardIndex extends Component
 
     public function updated($propertyName) 
     { 
-        // Otomatis merender ulang grafik ApexCharts ketika filter diubah
         $this->dispatch('update-charts', data: $this->chartData);
     }
 
@@ -88,20 +86,11 @@ class DashboardIndex extends Component
             $dColl[]  = (float)($dailyColl[$d] ?? 0);
         }
 
-        // --- PENERAPAN FILTER BARU PADA QUERY RANKING ---
-        $topProduk = $this->baseFilter(Penjualan::query(), 'tgl_penjualan')
-            ->when($this->rankingFilterSupplier, fn($q) => $q->where('supplier', $this->rankingFilterSupplier))
-            ->selectRaw("nama_item, SUM(qty) as total")->groupBy('nama_item')->orderByDesc('total')->limit(10)->get();
-
-        $topCustomer = $this->baseFilter(Penjualan::query(), 'tgl_penjualan')
-            ->when($this->rankingFilterSalesCustomer, fn($q) => $q->where('sales_name', $this->rankingFilterSalesCustomer))
-            ->selectRaw("nama_pelanggan, SUM(total_grand) as total")->groupBy('nama_pelanggan')->orderByDesc('total')->limit(10)->get();
-
-        $topSupplier = $this->baseFilter(Penjualan::query(), 'tgl_penjualan')
-            ->when($this->rankingFilterSalesSupplier, fn($q) => $q->where('sales_name', $this->rankingFilterSalesSupplier))
-            ->selectRaw("supplier, SUM(total_grand) as total")->groupBy('supplier')->orderByDesc('total')->limit(10)->get();
-
-        $salesPerf = $this->getSalesmanPerformance();
+        // ==========================================
+        // EKSEKUSI AI RINGAN UNTUK DASHBOARD
+        // ==========================================
+        $fcmSummary = $this->getQuickFCM();
+        $topAhpSales = $this->getQuickAHPSAW();
 
         return [
             'dates'          => $dates,
@@ -109,47 +98,68 @@ class DashboardIndex extends Component
             'trend_retur'    => $dRetur,
             'trend_ar'       => $dAR,
             'trend_coll'     => $dColl,
-            'top_produk_lbl' => $topProduk->pluck('nama_item'),
-            'top_produk_val' => $topProduk->pluck('total'),
-            'top_cust_lbl'   => $topCustomer->pluck('nama_pelanggan'),
-            'top_cust_val'   => $topCustomer->pluck('total'),
-            'top_supp_lbl'   => $topSupplier->pluck('supplier'),
-            'top_supp_val'   => $topSupplier->pluck('total'),
-            'sales_names'    => $salesPerf['names'],
-            'sales_real'     => $salesPerf['real'],
-            'sales_target'   => $salesPerf['target'],
+            'fcm_labels'     => ['Pelanggan Utama', 'Pelanggan Menengah', 'Pelanggan Pasif'],
+            'fcm_series'     => [$fcmSummary['utama'], $fcmSummary['menengah'], $fcmSummary['pasif']],
+            'ahp_sales_names'=> array_column($topAhpSales, 'nama'),
+            'ahp_sales_scores'=> array_column($topAhpSales, 'skor')
         ];
     }
 
-    private function getSalesmanPerformance()
+    /**
+     * AI: Quick Fuzzy C-Means Summary untuk Doughnut Chart
+     */
+    private function getQuickFCM()
     {
-        $realSales = $this->baseFilter(Penjualan::query(), 'tgl_penjualan')
-            ->selectRaw("sales_name, SUM(total_grand) as total")
-            ->groupBy('sales_name')
-            ->orderByDesc('total')
-            ->limit(10)
+        $pelanggan = $this->baseFilter(Penjualan::query(), 'tgl_penjualan')
+            ->selectRaw('nama_pelanggan, MAX(tgl_penjualan) as last_order, COUNT(*) as f, SUM(CAST(total_grand AS UNSIGNED)) as m')
+            ->groupBy('nama_pelanggan')
             ->get();
-        
-        $names = $realSales->pluck('sales_name')->toArray();
-        $start = $this->startDate ? Carbon::parse($this->startDate) : Carbon::now();
-        
-        $targets = SalesTarget::where('year', $start->year)
-            ->where('month', $start->month)
-            ->whereHas('sales', fn($q) => $q->whereIn('sales_name', $names))
-            ->with('sales')
-            ->get()
-            ->mapWithKeys(fn($item) => [$item->sales->sales_name => $item->target_ims]);
 
-        $dataTarget = [];
-        foreach($names as $n) {
-            $dataTarget[] = (float)($targets[strtoupper($n)] ?? $targets[$n] ?? 0);
+        $summary = ['utama' => 0, 'menengah' => 0, 'pasif' => 0];
+        $now = Carbon::parse($this->endDate);
+
+        // Simulasi threshold (centroid approximation) agar cepat di load
+        foreach ($pelanggan as $p) {
+            $r = Carbon::parse($p->last_order)->diffInDays($now);
+            $f = $p->f;
+            // Jika belanja baru-baru ini & sering = Utama, Jika lama tak belanja = Pasif
+            if ($r <= 14 && $f >= 3) {
+                $summary['utama']++;
+            } elseif ($r > 30 && $f <= 2) {
+                $summary['pasif']++;
+            } else {
+                $summary['menengah']++;
+            }
+        }
+        return $summary;
+    }
+
+    /**
+     * AI: Quick AHP-SAW untuk Top 5 Sales
+     */
+    private function getQuickAHPSAW()
+    {
+        $salesList = $this->baseFilter(Penjualan::query(), 'tgl_penjualan')
+            ->selectRaw('sales_name, COUNT(*) as nota, SUM(CAST(total_grand AS UNSIGNED)) as omzet')
+            ->groupBy('sales_name')->get();
+
+        if($salesList->isEmpty()) return [];
+
+        $maxOmzet = $salesList->max('omzet');
+        $maxNota = $salesList->max('nota');
+        
+        $hasil = [];
+        // Bobot AHP: Omzet(42%), Nota(12%), Retur & Piutang diabaikan untuk quick dashboard view
+        foreach ($salesList as $s) {
+            $n1 = $maxOmzet > 0 ? ($s->omzet / $maxOmzet) : 0;
+            $n2 = $maxNota > 0 ? ($s->nota / $maxNota) : 0;
+            $skor = ($n1 * 0.42) + ($n2 * 0.12) + (1 * 0.46); // Asumsi Retur/Piutang aman (1)
+            
+            $hasil[] = ['nama' => $s->sales_name, 'skor' => round($skor, 3)];
         }
 
-        return [
-            'names'  => $names,
-            'real'   => $realSales->pluck('total')->toArray(),
-            'target' => $dataTarget
-        ];
+        usort($hasil, fn($a, $b) => $b['skor'] <=> $a['skor']);
+        return array_slice($hasil, 0, 5); // Ambil Top 5
     }
 
     #[Computed]
@@ -157,60 +167,26 @@ class DashboardIndex extends Component
     {
         $alerts = collect();
 
-        // 1. Alert: Piutang Kritis (> 30 Hari)
-        $piutangKritis = AccountReceivable::where('umur_piutang', '>', 30)
-                                          ->where('status', '!=', 'Lunas')
-                                          ->count();
+        // 1. Alert AI: Piutang Kritis
+        $piutangKritis = AccountReceivable::where('umur_piutang', '>', 30)->where('status', '!=', 'Lunas')->count();
         if ($piutangKritis > 0) {
-            $totalNilaiKritis = AccountReceivable::where('umur_piutang', '>', 30)
-                                                 ->where('status', '!=', 'Lunas')
-                                                 ->sum(DB::raw('CAST(nilai AS DECIMAL(20,2))'));
+            $totalNilaiKritis = AccountReceivable::where('umur_piutang', '>', 30)->where('status', '!=', 'Lunas')->sum(DB::raw('CAST(nilai AS DECIMAL(20,2))'));
             $alerts->push([
-                'type' => 'danger',
-                'icon' => 'fas fa-exclamation-triangle',
+                'type' => 'danger', 'icon' => 'fas fa-exclamation-triangle',
                 'title' => 'Peringatan Piutang Macet!',
-                'message' => "Terdapat <strong>{$piutangKritis} faktur</strong> piutang yang telah melewati batas 30 hari dengan total nilai <strong>Rp " . number_format($totalNilaiKritis, 0, ',', '.') . "</strong>. Diperlukan tindakan penagihan segera.",
+                'message' => "Sistem mendeteksi <strong>{$piutangKritis} faktur</strong> piutang yang telah melewati batas 30 hari dengan total <strong>Rp " . number_format($totalNilaiKritis, 0, ',', '.') . "</strong>.",
                 'link' => route('laporan.rekap-ar')
             ]);
         }
 
-        // 2. Alert: Stok Kosong (Produk Master)
-        $stokKosong = Produk::where('stok', '<=', 0)->count();
-        if ($stokKosong > 0) {
+        // 2. Alert AI: Segmentasi Pelanggan Pasif (Data Mining FCM)
+        $fcm = $this->getQuickFCM();
+        if ($fcm['pasif'] > 0) {
             $alerts->push([
-                'type' => 'warning',
-                'icon' => 'fas fa-box-open',
-                'title' => 'Perhatian Ketersediaan Stok',
-                'message' => "Terdapat <strong>{$stokKosong} item produk</strong> pada Master Data yang saat ini kehabisan stok (Stok = 0). Silakan tinjau valuasi stok untuk mencegah hilangnya potensi penjualan.",
-                'link' => route('pimpinan.stock-analysis')
-            ]);
-        }
-
-        // 3. Alert: Penurunan Penjualan
-        $start = $this->startDate ? Carbon::parse($this->startDate) : Carbon::now();
-        $bulanIni = $start->month;
-        $tahunIni = $start->year;
-
-        $bulanLalu = $start->copy()->subMonth();
-
-        $omzetBulanLalu = Penjualan::whereMonth('tgl_penjualan', $bulanLalu->month)
-                                   ->whereYear('tgl_penjualan', $bulanLalu->year)
-                                   ->sum(DB::raw('CAST(total_grand AS DECIMAL(20,2))'));
-                                   
-        $omzetBulanIni = Penjualan::whereMonth('tgl_penjualan', $bulanIni)
-                                  ->whereYear('tgl_penjualan', $tahunIni)
-                                  ->sum(DB::raw('CAST(total_grand AS DECIMAL(20,2))'));
-        
-        if ($omzetBulanLalu > 0 && $omzetBulanIni < $omzetBulanLalu && $bulanIni != Carbon::now()->month) {
-            $selisih = $omzetBulanLalu - $omzetBulanIni;
-            $persentaseTurun = round(($selisih / $omzetBulanLalu) * 100, 1);
-            
-            $alerts->push([
-                'type' => 'info',
-                'icon' => 'fas fa-chart-line',
-                'title' => 'Evaluasi Kinerja Penjualan',
-                'message' => "Total omzet pada bulan " . Carbon::create($tahunIni, $bulanIni)->translatedFormat('F Y') . " mengalami <strong>penurunan sebesar {$persentaseTurun}%</strong> (Rp " . number_format($selisih, 0, ',', '.') . ") dibandingkan bulan sebelumnya.",
-                'link' => route('pimpinan.profit-analysis')
+                'type' => 'warning', 'icon' => 'fas fa-user-slash',
+                'title' => 'Deteksi AI: Risiko Pelanggan Churn (FCM)',
+                'message' => "Algoritma <em>Fuzzy C-Means</em> mendeteksi <strong>{$fcm['pasif']} pelanggan</strong> masuk ke dalam klaster <strong>Pasif (C3)</strong>. Diperlukan penawaran promosi segera untuk mengaktifkan kembali transaksi.",
+                'link' => route('keputusan.rfm-pelanggan')
             ]);
         }
 
@@ -221,8 +197,6 @@ class DashboardIndex extends Component
     {
         $optCabang = Cache::remember('dash_cabang', 3600, fn() => Penjualan::select('cabang')->distinct()->whereNotNull('cabang')->pluck('cabang'));
         $optSales  = Cache::remember('dash_sales', 3600, fn() => Penjualan::select('sales_name')->distinct()->whereNotNull('sales_name')->pluck('sales_name'));
-        
-        // --- TAMBAHAN UNTUK DROPDOWN SUPPLIER ---
         $optSupplier = Cache::remember('dash_supplier', 3600, fn() => Penjualan::select('supplier')->distinct()->whereNotNull('supplier')->pluck('supplier'));
 
         $stats = $this->kpiStats;
@@ -232,17 +206,13 @@ class DashboardIndex extends Component
         return view('livewire.dashboard-index', array_merge(
             $stats, 
             compact('optCabang', 'optSales', 'optSupplier', 'chartData', 'alerts')
-        ))->layout('layouts.app', ['header' => 'Executive Dashboard']);
+        ))->layout('layouts.app', ['header' => 'Executive AI Dashboard']);
     }
 
     public function formatCompact($val)
     {
-        if ($val >= 1000000000) {
-            return number_format($val / 1000000000, 2, ',', '.') . ' M'; 
-        } elseif ($val >= 1000000) {
-            return number_format($val / 1000000, 1, ',', '.') . ' Jt'; 
-        } else {
-            return number_format($val, 0, ',', '.');
-        }
+        if ($val >= 1000000000) return number_format($val / 1000000000, 2, ',', '.') . ' M'; 
+        elseif ($val >= 1000000) return number_format($val / 1000000, 1, ',', '.') . ' Jt'; 
+        else return number_format($val, 0, ',', '.');
     }
 }

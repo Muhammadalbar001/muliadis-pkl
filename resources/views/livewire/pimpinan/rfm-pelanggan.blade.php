@@ -42,17 +42,18 @@
             {{-- Logo & Judul --}}
             <div class="flex items-center gap-4 w-full xl:w-auto shrink-0">
                 <div
-                    class="p-3 rounded-2xl shadow-xl bg-gradient-to-br from-fuchsia-600 to-purple-700 text-white ring-4 ring-fuchsia-500/20">
-                    <i class="fas fa-users-viewfinder text-xl"></i>
+                    class="p-3 rounded-2xl shadow-xl bg-gradient-to-br from-fuchsia-600 to-purple-700 text-white ring-4 ring-fuchsia-500/20 relative overflow-hidden flex items-center justify-center">
+                    <i class="fas fa-project-diagram text-xl relative z-10"></i>
+                    <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
                 </div>
                 <div>
                     <h1
-                        class="text-xl font-black tracking-tighter uppercase leading-none dark:text-white text-slate-900">
-                        Segmentasi <span class="text-fuchsia-600 dark:text-fuchsia-400">Pelanggan</span>
+                        class="text-xl font-black tracking-tighter uppercase leading-none dark:text-white text-slate-900 flex items-center gap-2">
+                        Analisa <span class="text-fuchsia-600 dark:text-fuchsia-400">Fuzzy C-Means</span>
                     </h1>
                     <p
                         class="text-[10px] font-extrabold uppercase tracking-[0.2em] mt-1.5 dark:text-slate-400 text-slate-600">
-                        Analisis Loyalitas Metode RFM
+                        Segmentasi Pelanggan Berbasis AI (RFM)
                     </p>
                 </div>
             </div>
@@ -60,7 +61,7 @@
             {{-- Kolom Pencarian, Filter & Tombol Aksi --}}
             <div class="flex flex-wrap xl:flex-nowrap items-center gap-3 w-full xl:w-auto justify-end">
 
-                {{-- SEARCH FILTER (FITUR BARU) --}}
+                {{-- SEARCH FILTER --}}
                 <div class="relative w-full sm:w-auto sm:min-w-[200px] group">
                     <i
                         class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 dark:text-slate-400 text-slate-500 group-focus-within:text-fuchsia-600 transition-colors text-xs"></i>
@@ -69,7 +70,7 @@
                         placeholder="Cari Pelanggan...">
                 </div>
 
-                {{-- FILTER PERIODE (GROUPED) --}}
+                {{-- FILTER PERIODE --}}
                 <div
                     class="flex items-center bg-white dark:bg-[#121212] border-2 border-slate-200 dark:border-white/10 rounded-xl px-2 shadow-sm h-[42px] shrink-0">
                     <i class="far fa-calendar-alt text-slate-400 dark:text-slate-500 ml-2 text-xs"></i>
@@ -109,12 +110,56 @@
             <i class="fas fa-users-slash text-7xl text-slate-300 dark:text-slate-700 mb-5"></i>
             <h3 class="text-xl font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">Belum Ada Data
                 Pelanggan</h3>
-            <p class="text-xs text-slate-500 mt-2 font-medium">Tidak ada transaksi yang tercatat pada bulan yang
-                dipilih.</p>
+            <p class="text-xs text-slate-500 mt-2 font-medium">Tidak ada transaksi yang tercatat pada bulan yang dipilih
+                untuk dilakukan klasterisasi.</p>
         </div>
         @else
 
-        {{-- KOTAK INFORMASI ACUAN RFM --}}
+        {{-- PANEL METRIK EVALUASI MODEL AI (FITUR BARU UNTUK DOSEN PENGUJI) --}}
+        @if(isset($aiMetrics) && $aiMetrics['accuracy'] > 0)
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div
+                class="bg-white dark:bg-[#121212] p-5 rounded-2xl border-2 border-slate-200 dark:border-white/5 shadow-sm flex items-center gap-5 relative overflow-hidden">
+                <div
+                    class="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                    <i class="fas fa-bullseye text-2xl"></i>
+                </div>
+                <div>
+                    <h4
+                        class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 mb-1">
+                        Akurasi Model FCM</h4>
+                    <div class="flex items-end gap-3">
+                        <span
+                            class="text-2xl font-black text-slate-800 dark:text-white">{{ number_format($aiMetrics['accuracy'], 1) }}%</span>
+                        <span class="text-[10px] font-bold text-slate-500 mb-1 leading-tight">Tingkat kecocokan
+                            algoritma<br>terhadap penilaian manual pakar.</span>
+                    </div>
+                </div>
+                <i class="fas fa-check-double absolute -right-4 -bottom-4 text-6xl opacity-5 dark:opacity-10"></i>
+            </div>
+
+            <div
+                class="bg-white dark:bg-[#121212] p-5 rounded-2xl border-2 border-slate-200 dark:border-white/5 shadow-sm flex items-center gap-5 relative overflow-hidden">
+                <div class="p-4 rounded-xl bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 shrink-0">
+                    <i class="fas fa-balance-scale text-2xl"></i>
+                </div>
+                <div>
+                    <h4
+                        class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 mb-1">
+                        Nilai F1-Score</h4>
+                    <div class="flex items-end gap-3">
+                        <span
+                            class="text-2xl font-black text-slate-800 dark:text-white">{{ number_format($aiMetrics['f1_score'], 1) }}%</span>
+                        <span class="text-[10px] font-bold text-slate-500 mb-1 leading-tight">Rata-rata harmonik
+                            antara<br>Precision dan Recall.</span>
+                    </div>
+                </div>
+                <i class="fas fa-chart-pie absolute -right-4 -bottom-4 text-6xl opacity-5 dark:opacity-10"></i>
+            </div>
+        </div>
+        @endif
+
+        {{-- KOTAK INFORMASI ACUAN KLASTER FCM --}}
         <div
             class="bg-white dark:bg-[#121212] border-2 border-fuchsia-100 dark:border-fuchsia-900/30 p-6 rounded-[2rem] shadow-sm relative overflow-hidden">
             <div
@@ -122,56 +167,54 @@
             </div>
             <h4
                 class="text-[10px] font-black text-fuchsia-600 dark:text-fuchsia-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2 relative z-10">
-                <i class="fas fa-info-circle"></i> Standar Penilaian Sistem (Kuantil 1-5)
+                <i class="fas fa-info-circle"></i> Karakteristik Klaster Fuzzy C-Means (AI)
             </h4>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
                 <div class="bg-slate-50 dark:bg-white/5 p-4 rounded-xl border border-slate-100 dark:border-white/5">
                     <span
-                        class="block text-xs font-black text-slate-800 dark:text-white mb-1 uppercase tracking-wider">Keterbaruan
-                        (R)</span>
-                    <p class="text-[10px] text-slate-500 font-medium leading-relaxed">20% Pelanggan dengan transaksi
-                        paling baru mendapat skor tertinggi (5).</p>
+                        class="block text-xs font-black text-emerald-600 dark:text-emerald-400 mb-1 uppercase tracking-wider"><i
+                            class="fas fa-crown mr-1"></i> Utama (C1)</span>
+                    <p class="text-[10px] text-slate-500 font-medium leading-relaxed">Pelanggan dengan probabilitas
+                        tertinggi yang rutin belanja baru-baru ini dengan frekuensi dan nominal transaksi besar.</p>
                 </div>
                 <div class="bg-slate-50 dark:bg-white/5 p-4 rounded-xl border border-slate-100 dark:border-white/5">
                     <span
-                        class="block text-xs font-black text-slate-800 dark:text-white mb-1 uppercase tracking-wider">Frekuensi
-                        (F)</span>
-                    <p class="text-[10px] text-slate-500 font-medium leading-relaxed">20% Pelanggan dengan jumlah nota
-                        terbanyak mendapat skor tertinggi (5).</p>
+                        class="block text-xs font-black text-blue-600 dark:text-blue-400 mb-1 uppercase tracking-wider"><i
+                            class="fas fa-handshake mr-1"></i> Menengah (C2)</span>
+                    <p class="text-[10px] text-slate-500 font-medium leading-relaxed">Pelanggan yang berbelanja cukup
+                        stabil namun belum mencapai tingkat transaksi maksimal. Potensial untuk ditingkatkan.</p>
                 </div>
                 <div class="bg-slate-50 dark:bg-white/5 p-4 rounded-xl border border-slate-100 dark:border-white/5">
                     <span
-                        class="block text-xs font-black text-slate-800 dark:text-white mb-1 uppercase tracking-wider">Moneter
-                        (M)</span>
-                    <p class="text-[10px] text-slate-500 font-medium leading-relaxed">20% Pelanggan dengan total belanja
-                        terbesar mendapat skor tertinggi (5).</p>
+                        class="block text-xs font-black text-rose-600 dark:text-rose-400 mb-1 uppercase tracking-wider"><i
+                            class="fas fa-user-slash mr-1"></i> Pasif (C3)</span>
+                    <p class="text-[10px] text-slate-500 font-medium leading-relaxed">Pelanggan yang probabilitasnya
+                        mendekati pasif; lama tidak bertransaksi dan memiliki frekuensi/nominal rendah.</p>
                 </div>
             </div>
         </div>
 
-        {{-- KARTU SUMMARY --}}
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        {{-- KARTU SUMMARY KLASTER --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             @php
             $cards = [
-            ['label' => 'Utama', 'key' => 'Pelanggan Utama', 'icon' => 'crown', 'color' => 'emerald'],
-            ['label' => 'Setia', 'key' => 'Pelanggan Setia', 'icon' => 'handshake', 'color' => 'blue'],
-            ['label' => 'Potensial', 'key' => 'Pelanggan Potensial', 'icon' => 'seedling', 'color' => 'cyan'],
-            ['label' => 'Berisiko', 'key' => 'Berisiko Pindah', 'icon' => 'user-clock', 'color' => 'orange'],
-            ['label' => 'Pasif', 'key' => 'Pelanggan Pasif', 'icon' => 'user-slash', 'color' => 'rose'],
+            ['label' => 'Utama (C1)', 'key' => 'Pelanggan Utama (C1)', 'icon' => 'crown', 'color' => 'emerald'],
+            ['label' => 'Menengah (C2)', 'key' => 'Pelanggan Menengah (C2)', 'icon' => 'handshake', 'color' => 'blue'],
+            ['label' => 'Pasif (C3)', 'key' => 'Pelanggan Pasif (C3)', 'icon' => 'user-slash', 'color' => 'rose'],
             ];
             @endphp
             @foreach($cards as $card)
             <div
-                class="bg-white dark:bg-[#121212] border-2 border-{{ $card['color'] }}-100 dark:border-{{ $card['color'] }}-900/30 p-4 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm hover:-translate-y-1 transition-transform group">
+                class="bg-white dark:bg-[#121212] border-2 border-{{ $card['color'] }}-100 dark:border-{{ $card['color'] }}-900/30 p-6 rounded-[2rem] flex flex-col items-center justify-center text-center shadow-sm hover:-translate-y-1 transition-transform group">
                 <i
-                    class="fas fa-{{ $card['icon'] }} text-2xl text-{{ $card['color'] }}-500 mb-3 group-hover:scale-110 transition-transform"></i>
+                    class="fas fa-{{ $card['icon'] }} text-4xl text-{{ $card['color'] }}-500 mb-4 group-hover:scale-110 transition-transform"></i>
                 <h4
-                    class="text-3xl font-black text-{{ $card['color'] }}-700 dark:text-{{ $card['color'] }}-400 tracking-tighter">
+                    class="text-4xl font-black text-{{ $card['color'] }}-700 dark:text-{{ $card['color'] }}-400 tracking-tighter">
                     {{ $summary[$card['key']] ?? 0 }}
                 </h4>
                 <p
-                    class="text-[9px] font-bold uppercase tracking-widest text-{{ $card['color'] }}-600 dark:text-{{ $card['color'] }}-500 mt-1">
-                    {{ $card['label'] }}
+                    class="text-xs font-bold uppercase tracking-widest text-{{ $card['color'] }}-600 dark:text-{{ $card['color'] }}-500 mt-2">
+                    Pelanggan {{ $card['label'] }}
                 </p>
             </div>
             @endforeach
@@ -185,10 +228,10 @@
                 <div>
                     <h4
                         class="font-black text-slate-800 dark:text-white uppercase tracking-widest text-sm flex items-center gap-2">
-                        <i class="fas fa-table text-fuchsia-500"></i> Matriks Keputusan Pelanggan
+                        <i class="fas fa-table-list text-fuchsia-500"></i> Matriks Klasterisasi Probabilistik
                     </h4>
                     <p class="text-[11px] font-bold text-slate-500 mt-1 uppercase tracking-widest">Klik baris tabel
-                        untuk melihat detail.</p>
+                        untuk melihat komparasi keputusan sistem.</p>
                 </div>
             </div>
 
@@ -205,10 +248,11 @@
                             <th class="px-6 py-5 text-right border-l border-slate-200 dark:border-white/5">Moneter (M)
                                 <span class="block text-[8px] opacity-60 mt-0.5">Rupiah</span></th>
                             <th
+                                class="px-6 py-5 text-center border-l border-slate-200 dark:border-white/5 bg-slate-200/50 dark:bg-slate-800/50 text-slate-500">
+                                Sistem Lama <span class="block text-[8px] opacity-60">Rule-Based Pakar</span></th>
+                            <th
                                 class="px-6 py-5 text-center border-l border-slate-200 dark:border-white/5 bg-fuchsia-50 dark:bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-400 text-[11px]">
-                                Skor Gabungan</th>
-                            <th class="px-6 py-5 text-center border-l border-slate-200 dark:border-white/5">Klasifikasi
-                            </th>
+                                Klaster AI <span class="block text-[8px] opacity-60">Fuzzy C-Means</span></th>
                         </tr>
                     </thead>
                     <tbody
@@ -229,31 +273,33 @@
 
                             <td class="px-6 py-4 text-center border-l border-slate-100 dark:border-white/5">
                                 <span
-                                    class="block font-black text-slate-800 dark:text-slate-200">{{ number_format($row['r_raw'], 0, ',', '.') }}</span>
-                                <span class="text-[9px] font-bold text-slate-400">Skor: {{ $row['r_score'] }}</span>
+                                    class="block font-mono text-base font-black text-slate-800 dark:text-slate-200">{{ number_format($row['r_raw'], 0, ',', '.') }}</span>
                             </td>
 
                             <td class="px-6 py-4 text-center border-l border-slate-100 dark:border-white/5">
                                 <span
-                                    class="block font-black text-slate-800 dark:text-slate-200">{{ number_format($row['f_raw'], 0, ',', '.') }}</span>
-                                <span class="text-[9px] font-bold text-slate-400">Skor: {{ $row['f_score'] }}</span>
+                                    class="block font-mono text-base font-black text-slate-800 dark:text-slate-200">{{ number_format($row['f_raw'], 0, ',', '.') }}</span>
                             </td>
 
                             <td class="px-6 py-4 text-right border-l border-slate-100 dark:border-white/5">
-                                <span class="block font-black text-emerald-600 dark:text-emerald-400">Rp
+                                <span
+                                    class="block font-mono text-base font-black text-emerald-600 dark:text-emerald-400">Rp
                                     {{ $row['m_fmt'] }}</span>
-                                <span class="text-[9px] font-bold text-slate-400">Skor: {{ $row['m_score'] }}</span>
                             </td>
 
+                            {{-- Klasifikasi Pakar Lama --}}
+                            <td
+                                class="px-6 py-4 text-center border-l border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-800/20">
+                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                    {{ $row['expert_segment'] }}
+                                </span>
+                            </td>
+
+                            {{-- Klasifikasi FCM AI --}}
                             <td
                                 class="px-6 py-4 text-center border-l border-slate-100 dark:border-white/5 bg-fuchsia-50/50 dark:bg-fuchsia-500/5">
                                 <span
-                                    class="font-mono font-black text-lg text-fuchsia-600 dark:text-fuchsia-400">{{ $row['rfm_concat'] }}</span>
-                            </td>
-
-                            <td class="px-6 py-4 text-center border-l border-slate-100 dark:border-white/5">
-                                <span
-                                    class="px-3 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border border-{{ $row['color'] }}-200 bg-{{ $row['color'] }}-50 dark:bg-{{ $row['color'] }}-500/10 dark:border-{{ $row['color'] }}-500/30 text-{{ $row['color'] }}-600 dark:text-{{ $row['color'] }}-400 shadow-sm">
+                                    class="px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-widest border border-{{ $row['color'] }}-200 bg-{{ $row['color'] }}-50 dark:bg-{{ $row['color'] }}-500/10 dark:border-{{ $row['color'] }}-500/30 text-{{ $row['color'] }}-600 dark:text-{{ $row['color'] }}-400 shadow-sm">
                                     {{ $row['segment'] }}
                                 </span>
                             </td>
@@ -278,9 +324,10 @@
             class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
             <div x-data @click.outside="$wire.closeModal()"
                 class="bg-white dark:bg-[#18181b] w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden relative border-2 border-slate-200 dark:border-white/10 my-8">
-                <div class="bg-fuchsia-600 px-6 py-5 flex justify-between items-center text-white">
+                <div
+                    class="bg-gradient-to-r from-fuchsia-600 to-rose-600 px-6 py-5 flex justify-between items-center text-white">
                     <h3 class="font-black tracking-widest uppercase text-sm flex items-center gap-2">
-                        <i class="fas fa-microscope"></i> Analisis Perilaku Belanja
+                        <i class="fas fa-microscope"></i> Komparasi Keputusan Sistem
                     </h3>
                     <button wire:click="closeModal"
                         class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/40 flex items-center justify-center transition-colors"><i
@@ -290,71 +337,65 @@
                 <div class="p-6 md:p-8">
                     <div class="mb-6 text-center">
                         <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-black tracking-widest">
-                            Identitas Toko / Pelanggan</p>
+                            Identitas Pelanggan</p>
                         <h2 class="text-2xl font-black text-slate-800 dark:text-white mt-1 uppercase">
                             {{ $selectedDetail['nama'] }}</h2>
                     </div>
 
                     <div class="space-y-4">
-                        <div
-                            class="p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/10">
-                            <div class="flex justify-between items-start mb-2">
+                        {{-- Data Mentah RFM --}}
+                        <div class="grid grid-cols-3 gap-3 mb-6">
+                            <div
+                                class="bg-slate-50 dark:bg-white/5 p-3 rounded-xl border border-slate-200 dark:border-white/10 text-center">
                                 <span
-                                    class="text-[10px] font-black text-fuchsia-600 dark:text-fuchsia-400 uppercase tracking-widest">Keterbaruan
-                                    (R)</span>
+                                    class="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1">Recency
+                                    (Hari)</span>
                                 <span
-                                    class="bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-400 px-2 py-1 rounded text-[10px] font-black border border-fuchsia-200 dark:border-fuchsia-800">Skor:
-                                    {{ $selectedDetail['r_score'] }}</span>
+                                    class="font-mono text-lg font-black dark:text-white">{{ number_format($selectedDetail['r_raw'], 0, ',', '.') }}</span>
                             </div>
-                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                                Terakhir belanja pada <strong>{{ number_format($selectedDetail['r_raw'], 0, ',', '.') }}
-                                    Hari</strong> yang lalu. <br>
-                                <span class="text-[10px] text-slate-500 mt-1 inline-block"><em>Keterangan:</em>
-                                    Menduduki <strong>{{ $selectedDetail['r_rank_info'] }}</strong> dari seluruh
-                                    populasi pelanggan.</span>
-                            </p>
+                            <div
+                                class="bg-slate-50 dark:bg-white/5 p-3 rounded-xl border border-slate-200 dark:border-white/10 text-center">
+                                <span
+                                    class="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1">Frequency
+                                    (Nota)</span>
+                                <span
+                                    class="font-mono text-lg font-black dark:text-white">{{ number_format($selectedDetail['f_raw'], 0, ',', '.') }}</span>
+                            </div>
+                            <div
+                                class="bg-slate-50 dark:bg-white/5 p-3 rounded-xl border border-slate-200 dark:border-white/10 text-center">
+                                <span
+                                    class="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1">Monetary
+                                    (Rp)</span>
+                                <span
+                                    class="font-mono text-sm font-black dark:text-emerald-400 text-emerald-600">{{ $selectedDetail['m_fmt'] }}</span>
+                            </div>
                         </div>
 
+                        {{-- Hasil Sistem Lama --}}
                         <div
-                            class="p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/10">
-                            <div class="flex justify-between items-start mb-2">
+                            class="p-4 bg-slate-100 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-white/10 flex justify-between items-center">
+                            <div>
                                 <span
-                                    class="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">Frekuensi
-                                    (F)</span>
-                                <span
-                                    class="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded text-[10px] font-black border border-blue-200 dark:border-blue-800">Skor:
-                                    {{ $selectedDetail['f_score'] }}</span>
+                                    class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Penilaian
+                                    Sistem Lama</span>
+                                <span class="text-xs text-slate-400">Aturan If-Else Klasik (Ground Truth)</span>
                             </div>
-                            <p class="text-xs text-slate-600 dark:text-slate-300">
-                                Telah melakukan transaksi sebanyak
-                                <strong>{{ number_format($selectedDetail['f_raw'], 0, ',', '.') }} Nota</strong>.
-                            </p>
+                            <span
+                                class="text-sm font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">{{ $selectedDetail['expert_segment'] }}</span>
                         </div>
 
+                        {{-- Hasil AI FCM --}}
                         <div
-                            class="p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/10">
-                            <div class="flex justify-between items-start mb-2">
-                                <span
-                                    class="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Moneter
-                                    (M)</span>
-                                <span
-                                    class="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-2 py-1 rounded text-[10px] font-black border border-emerald-200 dark:border-emerald-800">Skor:
-                                    {{ $selectedDetail['m_score'] }}</span>
-                            </div>
-                            <p class="text-xs text-slate-600 dark:text-slate-300">
-                                Total nilai belanja mencapai <strong>Rp {{ $selectedDetail['m_fmt'] }}</strong>.
-                            </p>
-                        </div>
-
-                        <div
-                            class="mt-6 p-5 bg-fuchsia-600 dark:bg-fuchsia-600/20 dark:border dark:border-fuchsia-500/30 rounded-2xl text-center text-white shadow-xl shadow-fuchsia-500/20 relative overflow-hidden">
+                            class="mt-4 p-5 bg-fuchsia-600 dark:bg-fuchsia-600/20 dark:border dark:border-fuchsia-500/30 rounded-2xl text-center text-white shadow-xl shadow-fuchsia-500/20 relative overflow-hidden">
                             <div class="absolute right-0 top-0 w-16 h-full bg-white/10 -skew-x-12 translate-x-4"></div>
                             <p
                                 class="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1 relative z-10 dark:text-fuchsia-300">
-                                Klasifikasi Segmen Akhir</p>
+                                Keputusan AI (Fuzzy C-Means)
+                            </p>
                             <p
-                                class="text-3xl font-black uppercase tracking-tighter relative z-10 dark:text-fuchsia-400">
-                                {{ $selectedDetail['segment'] }}</p>
+                                class="text-2xl font-black uppercase tracking-tighter relative z-10 dark:text-fuchsia-400 mt-2">
+                                {{ $selectedDetail['segment'] }}
+                            </p>
                         </div>
                     </div>
                 </div>
