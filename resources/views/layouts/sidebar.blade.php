@@ -120,7 +120,7 @@
         </div>
 
         {{-- 3. STRATEGIS --}}
-        <div x-data="{ open: {{ request()->routeIs('pimpinan.profit-analysis') || request()->routeIs('pimpinan.stock-analysis') ? 'true' : 'false' }} }"
+        <!-- <div x-data="{ open: {{ request()->routeIs('pimpinan.profit-analysis') || request()->routeIs('pimpinan.stock-analysis') ? 'true' : 'false' }} }"
             class="w-full relative group">
             <button @click="isSidebarExpanded ? open = !open : isSidebarExpanded = true"
                 class="flex items-center w-full py-3 rounded-xl transition-all duration-300 group text-[11px] font-black relative uppercase tracking-widest
@@ -158,7 +158,7 @@
                 class="absolute left-14 bg-gradient-to-b from-slate-800 to-slate-900 text-white text-[10px] px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap shadow-xl font-bold tracking-wider uppercase transform translate-x-2 group-hover:translate-x-0">
                 Strategis
             </div>
-        </div>
+        </div> -->
 
         {{-- 4. KINERJA SALES --}}
         <div x-data="{ open: {{ request()->routeIs('laporan.kinerja.*') ? 'true' : 'false' }} }"

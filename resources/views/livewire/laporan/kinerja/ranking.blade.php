@@ -36,6 +36,7 @@
             </div>
 
             <div class="flex flex-wrap sm:flex-nowrap gap-3 items-center w-full xl:w-auto justify-end">
+                {{-- Input Pencarian --}}
                 <div class="relative w-full sm:w-48 group">
                     <i
                         class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-500 transition-colors text-xs"></i>
@@ -44,19 +45,27 @@
                         placeholder="Cari Sales...">
                 </div>
 
+                {{-- Filter Cabang --}}
                 <select wire:model.live="filterCabang"
                     class="border px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm h-[38px] dark:bg-black/40 dark:border-white/10 dark:text-slate-300 bg-white border-slate-200 text-slate-700 w-full sm:w-40 cursor-pointer">
                     <option value="">Semua Cabang</option>
                     @foreach($optCabang as $c) <option value="{{ $c }}">{{ $c }}</option> @endforeach
                 </select>
 
-                <button wire:click="resetFilter"
-                    class="px-4 py-2 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 rounded-xl text-[10px] hover:bg-rose-50 hover:text-rose-500 transition-all shadow-sm h-[38px] flex items-center justify-center"><i
-                        class="fas fa-undo"></i></button>
+                {{-- Filter Bulan (BARU DITAMBAHKAN) --}}
+                <input type="month" wire:model.live="bulan"
+                    class="w-full sm:w-36 border px-4 py-2 rounded-xl text-[11px] font-black uppercase h-[38px] dark:bg-black/40 bg-white dark:border-white/10 border-slate-200 dark:text-white transition-all shadow-sm cursor-pointer">
 
+                {{-- Tombol Reset --}}
+                <button wire:click="resetFilter"
+                    class="px-4 py-2 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 rounded-xl text-[10px] hover:bg-rose-50 hover:text-rose-500 transition-all shadow-sm h-[38px] flex items-center justify-center"
+                    title="Reset Filter"><i class="fas fa-undo"></i></button>
+
+                {{-- Tombol Cetak PDF --}}
                 <button wire:click="exportPdf" wire:loading.attr="disabled"
                     class="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-600/20 h-[38px] flex items-center gap-2 transition-transform active:scale-95 whitespace-nowrap">
                     <i class="fas fa-file-pdf"></i> Cetak Laporan
+                    <i wire:loading wire:target="exportPdf" class="fas fa-spinner fa-spin ml-1"></i>
                 </button>
             </div>
         </div>
