@@ -1,35 +1,8 @@
-<div class="min-h-screen space-y-6 pb-10 transition-colors duration-300 font-jakarta dark:bg-[#050505] bg-slate-50"
-    x-data="{ activeTab: 'overview' }">
-
-    {{-- CSS Animasi & Scrollbar --}}
+<div class="min-h-screen pb-20 font-jakarta bg-slate-50 dark:bg-[#050505] transition-colors duration-300">
     <style>
-    .animate-fade-in {
-        animation: fadeIn 0.4s ease-out forwards;
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    [x-cloak] {
-        display: none !important;
-    }
-
     .custom-scrollbar::-webkit-scrollbar {
         width: 4px;
         height: 6px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: transparent;
     }
 
     .custom-scrollbar::-webkit-scrollbar-thumb {
@@ -38,553 +11,363 @@
     }
     </style>
 
-    {{-- STICKY HEADER (Serasi dengan Master & User) --}}
-    <div class="sticky top-0 z-40 backdrop-blur-xl border-b transition-all duration-300 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-4 mb-6
-        dark:bg-[#0a0a0a]/80 dark:border-white/10 bg-white/95 border-slate-300 shadow-md flex flex-col gap-4">
-
-        {{-- Baris Atas: Judul & Info --}}
-        <div class="flex flex-col xl:flex-row gap-6 items-center justify-between">
-            <div class="flex items-center gap-4 w-full xl:w-auto shrink-0">
-                <div
-                    class="p-3 rounded-2xl shadow-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white ring-4 ring-blue-500/20">
-                    <i class="fas fa-server text-xl"></i>
-                </div>
-                <div>
-                    <h1
-                        class="text-xl font-black tracking-tighter uppercase leading-none dark:text-white text-slate-900">
-                        Status <span class="text-blue-600 dark:text-blue-400">Integritas</span> Sistem
-                    </h1>
-                    <div class="flex flex-wrap items-center gap-2 mt-1.5">
-                        <p
-                            class="text-[10px] font-extrabold uppercase tracking-[0.2em] dark:text-slate-400 text-slate-600">
-                            Pusat Kendali Pengawasan
-                        </p>
-                        <span
-                            class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/5 text-[9px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1 border border-slate-200 dark:border-white/5">
-                            <i class="fas fa-clock text-blue-500"></i> Sync:
-                            {{ $lastSync ? \Carbon\Carbon::parse($lastSync)->translatedFormat('d M H:i') : '-' }}
-                        </span>
-                    </div>
-                </div>
+    {{-- HEADER --}}
+    <div
+        class="sticky top-0 z-40 backdrop-blur-xl border-b -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-6 mb-8 dark:bg-[#0a0a0a]/80 bg-white/80 border-slate-200">
+        <div class="flex items-center gap-4">
+            <div class="p-3 rounded-2xl shadow-lg bg-blue-600 text-white flex items-center justify-center">
+                <i class="fas fa-shield-alt text-xl"></i>
             </div>
-
-            {{-- Tombol Aksi --}}
-            <div class="flex items-center gap-2 w-full xl:w-auto justify-end">
-                <a href="{{ route('master.produk') }}"
-                    class="px-5 py-2.5 bg-gradient-to-r from-slate-800 to-slate-900 dark:from-white dark:to-slate-200 dark:text-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg transition-all active:scale-95 flex items-center gap-2">
-                    <i class="fas fa-database"></i>
-                    <span>Kelola Master Data</span>
-                </a>
+            <div>
+                <h1 class="text-2xl font-black uppercase leading-none dark:text-white text-slate-800">
+                    Status Integritas <span class="text-blue-600">Sistem</span>
+                </h1>
+                <p
+                    class="text-[10px] font-bold uppercase tracking-[0.3em] opacity-60 mt-1 dark:text-slate-400 text-slate-500">
+                    Pusat Kendali & Taktikal Supervisor
+                </p>
             </div>
-        </div>
-
-        {{-- Baris Bawah: Navigasi Tab Menyatu dengan Header --}}
-        <div
-            class="flex gap-4 sm:gap-8 overflow-x-auto custom-scrollbar pt-2 border-t dark:border-white/5 border-slate-100">
-            <button @click="activeTab = 'overview'"
-                :class="activeTab === 'overview' ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-500' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600'"
-                class="py-3 text-[11px] font-black uppercase tracking-widest border-b-[3px] transition-all flex items-center gap-2 whitespace-nowrap">
-                <i class="fas fa-chart-pie text-sm"></i> Ringkasan Master
-            </button>
-
-            <button @click="activeTab = 'persetujuan'"
-                :class="activeTab === 'persetujuan' ? 'border-rose-600 text-rose-600 dark:text-rose-400 dark:border-rose-500' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:border-rose-300 dark:hover:border-rose-600'"
-                class="py-3 text-[11px] font-black uppercase tracking-widest border-b-[3px] transition-all flex items-center gap-2 whitespace-nowrap relative">
-                <i class="fas fa-clipboard-check text-sm"></i> Otorisasi Data
-                @if($pendingRequests->count() > 0)
-                <span class="ml-1 bg-rose-500 text-white px-1.5 py-0.5 rounded-md text-[9px] shadow-sm animate-pulse">
-                    {{ $pendingRequests->count() }} Perlu Aksi
-                </span>
-                @endif
-            </button>
-
-            <button @click="activeTab = 'monitoring'"
-                :class="activeTab === 'monitoring' ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-500' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-600'"
-                class="py-3 text-[11px] font-black uppercase tracking-widest border-b-[3px] transition-all flex items-center gap-2 whitespace-nowrap">
-                <i class="fas fa-search-dollar text-sm"></i> Evaluasi Kinerja
-            </button>
         </div>
     </div>
 
-    {{-- AREA KONTEN UTAMA --}}
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="px-4 sm:px-6 lg:px-8 space-y-6">
 
-        {{-- ALERT NOTIFIKASI SESSION --}}
-        @if (session()->has('message'))
-        <div
-            class="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-between shadow-sm animate-fade-in mb-4">
-            <div class="flex items-center gap-2"><i class="fas fa-check-circle text-lg"></i> {{ session('message') }}
-            </div>
-            <button type="button" class="opacity-50 hover:opacity-100 transition-opacity"
-                onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+        {{-- NAVIGATION TABS --}}
+        <div class="flex flex-wrap gap-2 border-b border-slate-200 dark:border-white/10 pb-4">
+            <button wire:click="setTab('master')"
+                class="px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all {{ $activeTab == 'master' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'bg-white dark:bg-white/5 text-slate-500 hover:bg-slate-100 dark:hover:bg-white/10' }}">
+                <i class="fas fa-database mr-2"></i> Ringkasan Master
+            </button>
+            <button wire:click="setTab('otorisasi')"
+                class="px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all relative {{ $activeTab == 'otorisasi' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'bg-white dark:bg-white/5 text-slate-500 hover:bg-slate-100 dark:hover:bg-white/10' }}">
+                <i class="fas fa-user-shield mr-2"></i> Otorisasi Data
+                @if($antreanHapus->where('status', 'Pending')->count() > 0)
+                <span
+                    class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[8px] text-white">
+                    {{ $antreanHapus->where('status', 'Pending')->count() }}
+                </span>
+                @endif
+            </button>
+            <button wire:click="setTab('evaluasi')"
+                class="px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all {{ $activeTab == 'evaluasi' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'bg-white dark:bg-white/5 text-slate-500 hover:bg-slate-100 dark:hover:bg-white/10' }}">
+                <i class="fas fa-clipboard-list mr-2"></i> Evaluasi Kinerja
+            </button>
         </div>
-        @endif
-        @if (session()->has('error'))
-        <div
-            class="bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-700 dark:text-rose-400 px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-between shadow-sm animate-fade-in mb-4">
-            <div class="flex items-center gap-2"><i class="fas fa-info-circle text-lg"></i> {{ session('error') }}</div>
-            <button type="button" class="opacity-50 hover:opacity-100 transition-opacity"
-                onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
-        </div>
-        @endif
 
         {{-- ========================================== --}}
-        {{-- ISI TAB 1: RINGKASAN MASTER (OVERVIEW)     --}}
+        {{-- TAB 1: RINGKASAN MASTER & DATA HEALTH      --}}
         {{-- ========================================== --}}
-        <div x-show="activeTab === 'overview'" x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
-            x-cloak class="space-y-6">
-
-            {{-- SMART ALERTS: RADAR KEAMANAN DATA --}}
-            @if(count($alerts) > 0)
-            <div class="space-y-3" x-data="{ show: true }" x-show="show" x-transition.duration.500ms>
-                <div class="flex items-center justify-between px-2 mb-2 mt-2">
-                    <h3
-                        class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                        <i class="fas fa-satellite-dish text-rose-500 animate-pulse"></i> Radar Keamanan Data Master
-                    </h3>
-                    <button @click="show = false"
-                        class="text-[10px] font-bold text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest">
-                        Tutup Semat
-                    </button>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    @foreach($alerts as $alert)
-                    @php
-                    $bgClass = $alert['type'] == 'danger' ? 'bg-rose-50 dark:bg-rose-500/10 border-rose-200
-                    dark:border-rose-500/30' :
-                    ($alert['type'] == 'warning' ? 'bg-orange-50 dark:bg-orange-500/10 border-orange-200
-                    dark:border-orange-500/30' :
-                    'bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30');
-
-                    $textClass = $alert['type'] == 'danger' ? 'text-rose-700 dark:text-rose-400' :
-                    ($alert['type'] == 'warning' ? 'text-orange-700 dark:text-orange-400' : 'text-blue-700
-                    dark:text-blue-400');
-
-                    $iconClass = $alert['type'] == 'danger' ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/40
-                    dark:text-rose-400' :
-                    ($alert['type'] == 'warning' ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/40
-                    dark:text-orange-400' :
-                    'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400');
-                    @endphp
-
-                    <div
-                        class="flex flex-col sm:flex-row justify-between p-4 rounded-2xl border {{ $bgClass }} shadow-sm gap-4 transition-transform hover:-translate-y-0.5">
-                        <div class="flex items-start gap-4">
-                            <div
-                                class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 {{ $iconClass }} shadow-inner">
-                                <i
-                                    class="{{ $alert['icon'] }} text-lg {{ $alert['type'] == 'danger' ? 'animate-pulse' : '' }}"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-black text-[11px] uppercase tracking-widest mb-1 {{ $textClass }}">
-                                    {{ $alert['title'] }}</h4>
-                                <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
-                                    {!! $alert['message'] !!}</p>
-                            </div>
-                        </div>
-
-                        @if(isset($alert['link']))
-                        <a href="{{ $alert['link'] }}"
-                            class="shrink-0 px-4 py-2 bg-white dark:bg-[#18181b] border border-slate-200 dark:border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest {{ $textClass }} hover:bg-slate-50 dark:hover:bg-white/5 transition-colors shadow-sm self-start sm:self-center text-center mt-2 sm:mt-0">
-                            Tinjau <i class="fas fa-arrow-right ml-1"></i>
-                        </a>
-                        @elseif(isset($alert['action_tab']))
-                        <button @click="activeTab = '{{ $alert['action_tab'] }}'"
-                            class="shrink-0 px-4 py-2 bg-white dark:bg-[#18181b] border border-slate-200 dark:border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest {{ $textClass }} hover:bg-slate-50 dark:hover:bg-white/5 transition-colors shadow-sm self-start sm:self-center text-center mt-2 sm:mt-0">
-                            Otorisasi <i class="fas fa-unlock-alt ml-1"></i>
-                        </button>
+        @if($activeTab == 'master')
+        <div class="space-y-6 animate-fade-in">
+            {{-- Data Health Alerts --}}
+            @if($health['produk_invalid'] > 0 || $health['sales_tanpa_target'] > 0)
+            <div
+                class="bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-500/20 p-5 rounded-2xl flex items-start gap-4">
+                <i class="fas fa-exclamation-triangle text-orange-500 text-2xl mt-1"></i>
+                <div>
+                    <h4 class="font-black text-orange-700 dark:text-orange-400 uppercase tracking-widest text-sm mb-2">
+                        Peringatan Kesehatan Data (Data Health)</h4>
+                    <ul class="list-disc list-inside text-xs text-orange-600 dark:text-orange-300 space-y-1">
+                        @if($health['produk_invalid'] > 0)
+                        <li>Terdapat <strong>{{ $health['produk_invalid'] }} Produk</strong> yang belum memiliki relasi
+                            Supplier. Segera lengkapi di Master Produk.</li>
                         @endif
-                    </div>
-                    @endforeach
+                        @if($health['sales_tanpa_target'] > 0)
+                        <li>Terdapat <strong>{{ $health['sales_tanpa_target'] }} Salesman Aktif</strong> yang belum
+                            diatur Target Penjualannya bulan ini. Hal ini dapat mengganggu perhitungan algoritma SPK
+                            Pimpinan.</li>
+                        @endif
+                    </ul>
                 </div>
             </div>
             @endif
 
-            {{-- 4 KARTU OVERVIEW --}}
-            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-                {{-- Kartu Anomali --}}
+            {{-- 4 Kotak Ringkasan --}}
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div
-                    class="dark:bg-[#121212] bg-white rounded-[2rem] p-6 border-2 {{ $anomaliProdukCount > 0 ? 'border-rose-400 dark:border-rose-600 shadow-rose-500/10' : 'border-slate-200 dark:border-white/5' }} shadow-sm relative overflow-hidden group">
-                    <div
-                        class="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-rose-50 dark:from-rose-900/10 to-transparent pointer-events-none">
-                    </div>
-                    <div class="relative z-10 flex justify-between items-start">
-                        <div>
-                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Anomali
-                                Master</p>
-                            <h3 class="text-4xl font-black text-slate-800 dark:text-white tracking-tighter">
-                                {{ number_format($anomaliProdukCount) }}</h3>
-                        </div>
-                        <div
-                            class="w-12 h-12 rounded-2xl {{ $anomaliProdukCount > 0 ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/30' : 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400' }} flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <i
-                                class="fas fa-exclamation-triangle text-xl {{ $anomaliProdukCount > 0 ? 'animate-pulse' : '' }}"></i>
-                        </div>
-                    </div>
-                    <div class="mt-6 relative z-10">
-                        @if($anomaliProdukCount > 0)
-                        <div
-                            class="flex items-center gap-1.5 text-[9px] font-bold text-rose-700 dark:text-rose-300 px-3 py-2 bg-rose-100 dark:bg-rose-900/40 rounded-xl border border-rose-200 dark:border-rose-700/50 leading-tight">
-                            <i class="fas fa-info-circle"></i> SKU Penjualan tak terdaftar!
-                        </div>
-                        @else
-                        <div
-                            class="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 px-3 py-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800/30">
-                            <i class="fas fa-check-double text-emerald-500"></i> Semua SKU sinkron.
-                        </div>
-                        @endif
-                    </div>
+                    class="p-6 bg-white dark:bg-[#121212] rounded-3xl border border-slate-200 dark:border-white/10 shadow-sm">
+                    <i class="fas fa-box text-3xl text-indigo-500 mb-4"></i>
+                    <h4 class="text-sm font-black text-slate-500 uppercase tracking-widest mb-1">Total Produk</h4>
+                    <p class="text-3xl font-extrabold text-slate-800 dark:text-white">{{ $totalProduk }}</p>
                 </div>
-
-                {{-- Kartu Produk --}}
                 <div
-                    class="dark:bg-[#121212] bg-white rounded-[2rem] p-6 border-2 border-slate-200 dark:border-white/5 shadow-sm relative overflow-hidden group">
-                    <div class="relative z-10 flex justify-between items-start">
-                        <div>
-                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Total Produk
-                            </p>
-                            <h3 class="text-4xl font-black text-slate-800 dark:text-white tracking-tighter">
-                                {{ number_format($totalProduk) }}</h3>
-                        </div>
-                        <div
-                            class="w-12 h-12 rounded-2xl bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center text-cyan-600 dark:text-cyan-400 group-hover:scale-110 transition-transform">
-                            <i class="fas fa-boxes text-xl"></i>
-                        </div>
-                    </div>
-                    <div class="mt-6 relative z-10">
-                        @if($produkKosong > 0)
-                        <div
-                            class="flex items-center gap-1.5 text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20 px-3 py-2 rounded-xl border border-rose-100 dark:border-rose-800/30">
-                            <i class="fas fa-box-open"></i> {{ $produkKosong }} Stok Kosong
-                        </div>
-                        @else
-                        <div
-                            class="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 px-3 py-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800/30">
-                            <i class="fas fa-check-circle text-emerald-500"></i> Stok master aman
-                        </div>
-                        @endif
-                    </div>
+                    class="p-6 bg-white dark:bg-[#121212] rounded-3xl border border-slate-200 dark:border-white/10 shadow-sm">
+                    <i class="fas fa-truck-loading text-3xl text-blue-500 mb-4"></i>
+                    <h4 class="text-sm font-black text-slate-500 uppercase tracking-widest mb-1">Total Supplier</h4>
+                    <p class="text-3xl font-extrabold text-slate-800 dark:text-white">{{ $totalSupplier }}</p>
                 </div>
-
-                {{-- Kartu Supplier --}}
                 <div
-                    class="dark:bg-[#121212] bg-white rounded-[2rem] p-6 border-2 border-slate-200 dark:border-white/5 shadow-sm relative overflow-hidden group">
-                    <div class="relative z-10 flex justify-between items-start">
-                        <div>
-                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Total
-                                Supplier</p>
-                            <h3 class="text-4xl font-black text-slate-800 dark:text-white tracking-tighter">
-                                {{ number_format($totalSupplier) }}</h3>
-                        </div>
-                        <div
-                            class="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">
-                            <i class="fas fa-truck text-xl"></i>
-                        </div>
-                    </div>
+                    class="p-6 bg-white dark:bg-[#121212] rounded-3xl border border-slate-200 dark:border-white/10 shadow-sm">
+                    <i class="fas fa-users-tie text-3xl text-orange-500 mb-4"></i>
+                    <h4 class="text-sm font-black text-slate-500 uppercase tracking-widest mb-1">Total Salesman</h4>
+                    <p class="text-3xl font-extrabold text-slate-800 dark:text-white">{{ $totalSalesman }}</p>
                 </div>
-
-                {{-- Kartu Salesman --}}
                 <div
-                    class="dark:bg-[#121212] bg-white rounded-[2rem] p-6 border-2 border-slate-200 dark:border-white/5 shadow-sm relative overflow-hidden group">
-                    <div class="relative z-10 flex justify-between items-start">
-                        <div>
-                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Total
-                                Salesman</p>
-                            <h3 class="text-4xl font-black text-slate-800 dark:text-white tracking-tighter">
-                                {{ number_format($totalSalesman) }}</h3>
-                        </div>
-                        <div
-                            class="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
-                            <i class="fas fa-user-tie text-xl"></i>
-                        </div>
-                    </div>
+                    class="p-6 bg-white dark:bg-[#121212] rounded-3xl border border-slate-200 dark:border-white/10 shadow-sm">
+                    <i class="fas fa-user-shield text-3xl text-emerald-500 mb-4"></i>
+                    <h4 class="text-sm font-black text-slate-500 uppercase tracking-widest mb-1">Total Pengguna</h4>
+                    <p class="text-3xl font-extrabold text-slate-800 dark:text-white">{{ $totalUser }}</p>
                 </div>
             </div>
         </div>
+        @endif
 
         {{-- ========================================== --}}
-        {{-- ISI TAB 2: OTORISASI DATA (PERSETUJUAN)    --}}
+        {{-- TAB 2: OTORISASI DATA (MAKER-CHECKER)      --}}
         {{-- ========================================== --}}
-        <div x-show="activeTab === 'persetujuan'" x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
-            x-cloak>
-
+        @if($activeTab == 'otorisasi')
+        <div class="animate-fade-in">
             <div
-                class="dark:bg-[#0f0f0f] bg-white rounded-[2.5rem] border-2 border-slate-300 dark:border-white/10 shadow-2xl overflow-hidden relative">
-                <div
-                    class="px-8 py-6 border-b-2 border-slate-200 dark:border-white/5 flex justify-between items-center bg-slate-100 dark:bg-white/5">
-                    <div class="flex items-center gap-4">
-                        <div
-                            class="w-12 h-12 rounded-xl bg-rose-100 dark:bg-rose-900/40 flex items-center justify-center text-rose-600 dark:text-rose-400 shadow-inner text-xl border border-rose-200 dark:border-rose-800/30">
-                            <i class="fas fa-clipboard-check"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-black text-slate-800 dark:text-white text-base uppercase tracking-widest">
-                                Antrean Penghapusan Data</h3>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 font-bold mt-1">Membutuhkan otorisasi
-                                Anda untuk mengeksekusi Hard Delete.</p>
-                        </div>
-                    </div>
+                class="bg-white dark:bg-[#121212] rounded-3xl shadow-xl border border-slate-200 dark:border-white/5 overflow-hidden">
+                <div class="p-6 border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02]">
+                    <h3
+                        class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                        <i class="fas fa-exclamation-circle text-rose-500"></i> Antrean Penghapusan Data (Dari Admin)
+                    </h3>
+                    <p class="text-[10px] text-slate-500 mt-1 font-medium">Tinjau permohonan penghapusan data
+                        operasional sebelum dieksekusi permanen oleh sistem.</p>
                 </div>
 
-                <div class="p-0 overflow-x-auto custom-scrollbar">
-                    <table class="w-full text-left text-sm whitespace-nowrap">
-                        <thead
-                            class="text-slate-500 dark:text-slate-400 border-b-2 border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-transparent">
-                            <tr class="text-[10px] uppercase tracking-widest font-black">
-                                <th class="px-8 py-5">Waktu Pengajuan</th>
-                                <th class="px-8 py-5">Pemohon</th>
-                                <th class="px-8 py-5 text-center">Modul Target</th>
-                                <th class="px-8 py-5 text-center">Rentang Tanggal (Dihapus)</th>
-                                <th class="px-8 py-5">Alasan Penghapusan</th>
-                                <th class="px-8 py-5 text-center">Tindakan</th>
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-sm text-left uppercase">
+                        <thead>
+                            <tr
+                                class="bg-slate-50 dark:bg-[#1a1a1a] text-slate-500 dark:text-slate-400 font-black text-[10px] tracking-[0.15em] border-b dark:border-white/5">
+                                <th class="px-6 py-4">Waktu Pengajuan</th>
+                                <th class="px-6 py-4">Pemohon</th>
+                                <th class="px-6 py-4">Modul Target</th>
+                                <th class="px-6 py-4">Rentang Tanggal (Dihapus)</th>
+                                <th class="px-6 py-4">Alasan</th>
+                                <th class="px-6 py-4 text-center">Status</th>
+                                <th class="px-6 py-4 text-center">Tindakan</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y-2 divide-slate-100 dark:divide-white/5">
-                            @forelse($pendingRequests as $req)
-                            <tr class="hover:bg-rose-500/[0.04] transition-colors">
-                                <td class="px-8 py-5 text-[11px] text-slate-500 dark:text-slate-400 font-bold">
-                                    {{ $req->created_at->diffForHumans() }}
+                        <tbody class="divide-y divide-slate-100 dark:divide-white/5">
+                            @forelse($antreanHapus as $req)
+                            <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+                                <td class="px-6 py-4 text-xs font-bold text-slate-600 dark:text-slate-300">
+                                    {{ $req->created_at->format('d M Y, H:i') }}
                                 </td>
-                                <td class="px-8 py-5 text-xs font-black text-slate-800 dark:text-slate-200">
-                                    {{ $req->requester->name ?? 'Admin' }}
+                                <td class="px-6 py-4 text-xs font-black text-blue-600 dark:text-blue-400">
+                                    <i class="fas fa-user-circle mr-1"></i> {{ $req->user->name ?? 'Admin' }}
                                 </td>
-                                <td class="px-8 py-5 text-center">
-                                    <span
-                                        class="px-3 py-1.5 rounded-lg border-2 text-[10px] font-black uppercase tracking-widest
-                                        {{ $req->tipe_modul == 'penjualan' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' : 
-                                          ($req->tipe_modul == 'retur' ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20' : 
-                                          ($req->tipe_modul == 'ar' ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20' : 
-                                          'bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-400 dark:border-cyan-500/20')) }}">
-                                        {{ $req->tipe_modul }}
-                                    </span>
+                                <td class="px-6 py-4 text-xs font-bold text-slate-700 dark:text-slate-200">
+                                    {{ $req->modul }}
                                 </td>
                                 <td
-                                    class="px-8 py-5 text-center font-bold text-rose-600 dark:text-rose-400 text-xs bg-rose-50/50 dark:bg-rose-500/5">
-                                    {{ \Carbon\Carbon::parse($req->tanggal_mulai)->format('d/m/Y') }}
-                                    <span class="text-slate-400 font-normal mx-2">s/d</span>
-                                    {{ \Carbon\Carbon::parse($req->tanggal_selesai)->format('d/m/Y') }}
+                                    class="px-6 py-4 text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50/30 dark:bg-rose-500/10">
+                                    {{ \Carbon\Carbon::parse($req->tanggal_awal)->format('d/m/Y') }} -
+                                    {{ \Carbon\Carbon::parse($req->tanggal_akhir)->format('d/m/Y') }}
                                 </td>
-                                <td class="px-8 py-5 text-xs text-slate-600 dark:text-slate-400 max-w-[250px] truncate"
-                                    title="{{ $req->alasan }}">
+                                <td
+                                    class="px-6 py-4 text-[10px] font-medium text-slate-500 dark:text-slate-400 normal-case">
                                     "{{ $req->alasan }}"
                                 </td>
-                                <td class="px-8 py-5">
+                                <td class="px-6 py-4 text-center">
+                                    @if($req->status == 'Pending')
+                                    <span
+                                        class="px-3 py-1 rounded bg-orange-100 text-orange-600 border border-orange-200 text-[10px] font-bold">Pending</span>
+                                    @elseif($req->status == 'Disetujui')
+                                    <span
+                                        class="px-3 py-1 rounded bg-emerald-100 text-emerald-600 border border-emerald-200 text-[10px] font-bold">Disetujui</span>
+                                    @else
+                                    <span
+                                        class="px-3 py-1 rounded bg-rose-100 text-rose-600 border border-rose-200 text-[10px] font-bold">Ditolak</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    @if($req->status == 'Pending')
                                     <div class="flex items-center justify-center gap-2">
-                                        <button wire:click="rejectDeletion({{ $req->id }})"
-                                            onclick="confirm('Tolak pengajuan ini?') || event.stopImmediatePropagation()"
-                                            class="w-10 h-10 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-colors shadow-sm">
+                                        <button wire:click="confirmAction({{ $req->id }}, 'approve')"
+                                            class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-colors border border-emerald-200"
+                                            title="Setujui & Hapus">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button wire:click="confirmAction({{ $req->id }}, 'reject')"
+                                            class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-500 hover:text-white transition-colors border border-rose-200"
+                                            title="Tolak">
                                             <i class="fas fa-times"></i>
                                         </button>
-                                        <button wire:click="approveDeletion({{ $req->id }})"
-                                            onclick="confirm('YAKIN SETUJUI? Data pada rentang tanggal tersebut akan dihapus PERMANEN dan tidak dapat dikembalikan.') || event.stopImmediatePropagation()"
-                                            class="px-4 py-2 h-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest transition-colors shadow-lg shadow-emerald-500/20">
-                                            <i class="fas fa-check"></i> Setujui
-                                        </button>
                                     </div>
+                                    @else
+                                    <span class="text-[10px] text-slate-400 font-bold"><i class="fas fa-lock"></i>
+                                        Terkunci</span>
+                                    @endif
                                 </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="6" class="px-6 py-24 text-center">
-                                    <div
-                                        class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-600">
-                                        <i class="fas fa-shield-check text-6xl mb-5 opacity-30"></i>
-                                        <h4 class="font-black text-base uppercase tracking-widest text-slate-500">Sistem
-                                            Aman Terkendali</h4>
-                                        <p class="text-xs mt-2 font-medium">Tidak ada antrean persetujuan penghapusan
-                                            data saat ini.</p>
-                                    </div>
+                                <td colspan="7"
+                                    class="px-6 py-10 text-center font-bold text-slate-400 uppercase tracking-widest text-xs">
+                                    <i class="fas fa-check-circle text-emerald-500 text-2xl mb-2 block"></i><br>
+                                    Tidak ada antrean penghapusan data saat ini.
                                 </td>
                             </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
+                <div class="px-6 py-4 bg-slate-50 dark:bg-[#1a1a1a] border-t dark:border-white/5 border-slate-100">
+                    {{ $antreanHapus->links() }}
+                </div>
             </div>
         </div>
+        @endif
 
         {{-- ========================================== --}}
-        {{-- ISI TAB 3: EVALUASI KINERJA (MONITORING)   --}}
+        {{-- TAB 3: EVALUASI KINERJA (TARGET & AI PLAN) --}}
         {{-- ========================================== --}}
-        <div x-show="activeTab === 'monitoring'" x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
-            x-cloak>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        @if($activeTab == 'evaluasi')
+        <div class="space-y-6 animate-fade-in">
+            {{-- Filter Bulan untuk Pacing --}}
+            <div
+                class="flex gap-3 items-center bg-white dark:bg-[#121212] p-4 rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm w-max">
+                <span class="text-[10px] font-black uppercase tracking-widest text-slate-500">Bulan Evaluasi:</span>
+                <select wire:model.live="evalBulan"
+                    class="border px-3 py-1.5 rounded-lg text-xs font-bold uppercase dark:bg-[#1a1a1a] dark:text-white border-slate-200 dark:border-white/10">
+                    @for($i=1; $i<=12; $i++) <option value="{{ sprintf('%02d', $i) }}">
+                        {{ \Carbon\Carbon::create()->month($i)->translatedFormat('F') }}</option> @endfor
+                </select>
+                <select wire:model.live="evalTahun"
+                    class="border px-3 py-1.5 rounded-lg text-xs font-bold uppercase dark:bg-[#1a1a1a] dark:text-white border-slate-200 dark:border-white/10">
+                    @for($y=date('Y')-1; $y<=date('Y'); $y++) <option value="{{ $y }}">{{ $y }}</option> @endfor
+                </select>
+                <div wire:loading wire:target="evalBulan, evalTahun"><i
+                        class="fas fa-spinner fa-spin text-blue-500"></i></div>
+            </div>
 
-                {{-- Tabel Retur --}}
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {{-- Kiri: Target Pacing (Progress Bar) --}}
                 <div
-                    class="dark:bg-[#0f0f0f] bg-white border-2 border-slate-300 dark:border-white/10 rounded-[2rem] shadow-xl overflow-hidden flex flex-col">
-                    <div
-                        class="px-6 py-5 border-b-2 border-slate-200 dark:border-white/5 flex justify-between items-center bg-slate-100 dark:bg-white/5">
-                        <div class="flex items-center gap-3">
-                            <div
-                                class="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/30">
-                                <i class="fas fa-undo-alt"></i>
+                    class="bg-white dark:bg-[#121212] rounded-3xl shadow-sm border border-slate-200 dark:border-white/10 p-6">
+                    <h3
+                        class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <i class="fas fa-bullseye text-blue-500"></i> Pencapaian Target Sales (Pacing)
+                    </h3>
+                    <div class="space-y-5 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+                        @foreach($eval['pacing'] as $p)
+                        <div>
+                            <div class="flex justify-between items-end mb-1">
+                                <span
+                                    class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase">{{ $p['nama'] }}</span>
+                                <span
+                                    class="text-[10px] font-black {{ $p['persen'] >= 80 ? 'text-emerald-500' : ($p['persen'] >= 50 ? 'text-orange-500' : 'text-rose-500') }}">{{ number_format($p['persen'], 1) }}%</span>
                             </div>
-                            <div>
-                                <h3
-                                    class="font-black text-slate-800 dark:text-white text-[11px] uppercase tracking-widest">
-                                    Top Retur</h3>
-                                <p class="text-[10px] text-slate-500 font-bold mt-0.5">Kuantitas tertinggi bulan ini</p>
+                            <div
+                                class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 mb-1 border border-slate-200 dark:border-white/5">
+                                <div class="h-2.5 rounded-full {{ $p['persen'] >= 80 ? 'bg-emerald-500' : ($p['persen'] >= 50 ? 'bg-orange-500' : 'bg-rose-500') }}"
+                                    style="width: {{ $p['persen'] > 100 ? 100 : $p['persen'] }}%"></div>
+                            </div>
+                            <div class="flex justify-between text-[9px] text-slate-400 font-bold tracking-widest">
+                                <span>Real: Rp {{ number_format($p['omzet']/1000000, 1) }} Jt</span>
+                                <span>Tgt: Rp {{ number_format($p['target']/1000000, 1) }} Jt</span>
                             </div>
                         </div>
-                    </div>
-                    <div class="p-0 flex-1 overflow-x-auto custom-scrollbar">
-                        <table class="w-full text-left text-sm whitespace-nowrap">
-                            <thead
-                                class="text-slate-500 dark:text-slate-400 border-b-2 border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-transparent">
-                                <tr>
-                                    <th class="px-5 py-4 font-black text-[10px] uppercase tracking-widest">Item</th>
-                                    <th class="px-5 py-4 font-black text-[10px] uppercase tracking-widest text-right">
-                                        Qty</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y-2 divide-slate-100 dark:divide-white/5">
-                                @forelse($topRetur as $index => $rt)
-                                <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                                    <td class="px-5 py-4 flex items-center gap-2">
-                                        <div class="text-[10px] font-black text-slate-400 w-3">{{ $index + 1 }}.</div>
-                                        <div class="font-bold text-xs text-slate-700 dark:text-slate-200 truncate max-w-[120px]"
-                                            title="{{ $rt->nama_item }}">{{ $rt->nama_item }}</div>
-                                    </td>
-                                    <td class="px-5 py-4 text-right">
-                                        <span
-                                            class="inline-flex items-center justify-center bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 px-2 py-1 rounded-md text-[10px] font-black border border-rose-200 dark:border-rose-800/50">
-                                            {{ number_format($rt->total_qty) }}
-                                        </span>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="2" class="px-5 py-10 text-center text-slate-500">
-                                        <p class="text-[10px] font-black uppercase tracking-widest">Belum ada retur.</p>
-                                    </td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                        @endforeach
                     </div>
                 </div>
 
-                {{-- Tabel Piutang --}}
-                <div
-                    class="dark:bg-[#0f0f0f] bg-white border-2 border-slate-300 dark:border-white/10 rounded-[2rem] shadow-xl overflow-hidden flex flex-col">
+                {{-- Kanan: AI Action Plan --}}
+                <div class="space-y-6">
+                    {{-- Action 1: Coaching --}}
                     <div
-                        class="px-6 py-5 border-b-2 border-slate-200 dark:border-white/5 flex justify-between items-center bg-slate-100 dark:bg-white/5">
-                        <div class="flex items-center gap-3">
+                        class="bg-rose-50 dark:bg-rose-900/10 rounded-3xl border border-rose-200 dark:border-rose-500/20 p-6 shadow-sm">
+                        <h3
+                            class="text-sm font-black text-rose-700 dark:text-rose-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <i class="fas fa-user-md"></i> Jadwalkan Coaching (Kinerja Rendah)
+                        </h3>
+                        <div class="space-y-2">
+                            @forelse($eval['coaching'] as $c)
                             <div
-                                class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/30">
-                                <i class="fas fa-exclamation-triangle"></i>
+                                class="flex items-center justify-between bg-white dark:bg-[#1a1a1a] p-3 rounded-xl border border-rose-100 dark:border-white/5">
+                                <div>
+                                    <p class="text-xs font-bold text-slate-800 dark:text-white uppercase">
+                                        {{ $c['nama'] }}</p>
+                                    <p class="text-[10px] text-slate-500">Hanya capai
+                                        {{ number_format($c['persen'], 1) }}% target.</p>
+                                </div>
+                                <button
+                                    class="px-3 py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-700 rounded-lg text-[10px] font-bold uppercase transition-colors">Tindak
+                                    Lanjuti</button>
                             </div>
-                            <div>
-                                <h3
-                                    class="font-black text-slate-800 dark:text-white text-[11px] uppercase tracking-widest">
-                                    Piutang Kritis</h3>
-                                <p class="text-[10px] text-slate-500 font-bold mt-0.5">Hutang toko (> 30 Hari)</p>
-                            </div>
+                            @empty
+                            <p class="text-xs text-emerald-600 font-bold">Semua sales on-track (>50% target).</p>
+                            @endforelse
                         </div>
                     </div>
-                    <div class="p-0 flex-1 overflow-x-auto custom-scrollbar">
-                        <table class="w-full text-left text-sm whitespace-nowrap">
-                            <thead
-                                class="text-slate-500 dark:text-slate-400 border-b-2 border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-transparent">
-                                <tr>
-                                    <th class="px-5 py-4 font-black text-[10px] uppercase tracking-widest">Outlet</th>
-                                    <th class="px-5 py-4 font-black text-[10px] uppercase tracking-widest text-right">
-                                        Tagihan</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y-2 divide-slate-100 dark:divide-white/5">
-                                @forelse($piutangKritis as $ar)
-                                <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                                    <td class="px-5 py-4">
-                                        <div class="font-bold text-xs text-slate-700 dark:text-slate-200 truncate max-w-[120px]"
-                                            title="{{ $ar->pelanggan_name }}">{{ $ar->pelanggan_name }}</div>
-                                        <div
-                                            class="text-[9px] mt-1 font-black uppercase tracking-widest text-rose-600 bg-rose-50 dark:bg-rose-900/30 w-fit px-1.5 rounded">
-                                            {{ $ar->umur_piutang }} Hari</div>
-                                    </td>
-                                    <td class="px-5 py-4 text-right">
-                                        <div class="font-black text-slate-800 dark:text-white text-xs">Rp
-                                            {{ number_format((float) $ar->nilai, 0, ',', '.') }}</div>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="2" class="px-5 py-10 text-center text-slate-500">
-                                        <p class="text-[10px] font-black uppercase tracking-widest">Aman. Tidak ada
-                                            piutang macet.</p>
-                                    </td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
 
-                {{-- Tabel Sales --}}
-                <div
-                    class="dark:bg-[#0f0f0f] bg-white border-2 border-slate-300 dark:border-white/10 rounded-[2rem] shadow-xl overflow-hidden flex flex-col">
+                    {{-- Action 2: Follow Up Churn --}}
                     <div
-                        class="px-6 py-5 border-b-2 border-slate-200 dark:border-white/5 flex justify-between items-center bg-slate-100 dark:bg-white/5">
-                        <div class="flex items-center gap-3">
+                        class="bg-orange-50 dark:bg-orange-900/10 rounded-3xl border border-orange-200 dark:border-orange-500/20 p-6 shadow-sm">
+                        <h3
+                            class="text-sm font-black text-orange-700 dark:text-orange-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <i class="fas fa-store-slash"></i> Follow-Up Toko Pasif (FCM AI)
+                        </h3>
+                        <div class="space-y-2">
+                            @forelse($eval['churn'] as $ch)
                             <div
-                                class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/30">
-                                <i class="fas fa-level-down-alt"></i>
+                                class="flex items-center justify-between bg-white dark:bg-[#1a1a1a] p-3 rounded-xl border border-orange-100 dark:border-white/5">
+                                <div>
+                                    <p class="text-xs font-bold text-slate-800 dark:text-white uppercase truncate max-w-[150px]"
+                                        title="{{ $ch->nama_pelanggan }}">{{ $ch->nama_pelanggan }}</p>
+                                    <p class="text-[9px] text-orange-600 font-bold">Sales: {{ $ch->sales_name }}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-[9px] text-slate-400">Order Terakhir:</p>
+                                    <p class="text-[10px] font-black text-slate-600 dark:text-slate-300">
+                                        {{ \Carbon\Carbon::parse($ch->last_order)->format('d M Y') }}</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3
-                                    class="font-black text-slate-800 dark:text-white text-[11px] uppercase tracking-widest">
-                                    Perlu Coaching</h3>
-                                <p class="text-[10px] text-slate-500 font-bold mt-0.5">Bottom 3 Kinerja (Bulan Ini)</p>
-                            </div>
+                            @empty
+                            <p class="text-xs text-emerald-600 font-bold">Tidak ada toko pasif bulan ini.</p>
+                            @endforelse
                         </div>
                     </div>
-                    <div class="p-0 flex-1 overflow-x-auto custom-scrollbar">
-                        <table class="w-full text-left text-sm whitespace-nowrap">
-                            <thead
-                                class="text-slate-500 dark:text-slate-400 border-b-2 border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-transparent">
-                                <tr>
-                                    <th class="px-5 py-4 font-black text-[10px] uppercase tracking-widest">Nama Sales
-                                    </th>
-                                    <th class="px-5 py-4 font-black text-[10px] uppercase tracking-widest text-right">
-                                        Omzet</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y-2 divide-slate-100 dark:divide-white/5">
-                                @forelse($bottomSales as $bs)
-                                <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                                    <td class="px-5 py-4">
-                                        <div
-                                            class="font-bold text-xs text-slate-700 dark:text-slate-200 truncate max-w-[120px]">
-                                            {{ $bs->sales_name }}</div>
-                                    </td>
-                                    <td class="px-5 py-4 text-right">
-                                        <div class="font-black text-slate-800 dark:text-white text-xs">Rp
-                                            {{ number_format((float) $bs->total_omzet, 0, ',', '.') }}</div>
-                                        <div
-                                            class="text-[9px] mt-1 font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
-                                            <i class="fas fa-arrow-down"></i> Rendah</div>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="2" class="px-5 py-10 text-center text-slate-500">
-                                        <p class="text-[10px] font-black uppercase tracking-widest">Belum ada data
-                                            penjualan.</p>
-                                    </td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
-
             </div>
         </div>
+        @endif
 
     </div>
+
+    {{-- MODAL KONFIRMASI OTORISASI --}}
+    @if($showConfirmModal)
+    <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white dark:bg-[#1a1a1a] rounded-3xl p-8 max-w-md w-full shadow-2xl text-center animate-fade-in">
+            @if($actionType == 'approve')
+            <div
+                class="w-20 h-20 mx-auto bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mb-4 border-4 border-rose-50">
+                <i class="fas fa-exclamation-triangle text-3xl"></i>
+            </div>
+            <h2 class="text-xl font-black text-slate-800 dark:text-white uppercase tracking-wider mb-2">Peringatan
+                Kritis!</h2>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
+                Anda akan <strong>MENYETUJUI</strong> penghapusan data ini. Data yang dihapus dari database tidak dapat
+                dikembalikan. Lanjutkan?
+            </p>
+            @else
+            <div
+                class="w-20 h-20 mx-auto bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mb-4 border-4 border-orange-50">
+                <i class="fas fa-times-circle text-4xl"></i>
+            </div>
+            <h2 class="text-xl font-black text-slate-800 dark:text-white uppercase tracking-wider mb-2">Tolak Pengajuan?
+            </h2>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
+                Pengajuan penghapusan dari Admin ini akan dibatalkan dan statusnya ditandai sebagai Ditolak.
+            </p>
+            @endif
+
+            <div class="flex gap-3 justify-center">
+                <button wire:click="closeModal"
+                    class="px-6 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold uppercase text-xs tracking-widest transition-colors">
+                    Batal
+                </button>
+                <button wire:click="executeAction"
+                    class="px-6 py-3 rounded-xl text-white font-bold uppercase text-xs tracking-widest transition-transform active:scale-95 {{ $actionType == 'approve' ? 'bg-rose-600 hover:bg-rose-700 shadow-lg shadow-rose-500/30' : 'bg-orange-500 hover:bg-orange-600 shadow-lg shadow-orange-500/30' }}">
+                    Ya, Eksekusi Sekarang
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>

@@ -74,7 +74,7 @@
         </a>
 
         {{-- ================================================== --}}
-        {{-- PIMPINAN & SUPERADMIN (ANALISA CERDAS, STRATEGIS, DLL) --}}
+        {{-- MENU PIMPINAN (ANALISA CERDAS, REKAPITULASI, DLL)  --}}
         {{-- ================================================== --}}
         @if(in_array(auth()->user()->role, ['super_admin', 'superadmin', 'pimpinan']))
 
@@ -118,47 +118,6 @@
                 Analisa Cerdas
             </div>
         </div>
-
-        {{-- 3. STRATEGIS --}}
-        <!-- <div x-data="{ open: {{ request()->routeIs('pimpinan.profit-analysis') || request()->routeIs('pimpinan.stock-analysis') ? 'true' : 'false' }} }"
-            class="w-full relative group">
-            <button @click="isSidebarExpanded ? open = !open : isSidebarExpanded = true"
-                class="flex items-center w-full py-3 rounded-xl transition-all duration-300 group text-[11px] font-black relative uppercase tracking-widest
-                {{ request()->routeIs('pimpinan.profit-analysis') || request()->routeIs('pimpinan.stock-analysis')
-                    ? 'text-amber-600 bg-gradient-to-r from-amber-50 to-yellow-50/50 dark:from-amber-600/20 dark:to-yellow-600/20 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 shadow-sm ring-1 ring-amber-100 dark:ring-amber-500/20' 
-                    : 'text-slate-600 hover:bg-amber-50 hover:text-amber-600 dark:text-slate-400 dark:hover:bg-amber-500/10 dark:hover:text-amber-400 border border-transparent' }}"
-                :class="isSidebarExpanded ? 'px-5 justify-between' : 'justify-center'">
-                <div class="flex items-center">
-                    <span class="w-5 flex justify-center">
-                        <i
-                            class="fas fa-chess-knight text-base transition-all duration-300 group-hover:scale-110 {{ request()->routeIs('pimpinan.profit-analysis') || request()->routeIs('pimpinan.stock-analysis') ? 'text-amber-600 dark:text-amber-400' : 'group-hover:text-amber-500 dark:group-hover:text-amber-400' }}"></i>
-                    </span>
-                    <span x-show="isSidebarExpanded" class="ml-4 font-bold">Strategis</span>
-                </div>
-                <i x-show="isSidebarExpanded"
-                    class="fas fa-chevron-right text-[9px] transition-all duration-300 opacity-70 group-hover:opacity-100"
-                    :class="{'rotate-90': open}"></i>
-            </button>
-            <div x-show="open && isSidebarExpanded" x-cloak x-transition.origin.top
-                class="mt-1 space-y-1 ml-4 border-l-[2px] border-amber-300 dark:border-amber-500/30 pl-4">
-                <a href="{{ route('pimpinan.profit-analysis') }}"
-                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('pimpinan.profit-analysis') ? 'text-amber-700 bg-amber-100/60 dark:text-amber-300 dark:bg-amber-500/20 shadow-sm' : 'text-slate-600 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-300 hover:bg-amber-50/50 dark:hover:bg-amber-500/10' }}">
-                    <span
-                        class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('pimpinan.profit-analysis') ? 'bg-amber-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
-                    Laba Rugi
-                </a>
-                <a href="{{ route('pimpinan.stock-analysis') }}"
-                    class="flex items-center gap-2 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 group {{ request()->routeIs('pimpinan.stock-analysis') ? 'text-amber-700 bg-amber-100/60 dark:text-amber-300 dark:bg-amber-500/20 shadow-sm' : 'text-slate-600 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-300 hover:bg-amber-50/50 dark:hover:bg-amber-500/10' }}">
-                    <span
-                        class="w-2 h-2 rounded-full transition-transform duration-300 group-hover:scale-125 {{ request()->routeIs('pimpinan.stock-analysis') ? 'bg-amber-600' : 'bg-slate-300 dark:bg-slate-500' }}"></span>
-                    Analisa Stok
-                </a>
-            </div>
-            <div x-show="!isSidebarExpanded"
-                class="absolute left-14 bg-gradient-to-b from-slate-800 to-slate-900 text-white text-[10px] px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap shadow-xl font-bold tracking-wider uppercase transform translate-x-2 group-hover:translate-x-0">
-                Strategis
-            </div>
-        </div> -->
 
         {{-- 4. KINERJA SALES --}}
         <div x-data="{ open: {{ request()->routeIs('laporan.kinerja.*') ? 'true' : 'false' }} }"
@@ -311,9 +270,9 @@
 
 
         {{-- ================================================== --}}
-        {{-- MASTER DATA (Supervisor & Superadmin)              --}}
+        {{-- MENU MASTER DATA (Khusus ADMIN & Superadmin)       --}}
         {{-- ================================================== --}}
-        @if(in_array(auth()->user()->role, ['super_admin', 'superadmin', 'supervisor']))
+        @if(in_array(auth()->user()->role, ['super_admin', 'superadmin', 'admin']))
         <div x-data="{ open: {{ request()->routeIs('master.*') ? 'true' : 'false' }} }"
             class="w-full relative group mt-4">
             <button @click="isSidebarExpanded ? open = !open : isSidebarExpanded = true"
@@ -368,9 +327,9 @@
         @endif
 
         {{-- ================================================== --}}
-        {{-- OPERASIONAL (Admin & Superadmin)                     --}}
+        {{-- MENU OPERASIONAL (Akses untuk ADMIN & OPERATOR)    --}}
         {{-- ================================================== --}}
-        @if(in_array(auth()->user()->role, ['super_admin', 'superadmin', 'admin']))
+        @if(in_array(auth()->user()->role, ['super_admin', 'superadmin', 'admin', 'operator']))
         <div x-data="{ open: {{ request()->routeIs('transaksi.*') ? 'true' : 'false' }} }"
             class="w-full relative group">
             <button @click="isSidebarExpanded ? open = !open : isSidebarExpanded = true"

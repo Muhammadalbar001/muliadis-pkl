@@ -4,8 +4,8 @@ use Illuminate\Support\Facades\Route;
 
 // --- 1. IMPORT DASHBOARD BERDASARKAN ROLE ---
 use App\Livewire\DashboardIndex; // Dashboard Pimpinan
-use App\Livewire\Admin\Dashboard as AdminDashboard; // Dashboard Admin Operasional
-use App\Livewire\Supervisor\Dashboard as SupervisorDashboard; // Dashboard Supervisor
+use App\Livewire\Admin\Dashboard as AdminDashboard; // Dashboard OPERATOR (dulunya Admin)
+use App\Livewire\Supervisor\Dashboard as SupervisorDashboard; // Dashboard ADMIN (dulunya Supervisor)
 
 // --- 2. MASTER DATA ---
 use App\Livewire\Master\SalesIndex;
@@ -52,10 +52,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function () {
         $role = auth()->user()->role;
         
-        if (in_array($role, ['supervisor'])) {
-            return redirect()->route('supervisor.dashboard');
-        } elseif (in_array($role, ['admin'])) {
+        // Pengecekan nama role baru
+        if (in_array($role, ['admin'])) {
             return redirect()->route('admin.dashboard');
+        } elseif (in_array($role, ['operator'])) {
+            return redirect()->route('operator.dashboard');
         }
         
         return redirect()->route('pimpinan.dashboard');
@@ -76,23 +77,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // ====================================================
-    // 2. DASHBOARD ADMIN (Operasional)
+    // 2. DASHBOARD ADMIN (Dulunya Supervisor)
     // ====================================================
     Route::middleware(['role:super_admin,superadmin,admin'])->prefix('admin')->group(function () {
-        Route::get('/dashboard', AdminDashboard::class)->name('admin.dashboard');
+        // Menggunakan Controller SupervisorDashboard yang lama
+        Route::get('/dashboard', SupervisorDashboard::class)->name('admin.dashboard');
     });
 
     // ====================================================
-    // 3. DASHBOARD SUPERVISOR
+    // 3. DASHBOARD OPERATOR (Dulunya Admin)
     // ====================================================
-    Route::middleware(['role:super_admin,superadmin,supervisor'])->prefix('supervisor')->group(function () {
-        Route::get('/dashboard', SupervisorDashboard::class)->name('supervisor.dashboard');
+    Route::middleware(['role:super_admin,superadmin,operator'])->prefix('operator')->group(function () {
+        // Menggunakan Controller AdminDashboard yang lama
+        Route::get('/dashboard', AdminDashboard::class)->name('operator.dashboard');
     });
 
     // ====================================================
-    // 4. MASTER DATA (Supervisor & Superadmin)
+    // 4. MASTER DATA (Admin & Superadmin)
     // ====================================================
-    Route::middleware(['role:super_admin,superadmin,supervisor'])->prefix('admin/master')->name('master.')->group(function () {
+    Route::middleware(['role:super_admin,superadmin,admin'])->prefix('admin/master')->name('master.')->group(function () {
         Route::get('/sales', SalesIndex::class)->name('sales');
         Route::get('/produk', ProdukIndex::class)->name('produk');
         Route::get('/supplier', SupplierIndex::class)->name('supplier');
@@ -100,9 +103,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // ====================================================
-    // 5. OPERASIONAL / TRANSAKSI (Admin & Superadmin)
+    // 5. OPERASIONAL / TRANSAKSI (Admin, Operator & Superadmin)
+    // Sesuai Revisi: Admin juga bisa mengakses menu Operator
     // ====================================================
-    Route::middleware(['role:super_admin,superadmin,admin'])->prefix('admin/transaksi')->name('transaksi.')->group(function () {
+    Route::middleware(['role:super_admin,superadmin,admin,operator'])->prefix('transaksi')->name('transaksi.')->group(function () {
         Route::get('/penjualan', PenjualanIndex::class)->name('penjualan');
         Route::get('/retur', ReturIndex::class)->name('retur');
         Route::get('/ar', ArIndex::class)->name('ar');
@@ -112,7 +116,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ====================================================
     // 6. ANALISA & LAPORAN (Pimpinan & Superadmin)
     // ====================================================
-    Route::middleware(['role:super_admin,superadmin,pimpinan'])->prefix('admin')->group(function () {
+    Route::middleware(['role:super_admin,superadmin,pimpinan'])->prefix('pimpinan')->group(function () {
         
         // LAPORAN REKAPITULASI
         Route::prefix('laporan')->name('laporan.')->group(function () {

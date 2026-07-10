@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,44 +12,31 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Akun Super Admin (Pemegang Aplikasi / IT)
-        // Memiliki akses ke Manajemen User & Semua Laporan
+        // 1. Akun Pimpinan (Strategic)
         User::create([
-            'name' => 'IT Super Admin',
-            'username' => 'superadmin',
-            'email' => 'it.admin@muliadis.com',
-            'password' => Hash::make('password'),
-            'role' => 'super_admin',
+            'name' => 'Pimpinan',
+            'username' => 'pimpinan', 
+            'email' => 'pimpinan@gmail.com',
+            'password' => bcrypt('password'),
+            'role' => 'pimpinan'
         ]);
 
-        // 2. Akun Pimpinan (Direktur / Owner)
-        // Memiliki akses ke Laporan Eksekutif & Dashboard
+        // 2. Akun Admin (Checker / Tactical - Dulunya Supervisor)
         User::create([
-            'name' => 'Bapak Direktur',
-            'username' => 'pimpinan',
-            'email' => 'direktur@muliadis.com',
-            'password' => Hash::make('password'),
-            'role' => 'pimpinan',
+            'name' => 'Admin',
+            'username' => 'admin', 
+            'email' => 'admin@gmail.com',
+            'password' => bcrypt('password'),
+            'role' => 'admin'
         ]);
 
-        // 3. Akun Supervisor (Kepala Operasional / Gudang)
-        // Memiliki akses ke Operasional & Laporan Analisa
+        // 3. Akun Operator (Feeder / Maker - Dulunya Admin)
         User::create([
-            'name' => 'Supervisor Ops',
-            'username' => 'supervisor',
-            'email' => 'spv@muliadis.com',
-            'password' => Hash::make('password'),
-            'role' => 'supervisor',
-        ]);
-
-        // 4. Akun Admin (Staff Input / Kasir)
-        // Fokus pada Input Transaksi & Data Master Dasar
-        User::create([
-            'name' => 'Staff Admin Kasir',
-            'username' => 'admin',
-            'email' => 'admin.staff@muliadis.com',
-            'password' => Hash::make('password'),
-            'role' => 'admin',
+            'name' => 'Operator',
+            'username' => 'operator', 
+            'email' => 'operator@gmail.com',
+            'password' => bcrypt('password'),
+            'role' => 'operator'
         ]);
     }
 }

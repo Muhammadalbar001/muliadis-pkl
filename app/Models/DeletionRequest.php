@@ -30,4 +30,10 @@ class DeletionRequest extends Model
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
+
+    public function user()
+    {
+        // Mengaitkan DeletionRequest dengan tabel Users
+        return $this->belongsTo(User::class, 'user_id'); 
+    }
 }

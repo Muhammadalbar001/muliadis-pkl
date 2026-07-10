@@ -44,7 +44,7 @@
         <div class="space-y-3">
             <div class="flex items-center px-2 mb-2">
                 <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500 flex items-center gap-2">
-                    <i class="fas fa-satellite-dish animate-pulse"></i> Radar Peringatan Dini AI
+                    <i class="fas fa-satellite-dish animate-pulse"></i> Radar Peringatan Dini
                 </h3>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -71,51 +71,123 @@
         </div>
         @endif
 
-        {{-- 4 KARTU KPI STANDAR --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        {{-- FITUR 2: KOTAK NARASI INSIGHT OTOMATIS (AI TEXT) --}}
+        <div
+            class="bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 p-[2px] rounded-[1.25rem] shadow-lg relative overflow-hidden">
+            <div class="absolute inset-0 bg-white/20 animate-pulse" style="animation-duration: 3s;"></div>
             <div
-                class="bg-gradient-to-br from-indigo-500 to-blue-600 p-4 rounded-2xl shadow-lg text-white relative overflow-hidden group">
+                class="bg-white dark:bg-[#121212] rounded-xl p-5 md:p-6 flex flex-col md:flex-row items-start gap-4 md:gap-6 relative z-10">
+                <div
+                    class="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/40 dark:to-purple-900/40 flex items-center justify-center shrink-0 border border-indigo-200 dark:border-indigo-500/30">
+                    <i class="fas fa-robot text-2xl text-indigo-600 dark:text-indigo-400"></i>
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-xs font-black uppercase tracking-[0.2em] mb-2 flex items-center gap-3">
+                        <span
+                            class="bg-gradient-to-r from-indigo-600 to-fuchsia-600 bg-clip-text text-transparent dark:from-indigo-400 dark:to-fuchsia-400">AI
+                            Executive Summary</span>
+                        <span class="relative flex h-2 w-2">
+                            <span
+                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                        </span>
+                    </h3>
+                    <p
+                        class="text-[13px] md:text-sm text-slate-700 dark:text-slate-300 leading-loose md:leading-relaxed font-medium">
+                        {!! $this->autoInsight !!}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        {{-- ==================================================== --}}
+        {{-- FITUR 3: 4 KARTU KPI STANDAR (DENGAN TREN MoM)       --}}
+        {{-- ==================================================== --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+
+            {{-- KPI 1: Penjualan --}}
+            <div
+                class="bg-gradient-to-br from-indigo-500 to-blue-600 p-4 rounded-2xl shadow-lg text-white relative overflow-hidden group flex flex-col justify-between">
                 <div class="relative z-10">
                     <p class="text-indigo-100 text-[10px] font-bold uppercase tracking-wider mb-0.5">Total Penjualan</p>
-                    <h3 class="text-2xl font-extrabold tracking-tight">Rp {{ $this->formatCompact($salesSum) }}</h3>
-                    <p class="text-[10px] mt-0.5 text-indigo-100 opacity-80">Realisasi Cabang</p>
+                    <h3 class="text-2xl font-extrabold tracking-tight mb-2">Rp {{ $this->formatCompact($salesSum) }}
+                    </h3>
+                    <div class="flex items-center justify-between">
+                        <p class="text-[10px] text-indigo-100 opacity-80">Realisasi Cabang</p>
+                        <span
+                            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/20 border border-white/10 text-[10px] font-bold {{ $trendSales >= 0 ? 'text-emerald-300' : 'text-rose-300' }}">
+                            <i class="fas {{ $trendSales >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' }}"></i>
+                            {{ number_format(abs($trendSales), 1) }}% MoM
+                        </span>
+                    </div>
                 </div>
                 <i
                     class="fas fa-chart-line absolute right-3 top-3 text-white/20 text-5xl group-hover:scale-110 transition-transform"></i>
             </div>
 
+            {{-- KPI 2: Retur (Kenaikan = Buruk/Merah, Penurunan = Baik/Hijau) --}}
             <div
-                class="bg-white dark:bg-[#121212] p-4 rounded-2xl border border-rose-100 dark:border-white/5 shadow-sm relative overflow-hidden">
-                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">Total Retur</p>
-                <h3 class="text-2xl font-extrabold text-rose-500 tracking-tight">Rp
-                    {{ $this->formatCompact($returSum) }}</h3>
-                <div class="mt-1 inline-flex items-center px-1.5 py-0.5 rounded bg-rose-50 border border-rose-100">
-                    <span class="text-[9px] font-bold text-rose-600">Rasio Kerugian:
+                class="bg-white dark:bg-[#121212] p-4 rounded-2xl border border-rose-100 dark:border-white/5 shadow-sm relative overflow-hidden flex flex-col justify-between">
+                <div>
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">Total Retur</p>
+                    <h3 class="text-2xl font-extrabold text-rose-500 tracking-tight mb-2">Rp
+                        {{ $this->formatCompact($returSum) }}</h3>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span
+                        class="text-[9px] font-bold text-rose-600 bg-rose-50 border border-rose-100 px-1.5 py-0.5 rounded">Rasio:
                         {{ number_format($persenRetur, 2) }}%</span>
+                    <span
+                        class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-white/5 text-[10px] font-bold {{ $trendRetur > 0 ? 'text-rose-500' : 'text-emerald-500' }}">
+                        <i class="fas {{ $trendRetur > 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' }}"></i>
+                        {{ number_format(abs($trendRetur), 1) }}% MoM
+                    </span>
                 </div>
             </div>
 
+            {{-- KPI 3: Piutang AR --}}
             <div
-                class="bg-white dark:bg-[#121212] p-4 rounded-2xl border border-orange-100 dark:border-white/5 shadow-sm relative overflow-hidden">
-                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">Piutang Dagang (AR)</p>
-                <h3 class="text-2xl font-extrabold text-orange-500 tracking-tight">Rp {{ $this->formatCompact($arSum) }}
-                </h3>
-                <p class="text-[10px] text-slate-400 mt-0.5">Tagihan Terbentuk</p>
+                class="bg-white dark:bg-[#121212] p-4 rounded-2xl border border-orange-100 dark:border-white/5 shadow-sm relative overflow-hidden flex flex-col justify-between">
+                <div>
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">Piutang Dagang (AR)
+                    </p>
+                    <h3 class="text-2xl font-extrabold text-orange-500 tracking-tight mb-2">Rp
+                        {{ $this->formatCompact($arSum) }}</h3>
+                </div>
+                <div class="flex items-center justify-between">
+                    <p class="text-[10px] text-slate-400">Tagihan Terbentuk</p>
+                    <span
+                        class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-white/5 text-[10px] font-bold {{ $trendAr > 0 ? 'text-orange-500' : 'text-emerald-500' }}">
+                        <i class="fas {{ $trendAr > 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' }}"></i>
+                        {{ number_format(abs($trendAr), 1) }}% MoM
+                    </span>
+                </div>
             </div>
 
+            {{-- KPI 4: Uang Masuk / Collection --}}
             <div
-                class="bg-white dark:bg-[#121212] p-4 rounded-2xl border border-emerald-100 dark:border-white/5 shadow-sm relative overflow-hidden">
-                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">Uang Masuk (Coll)</p>
-                <h3 class="text-2xl font-extrabold text-emerald-600 tracking-tight">Rp
-                    {{ $this->formatCompact($collSum) }}</h3>
-                <p class="text-[10px] text-slate-400 mt-0.5">Pembayaran Diterima</p>
+                class="bg-white dark:bg-[#121212] p-4 rounded-2xl border border-emerald-100 dark:border-white/5 shadow-sm relative overflow-hidden flex flex-col justify-between">
+                <div>
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">Uang Masuk (Coll)
+                    </p>
+                    <h3 class="text-2xl font-extrabold text-emerald-600 tracking-tight mb-2">Rp
+                        {{ $this->formatCompact($collSum) }}</h3>
+                </div>
+                <div class="flex items-center justify-between">
+                    <p class="text-[10px] text-slate-400">Pembayaran Diterima</p>
+                    <span
+                        class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-white/5 text-[10px] font-bold {{ $trendColl >= 0 ? 'text-emerald-500' : 'text-rose-500' }}">
+                        <i class="fas {{ $trendColl >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' }}"></i>
+                        {{ number_format(abs($trendColl), 1) }}% MoM
+                    </span>
+                </div>
             </div>
         </div>
 
-        {{-- AREA KEPUTUSAN AI (AHP-SAW & FCM) - DITAMPILKAN LANGSUNG --}}
+        {{-- AREA KEPUTUSAN AI (AHP-SAW & FCM) --}}
         <div class="flex items-center px-2 mt-4 mb-2">
             <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-2">
-                <i class="fas fa-brain text-fuchsia-500"></i> Insight Keputusan Analitik (DSS)
+                <i class="fas fa-brain text-fuchsia-500"></i> Visualisasi Keputusan Analitik (DSS)
             </h3>
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" wire:ignore>
@@ -126,9 +198,7 @@
                     <h4 class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
                         <i class="fas fa-project-diagram text-fuchsia-500"></i> Klasterisasi Pelanggan (FCM)
                     </h4>
-                    <a href="{{ route('keputusan.rfm-pelanggan') }}"
-                        class="text-[10px] font-bold text-fuchsia-600 bg-fuchsia-50 px-2 py-1 rounded hover:bg-fuchsia-100 transition-colors">Lihat
-                        Detail &rarr;</a>
+                    <span class="text-[9px] text-slate-400 italic">Klik grafik untuk detail</span>
                 </div>
                 <div id="chart-fcm" style="min-height: 350px;" class="flex justify-center items-center"></div>
             </div>
@@ -141,8 +211,8 @@
                         <i class="fas fa-medal text-blue-500"></i> Papan Peringkat Sales (AHP-SAW)
                     </h4>
                     <a href="{{ route('keputusan.spk-sales') }}"
-                        class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded hover:bg-blue-100 transition-colors">Lihat
-                        Detail &rarr;</a>
+                        class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded hover:bg-blue-100 transition-colors">Buka
+                        SPK &rarr;</a>
                 </div>
                 <div id="chart-ahp-sales" style="min-height: 350px;"></div>
             </div>
@@ -168,8 +238,82 @@
                 <div id="chart-ar-coll" style="min-height: 300px;"></div>
             </div>
         </div>
-
     </div>
+
+    {{-- MODAL DRILL-DOWN (KLIK GRAFIK FCM) --}}
+    @if($showSegmentModal)
+    <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+        wire:transition.opacity>
+        <div
+            class="bg-white dark:bg-[#121212] border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden animate-fade-in">
+
+            {{-- Header Modal --}}
+            <div
+                class="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-600 flex items-center justify-center">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-widest text-sm">
+                            {{ $segmentModalTitle }}</h3>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase">
+                            {{ count($segmentDetails) }} Toko Ditemukan</p>
+                    </div>
+                </div>
+                <button wire:click="closeSegmentModal"
+                    class="w-8 h-8 rounded-full bg-slate-200 dark:bg-white/10 flex items-center justify-center text-slate-500 hover:bg-rose-100 hover:text-rose-600 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            {{-- Body Modal (Tabel) --}}
+            <div class="p-0 overflow-y-auto custom-scrollbar flex-1">
+                <table class="w-full text-sm text-left border-collapse uppercase font-jakarta">
+                    <thead
+                        class="sticky top-0 bg-slate-50 dark:bg-[#1a1a1a] text-[10px] tracking-[0.15em] text-slate-500 dark:text-slate-400 font-black border-b border-slate-200 dark:border-white/10 z-10">
+                        <tr>
+                            <th class="px-6 py-4 border-r dark:border-white/5 border-slate-100 w-16 text-center">No</th>
+                            <th class="px-6 py-4 border-r dark:border-white/5 border-slate-100">Nama Toko / Pelanggan
+                            </th>
+                            <th class="px-6 py-4 border-r dark:border-white/5 border-slate-100 text-center">Transaksi
+                                (Freq)</th>
+                            <th class="px-6 py-4 border-r dark:border-white/5 border-slate-100 text-right">Total Belanja
+                                (Monetary)</th>
+                            <th class="px-6 py-4 text-center">Order Terakhir (Recency)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-white/5">
+                        @forelse($segmentDetails as $index => $item)
+                        <tr class="hover:bg-fuchsia-50 dark:hover:bg-fuchsia-500/5 transition-colors">
+                            <td
+                                class="px-6 py-4 text-center font-bold text-slate-500 border-r dark:border-white/5 border-slate-100">
+                                {{ $index + 1 }}</td>
+                            <td
+                                class="px-6 py-4 font-black text-slate-800 dark:text-white border-r dark:border-white/5 border-slate-100">
+                                {{ $item['nama'] }}</td>
+                            <td class="px-6 py-4 text-center font-bold border-r dark:border-white/5 border-slate-100">
+                                {{ $item['frekuensi'] }}x</td>
+                            <td
+                                class="px-6 py-4 text-right font-black text-fuchsia-600 dark:text-fuchsia-400 border-r dark:border-white/5 border-slate-100">
+                                Rp {{ number_format($item['monetary'], 0, ',', '.') }}</td>
+                            <td class="px-6 py-4 text-center font-bold text-[10px] tracking-widest">
+                                {{ $item['terakhir_belanja'] }}</td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="5"
+                                class="px-6 py-10 text-center font-bold text-slate-400 uppercase tracking-widest text-[10px]">
+                                Belum ada pelanggan di segmen ini.</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
@@ -299,7 +443,13 @@ document.addEventListener('livewire:init', () => {
                 chart: {
                     type: 'donut',
                     height: 350,
-                    background: 'transparent'
+                    background: 'transparent',
+                    events: {
+                        dataPointSelection: function(event, chartContext, config) {
+                            let seriesIndex = config.dataPointIndex;
+                            @this.call('showSegmentDetails', seriesIndex);
+                        }
+                    }
                 },
                 theme: {
                     mode: themeMode
@@ -329,7 +479,8 @@ document.addEventListener('livewire:init', () => {
                                     fontSize: '10px'
                                 }
                             }
-                        }
+                        },
+                        expandOnClick: false
                     }
                 },
                 dataLabels: {
@@ -338,9 +489,21 @@ document.addEventListener('livewire:init', () => {
                 legend: {
                     position: 'bottom',
                     fontSize: '12px'
+                },
+                states: {
+                    hover: {
+                        filter: {
+                            type: 'darken',
+                            value: 0.9
+                        }
+                    }
+                },
+                tooltip: {
+                    theme: themeMode
                 }
             });
             charts.fcm.render();
+            document.querySelector("#chart-fcm").style.cursor = 'pointer';
         }
 
         // 4. AHP-SAW Sales Performance (Horizontal Bar AI)

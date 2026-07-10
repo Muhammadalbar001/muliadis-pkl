@@ -3,157 +3,159 @@
 namespace App\Livewire\Supervisor;
 
 use Livewire\Component;
+use Livewire\WithPagination;
+use Livewire\Attributes\Computed;
+use App\Models\DeletionRequest;
 use App\Models\Master\Produk;
-use App\Models\Master\Supplier;
 use App\Models\Master\Sales;
+use App\Models\Master\Supplier;
+use App\Models\Master\SalesTarget;
 use App\Models\Transaksi\Penjualan;
-use App\Models\Transaksi\Retur;
-use App\Models\Keuangan\AccountReceivable;
-use App\Models\Keuangan\Collection;
-use App\Models\DeletionRequest; // Model Pengajuan
-use Carbon\Carbon;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class Dashboard extends Component
 {
-    // === FUNGSI PERSETUJUAN HAPUS (APPROVE) ===
-    public function approveDeletion($id)
+    use WithPagination;
+
+    public $activeTab = 'master'; // Tab default
+
+    // Variabel Otorisasi
+    public $requestIdToProcess = null;
+    public $actionType = ''; 
+    public $showConfirmModal = false;
+
+    // Variabel Filter Evaluasi Kinerja
+    public $evalBulan;
+    public $evalTahun;
+
+    public function mount()
     {
-        $request = DeletionRequest::findOrFail($id);
-
-        if ($request->tipe_modul == 'penjualan') {
-            Penjualan::whereBetween('tgl_penjualan', [$request->tanggal_mulai, $request->tanggal_selesai])->delete();
-        } elseif ($request->tipe_modul == 'retur') {
-            Retur::whereBetween('tgl_retur', [$request->tanggal_mulai, $request->tanggal_selesai])->delete();
-        } elseif ($request->tipe_modul == 'ar') {
-            AccountReceivable::whereBetween('tgl_penjualan', [$request->tanggal_mulai, $request->tanggal_selesai])->delete();
-        } elseif ($request->tipe_modul == 'collection') {
-            Collection::whereBetween('tanggal', [$request->tanggal_mulai, $request->tanggal_selesai])->delete();
-        }
-
-        $request->update([
-            'status' => 'approved',
-            'approved_by' => auth()->id(),
-        ]);
-
-        session()->flash('message', 'Pengajuan disetujui! Data ' . strtoupper($request->tipe_modul) . ' berhasil dihapus permanen.');
+        $this->evalBulan = date('m');
+        $this->evalTahun = date('Y');
     }
 
-    // === FUNGSI TOLAK HAPUS (REJECT) ===
-    public function rejectDeletion($id)
+    public function setTab($tab)
     {
-        $request = DeletionRequest::findOrFail($id);
+        $this->activeTab = $tab;
+        $this->resetPage();
+    }
+
+    // ==========================================
+    // LOGIKA 1: DATA HEALTH CHECK (Kesehatan Data)
+    // ==========================================
+    #[Computed]
+    public function dataHealth()
+    {
+        // Mengecek produk yang datanya tidak lengkap (tanpa supplier)
+        $produkInvalid = Produk::whereNull('supplier')->orWhere('supplier', '')->count();
         
-        $request->update([
-            'status' => 'rejected',
-            'approved_by' => auth()->id(),
-        ]);
+        // Mengecek Salesman yang aktif TAPI belum diberi Target Penjualan bulan ini
+        $salesActiveIds = Sales::where('status', 'Active')->pluck('id');
+        $salesWithTargetIds = SalesTarget::where('year', date('Y'))->where('month', date('n'))->pluck('sales_id');
+        $salesTanpaTarget = $salesActiveIds->diff($salesWithTargetIds)->count();
 
-        session()->flash('error', 'Pengajuan hapus data ditolak.');
+        return [
+            'produk_invalid' => $produkInvalid,
+            'sales_tanpa_target' => $salesTanpaTarget
+        ];
     }
+
+    // ==========================================
+    // LOGIKA 2: EVALUASI KINERJA & ACTION PLAN
+    // ==========================================
+    #[Computed]
+    public function evaluasiData()
+    {
+        $sales = Sales::where('status', 'Active')->get();
+        $targets = SalesTarget::where('year', $this->evalTahun)->where('month', (int)$this->evalBulan)->get()->keyBy('sales_id');
+
+        $start = Carbon::createFromDate($this->evalTahun, $this->evalBulan, 1)->startOfMonth()->format('Y-m-d');
+        $end = Carbon::createFromDate($this->evalTahun, $this->evalBulan, 1)->endOfMonth()->format('Y-m-d');
+
+        // 1. Hitung Target Pacing (Progress Bar)
+        $realisasi = Penjualan::whereBetween('tgl_penjualan', [$start, $end])
+            ->selectRaw('sales_name, SUM(total_grand) as omzet')
+            ->groupBy('sales_name')
+            ->pluck('omzet', 'sales_name');
+
+        $pacing = [];
+        foreach($sales as $s) {
+            $target = $targets->get($s->id)->target_ims ?? 0;
+            $omzet = $realisasi->get($s->sales_name) ?? 0;
+            $persen = $target > 0 ? ($omzet / $target) * 100 : 0;
+            
+            $pacing[] = [
+                'nama' => $s->sales_name,
+                'target' => $target,
+                'omzet' => $omzet,
+                'persen' => $persen
+            ];
+        }
+        usort($pacing, fn($a, $b) => $b['persen'] <=> $a['persen']);
+
+        // 2. Action Plan: Coaching Sales (Ambil 3 terbawah yang targetnya belum tercapai)
+        $coaching = array_filter($pacing, fn($p) => $p['target'] > 0 && $p['persen'] < 50);
+        $coaching = array_slice(array_reverse($coaching), 0, 3);
+
+        // 3. Action Plan: Follow Up Pelanggan Churn (Tidak order > 30 hari)
+        $churn = Penjualan::selectRaw('nama_pelanggan, MAX(tgl_penjualan) as last_order, sales_name')
+            ->groupBy('nama_pelanggan', 'sales_name')
+            ->having('last_order', '<', Carbon::now()->subDays(30)->format('Y-m-d'))
+            ->orderBy('last_order', 'asc')
+            ->limit(5)
+            ->get();
+
+        return compact('pacing', 'coaching', 'churn');
+    }
+
+    // ==========================================
+    // LOGIKA 3: OTORISASI HAPUS DATA
+    // ==========================================
+    public function confirmAction($id, $type)
+    {
+        $this->requestIdToProcess = $id;
+        $this->actionType = $type;
+        $this->showConfirmModal = true;
+    }
+
+    public function executeAction()
+    {
+        $request = DeletionRequest::find($this->requestIdToProcess);
+        
+        if ($request && $request->status === 'Pending') {
+            if ($this->actionType === 'approve') {
+                $request->update(['status' => 'Disetujui']);
+                if ($request->modul == 'Penjualan') DB::table('penjualans')->whereBetween('tgl_penjualan', [$request->tanggal_awal, $request->tanggal_akhir])->delete();
+                elseif ($request->modul == 'Retur') DB::table('returs')->whereBetween('tgl_retur', [$request->tanggal_awal, $request->tanggal_akhir])->delete();
+                elseif ($request->modul == 'Piutang') DB::table('account_receivables')->whereBetween('tgl_penjualan', [$request->tanggal_awal, $request->tanggal_akhir])->delete();
+                elseif ($request->modul == 'Pelunasan') DB::table('collections')->whereBetween('tanggal', [$request->tanggal_awal, $request->tanggal_akhir])->delete();
+
+                $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Pengajuan disetujui, Data berhasil dihapus dari sistem.']);
+            } elseif ($this->actionType === 'reject') {
+                $request->update(['status' => 'Ditolak']);
+                $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Pengajuan penghapusan ditolak.']);
+            }
+        }
+        $this->showConfirmModal = false;
+    }
+
+    public function closeModal() { $this->showConfirmModal = false; }
 
     public function render()
     {
-        $bulanIni = Carbon::now()->month;
-        $tahunIni = Carbon::now()->year;
-
-        // 1. METRIK MASTER DATA
         $totalProduk = Produk::count();
-        $produkKosong = Produk::where('stok', '<=', 0)->count(); 
         $totalSupplier = Supplier::count();
         $totalSalesman = Sales::count();
+        $totalUser = User::count();
 
-        // 2. STATUS SINKRONISASI Terakhir
-        $lastSync = Penjualan::latest('created_at')->first()?->created_at;
+        $antreanHapus = DeletionRequest::with('user')->orderBy('created_at', 'desc')->paginate(10);
+        $health = $this->dataHealth;
+        $eval = $this->evaluasiData;
 
-        // 3. ANOMALI DATA
-        $anomaliProdukCount = DB::table('penjualans')
-            ->whereNotNull('sku')
-            ->whereNotIn('sku', function($query) {
-                $query->select('sku')->from('produks')->whereNotNull('sku');
-            })
-            ->distinct()
-            ->count('sku');
-
-        // 4. DAFTAR PENGAJUAN HAPUS (PENDING)
-        $pendingRequests = DeletionRequest::with('requester')
-            ->where('status', 'pending')
-            ->orderBy('created_at', 'asc')
-            ->get();
-
-        // 5. Peringatan Operasional (Retur, Piutang Kritis, Sales Rendah)
-        $topRetur = Retur::selectRaw('nama_item, SUM(CAST(qty AS UNSIGNED)) as total_qty, SUM(CAST(total_grand AS UNSIGNED)) as total_nilai')
-            ->whereMonth('tgl_retur', $bulanIni)
-            ->whereYear('tgl_retur', $tahunIni)
-            ->groupBy('nama_item')
-            ->orderByDesc('total_qty')
-            ->take(5)
-            ->get();
-
-        $piutangKritis = AccountReceivable::where('umur_piutang', '>', 30)
-            ->where('status', '!=', 'Lunas')
-            ->orderByRaw('CAST(nilai AS UNSIGNED) DESC')
-            ->take(5)
-            ->get();
-
-        $bottomSales = Penjualan::selectRaw('sales_name, SUM(CAST(total_grand AS UNSIGNED)) as total_omzet')
-            ->whereMonth('tgl_penjualan', $bulanIni)
-            ->whereYear('tgl_penjualan', $tahunIni)
-            ->groupBy('sales_name')
-            ->orderBy('total_omzet', 'asc')
-            ->take(3)
-            ->get();
-
-        // ========================================================
-        // 6. SMART ALERTS (SISTEM PERINGATAN DINI UNTUK SUPERVISOR)
-        // ========================================================
-        $alerts = collect();
-
-        // Alert 1: Otorisasi Tertunda (Prioritas Tertinggi)
-        if ($pendingRequests->count() > 0) {
-            $alerts->push([
-                'type' => 'danger',
-                'icon' => 'fas fa-clipboard-check',
-                'title' => 'Otorisasi Tindakan Diperlukan',
-                'message' => "Terdapat <strong>{$pendingRequests->count()} pengajuan hapus data</strong> operasional dari Admin yang menumpuk. Harap segera eksekusi pengajuan tersebut pada Tab Otorisasi untuk menjaga kebersihan database.",
-                'action_tab' => 'persetujuan' // Untuk trigger tombol ke tab persetujuan
-            ]);
-        }
-
-        // Alert 2: Anomali Data (SKU Siluman)
-        if ($anomaliProdukCount > 0) {
-            $alerts->push([
-                'type' => 'warning',
-                'icon' => 'fas fa-exclamation-triangle',
-                'title' => 'Peringatan Integritas Master Data',
-                'message' => "Sistem mendeteksi <strong>{$anomaliProdukCount} SKU produk</strong> pada riwayat transaksi penjualan yang tidak terdaftar di database Master Produk. Segera sinkronisasikan Master Produk agar analisa sistem tidak keliru.",
-                'link' => route('master.produk')
-            ]);
-        }
-
-        // Alert 3: Peringatan Stok Kosong
-        if ($produkKosong > 0) {
-            $alerts->push([
-                'type' => 'info',
-                'icon' => 'fas fa-box-open',
-                'title' => 'Peringatan Ketersediaan Stok',
-                'message' => "Terdapat <strong>{$produkKosong} jenis produk</strong> yang saat ini berstatus kehabisan stok fisik (Stok = 0). Silakan lakukan pengecekan master data dan koordinasikan dengan Supplier terkait.",
-                'link' => route('master.produk')
-            ]);
-        }
-
-        return view('livewire.supervisor.dashboard', [
-            'totalProduk' => $totalProduk,
-            'produkKosong' => $produkKosong,
-            'totalSupplier' => $totalSupplier,
-            'totalSalesman' => $totalSalesman,
-            'lastSync' => $lastSync,
-            'anomaliProdukCount' => $anomaliProdukCount,
-            'topRetur' => $topRetur,
-            'piutangKritis' => $piutangKritis,
-            'bottomSales' => $bottomSales,
-            'pendingRequests' => $pendingRequests,
-            'alerts' => $alerts, // Kirim Notifikasi Cerdas ke View
-        ])->layout('layouts.app');
+        return view('livewire.supervisor.dashboard', compact(
+            'totalProduk', 'totalSupplier', 'totalSalesman', 'totalUser', 'antreanHapus', 'health', 'eval'
+        ))->layout('layouts.app', ['header' => 'Supervisor Dashboard']);
     }
 }

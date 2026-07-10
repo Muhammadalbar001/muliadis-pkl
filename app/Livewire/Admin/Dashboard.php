@@ -9,10 +9,15 @@ use App\Models\Keuangan\AccountReceivable;
 use App\Models\Keuangan\Collection;
 use App\Models\DeletionRequest; // Model Pengajuan
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class Dashboard extends Component
 {
-    // Property untuk Modal Pengajuan Hapus
+    // === FILTER PERIODE ===
+    public $bulan;
+    public $tahun;
+
+    // === PROPERTY MODAL PENGAJUAN HAPUS ===
     public $showModal = false;
     public $tipe_modul = '';
     public $tanggal_mulai = '';
@@ -33,7 +38,13 @@ class Dashboard extends Component
         'alasan.min' => 'Berikan alasan yang jelas (minimal 10 karakter).',
     ];
 
-    // Fungsi membuka modal dan mereset isi form
+    public function mount()
+    {
+        // Set default filter ke bulan & tahun saat ini
+        $this->bulan = date('m');
+        $this->tahun = date('Y');
+    }
+
     public function openModal()
     {
         $this->resetValidation();
@@ -41,7 +52,6 @@ class Dashboard extends Component
         $this->showModal = true;
     }
 
-    // Fungsi menyimpan pengajuan ke database
     public function submitDeletionRequest()
     {
         $this->validate();
@@ -52,84 +62,72 @@ class Dashboard extends Component
             'tanggal_selesai' => $this->tanggal_selesai,
             'alasan' => $this->alasan,
             'status' => 'pending',
-            'requested_by' => auth()->id(), // ID Admin yang sedang login
+            'requested_by' => auth()->id(), // ID Admin
         ]);
 
-        $this->showModal = false; // Tutup modal
-        
-        // Memunculkan pesan sukses sementara di atas layar
+        $this->showModal = false; 
         session()->flash('message', 'Pengajuan hapus data berhasil dikirim ke Supervisor!');
     }
 
     public function render()
     {
-        $hariIni = Carbon::today();
+        // Mendapatkan format nama bulan untuk UI
+        $selectedDate = Carbon::createFromDate($this->tahun, $this->bulan, 1);
+        $namaBulan = $selectedDate->translatedFormat('F Y');
 
-        // 1. Mengambil jumlah data masuk hari ini
-        $jualHariIni = Penjualan::whereDate('tgl_penjualan', $hariIni)->count();
-        $returHariIni = Retur::whereDate('tgl_retur', $hariIni)->count();
-        $piutangHariIni = AccountReceivable::whereDate('tgl_penjualan', $hariIni)->count(); 
-        $pelunasanHariIni = Collection::whereDate('tanggal', $hariIni)->count();
+        // 1. MENGAMBIL JUMLAH DATA MASUK BERDASARKAN BULAN & TAHUN PILIHAN
+        $statPenjualan = Penjualan::whereMonth('tgl_penjualan', $this->bulan)->whereYear('tgl_penjualan', $this->tahun)->count();
+        $statRetur     = Retur::whereMonth('tgl_retur', $this->bulan)->whereYear('tgl_retur', $this->tahun)->count();
+        $statAr        = AccountReceivable::whereMonth('tgl_penjualan', $this->bulan)->whereYear('tgl_penjualan', $this->tahun)->count(); 
+        $statColl      = Collection::whereMonth('tanggal', $this->bulan)->whereYear('tanggal', $this->tahun)->count();
 
-        // 2. Aktivitas input terakhir
-        $recentPenjualan = Penjualan::orderBy('created_at', 'desc')->take(3)->get();
-        $recentRetur = Retur::orderBy('created_at', 'desc')->take(2)->get();
+        // 2. AKTIVITAS INPUT TERAKHIR (Pada bulan pilihan)
+        $recentPenjualan = Penjualan::whereMonth('tgl_penjualan', $this->bulan)->whereYear('tgl_penjualan', $this->tahun)->orderBy('created_at', 'desc')->take(3)->get();
+        $recentRetur     = Retur::whereMonth('tgl_retur', $this->bulan)->whereYear('tgl_retur', $this->tahun)->orderBy('created_at', 'desc')->take(2)->get();
 
-        // 3. Status checklist import per cabang
-        $cabangList = ['Banjarmasin', 'Palangkaraya', 'Barabai', 'Batulicin', 'Pharma'];
-        $statusUploadCabang = [];
-        foreach ($cabangList as $cabang) {
-            $isUploaded = Penjualan::where('cabang', $cabang)
-                                   ->whereDate('tgl_penjualan', $hariIni)
-                                   ->exists();
-            $statusUploadCabang[$cabang] = $isUploaded;
-        }
-
-        // 4. Data Riwayat Pengajuan Hapus milik Admin ini
+        // 3. RIWAYAT PENGAJUAN HAPUS MILIK ADMIN INI
         $riwayatPengajuan = DeletionRequest::where('requested_by', auth()->id())
                             ->orderBy('created_at', 'desc')
-                            ->take(4)
+                            ->take(5)
                             ->get();
 
         // ========================================================
-        // 5. SMART ALERTS (PENGINGAT TUGAS HARIAN & NOTIFIKASI)
+        // 4. SMART ALERTS (PENGINGAT & NOTIFIKASI)
         // ========================================================
         $alerts = collect();
 
-        // Alert 1: Lupa Import Penjualan Hari Ini
-        if ($jualHariIni == 0) {
+        // Alert: Jika belum ada import sama sekali di bulan yang dipilih
+        if ($statPenjualan == 0) {
             $alerts->push([
-                'type' => 'warning',
-                'icon' => 'fas fa-file-excel',
+                'type' => 'warning', 'icon' => 'fas fa-file-excel',
                 'title' => 'Pengingat: Sinkronisasi Penjualan',
-                'message' => "Anda belum melakukan *import* data <strong>Penjualan</strong> untuk transaksi tanggal hari ini ({$hariIni->translatedFormat('d F Y')}). Segera unggah file operasional harian agar Pimpinan dapat memantau data terbaru.",
+                'message' => "Anda belum melakukan <em>import</em> data <strong>Penjualan</strong> untuk periode <strong>{$namaBulan}</strong>. Segera unggah file operasional agar Pimpinan dapat memantau data terbaru.",
                 'link' => route('transaksi.penjualan')
             ]);
         }
 
-        // Alert 2: Lupa Import Retur Hari Ini
-        if ($returHariIni == 0) {
+        if ($statRetur == 0) {
             $alerts->push([
-                'type' => 'warning',
-                'icon' => 'fas fa-file-excel',
+                'type' => 'warning', 'icon' => 'fas fa-file-excel',
                 'title' => 'Pengingat: Sinkronisasi Retur',
-                'message' => "Anda belum melakukan *import* data <strong>Retur Barang</strong> untuk tanggal hari ini. Pastikan tidak ada dokumen retur gudang yang belum diinput.",
+                'message' => "Belum ada data <strong>Retur Barang</strong> di periode <strong>{$namaBulan}</strong>. Pastikan tidak ada dokumen retur gudang yang terlewat.",
                 'link' => route('transaksi.retur')
             ]);
         }
 
-        // Alert 3: Hasil Pengajuan Hapus Data (Maksimal 2 Hari Terakhir)
+        // Alert: Notifikasi Hasil Keputusan Supervisor (Hanya muncul 2 hari terakhir)
         $recentUpdates = DeletionRequest::where('requested_by', auth()->id())
-                            ->whereIn('status', ['approved', 'rejected'])
+                            ->whereIn('status', ['Disetujui', 'Ditolak', 'approved', 'rejected'])
                             ->where('updated_at', '>=', Carbon::now()->subDays(2))
                             ->orderBy('updated_at', 'desc')
-                            ->take(2) // Maksimal 2 notif saja agar tidak penuh
+                            ->take(2) 
                             ->get();
 
         foreach ($recentUpdates as $update) {
-            $statusText = $update->status == 'approved' ? 'DISETUJUI' : 'DITOLAK';
-            $type = $update->status == 'approved' ? 'success' : 'danger';
-            $icon = $update->status == 'approved' ? 'fas fa-check-circle' : 'fas fa-times-circle';
+            $isApproved = in_array($update->status, ['Disetujui', 'approved']);
+            $statusText = $isApproved ? 'DISETUJUI' : 'DITOLAK';
+            $type = $isApproved ? 'success' : 'danger';
+            $icon = $isApproved ? 'fas fa-check-circle' : 'fas fa-times-circle';
             
             $alerts->push([
                 'type' => $type,
@@ -139,17 +137,10 @@ class Dashboard extends Component
             ]);
         }
 
-        return view('livewire.admin.dashboard', [
-            'jualHariIni' => $jualHariIni,
-            'returHariIni' => $returHariIni,
-            'piutangHariIni' => $piutangHariIni,
-            'pelunasanHariIni' => $pelunasanHariIni,
-            'recentPenjualan' => $recentPenjualan,
-            'recentRetur' => $recentRetur,
-            'statusUploadCabang' => $statusUploadCabang,
-            'riwayatPengajuan' => $riwayatPengajuan,
-            'alerts' => $alerts, // Kirim ke View
-            'hariIni' => $hariIni->translatedFormat('l, d F Y')
-        ])->layout('layouts.app');
+        return view('livewire.admin.dashboard', compact(
+            'statPenjualan', 'statRetur', 'statAr', 'statColl', 
+            'recentPenjualan', 'recentRetur', 'riwayatPengajuan', 
+            'alerts', 'namaBulan'
+        ))->layout('layouts.app', ['header' => 'Pusat Operasional Data']);
     }
 }

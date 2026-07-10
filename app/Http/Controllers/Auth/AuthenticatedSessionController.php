@@ -28,6 +28,8 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Redirect akan dilempar ke /dashboard di web.php,
+        // di sana sistem akan memeriksa apakah dia Pimpinan, Admin, atau Operator.
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
