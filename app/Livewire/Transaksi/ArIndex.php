@@ -4,130 +4,151 @@ namespace App\Livewire\Transaksi;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use Livewire\WithFileUploads;
 use App\Models\Keuangan\AccountReceivable;
-use App\Models\DeletionRequest;
-use App\Services\Import\ArImportService;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Auth;
 
 class ArIndex extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithPagination;
 
     public $search = '';
-    public $filterCabang = []; 
-    public $filterUmur = '';
-
-    // Properti Import
-    public $isImportOpen = false;
-    public $file;
-    public $resetData = false;
-
-    // --- PROPERTI PENGAJUAN HAPUS ---
-    public $isDeletePeriodModalOpen = false;
-    public $deleteStartDate;
-    public $deleteEndDate;
-    public $deleteReason;
-
-    public function updatedSearch() { $this->resetPage(); }
-    public function updatedFilterCabang() { $this->resetPage(); }
+    public $filter_cabang = '';
+    public $start_date = '';
+    public $end_date = '';
     
-    public function resetFilter() 
-    { 
-        $this->reset(['search', 'filterCabang', 'filterUmur']); 
-        $this->resetPage(); 
+    public $showModal = false;
+    public $isEdit = false;
+    public $ar_id;
+
+    public $no_invoice; 
+    public $tgl_penjualan; // Tanggal terjadinya piutang
+    public $cabang;
+    public $sales_name;
+    public $nama_pelanggan;
+    public $nilai;
+
+    public function updatingSearch() { $this->resetPage(); }
+    public function updatingFilterCabang() { $this->resetPage(); }
+    public function updatingStartDate() { $this->resetPage(); }
+    public function updatingEndDate() { $this->resetPage(); }
+
+    public function resetFilters()
+    {
+        $this->reset(['search', 'filter_cabang', 'start_date', 'end_date']);
+        $this->resetPage();
     }
 
-    // --- FUNGSI PENGAJUAN HAPUS ---
-    public function openDeletePeriodModal()
+    protected function rules()
     {
-        $this->resetValidation();
-        $this->reset(['deleteStartDate', 'deleteEndDate', 'deleteReason']);
-        $this->isDeletePeriodModalOpen = true;
+        return [
+            'no_invoice' => 'required|string|max:255',
+            'tgl_penjualan' => 'required|date',
+            'cabang' => 'required|string',
+            'sales_name' => 'required|string|max:255',
+            'nama_pelanggan' => 'required|string|max:255',
+            'nilai' => 'required|numeric|min:0',
+        ];
     }
 
-    public function closeDeletePeriodModal()
+    public function create()
     {
-        $this->isDeletePeriodModalOpen = false;
+        $this->reset(['no_invoice', 'tgl_penjualan', 'cabang', 'sales_name', 'nama_pelanggan', 'nilai', 'ar_id']);
+        $this->tgl_penjualan = date('Y-m-d');
+        $this->isEdit = false;
+        $this->showModal = true;
     }
 
-    public function submitDeletionRequest()
+    public function edit($id)
     {
-        $this->validate([
-            'deleteStartDate' => 'required|date',
-            'deleteEndDate'   => 'required|date|after_or_equal:deleteStartDate',
-            'deleteReason'    => 'required|string|min:10',
-        ], [
-            'deleteEndDate.after_or_equal' => 'Tanggal akhir tidak boleh lebih kecil dari tanggal awal.',
-            'deleteReason.min' => 'Berikan alasan minimal 10 karakter.',
-        ]);
+        if(Auth::user()->role === 'operator') {
+            session()->flash('error', 'Akses ditolak! Operator tidak diizinkan mengedit data secara langsung.');
+            return;
+        }
 
-        DeletionRequest::create([
-            'tipe_modul'      => 'ar',
-            'tanggal_mulai'   => $this->deleteStartDate,
-            'tanggal_selesai' => $this->deleteEndDate,
-            'alasan'          => $this->deleteReason,
-            'status'          => 'pending',
-            'requested_by'    => auth()->id(),
-        ]);
-
-        $this->closeDeletePeriodModal();
+        $data = AccountReceivable::findOrFail($id);
+        $this->ar_id = $data->id;
+        $this->no_invoice = $data->no_invoice; 
+        $this->tgl_penjualan = $data->tgl_penjualan;
+        $this->cabang = $data->cabang;
+        $this->sales_name = $data->sales_name;
+        $this->nama_pelanggan = $data->nama_pelanggan;
+        $this->nilai = $data->nilai;
         
-        $this->dispatch('show-toast', [
-            'type' => 'success', 
-            'message' => 'Pengajuan hapus periode Piutang berhasil dikirim ke Supervisor!'
-        ]);
+        $this->isEdit = true;
+        $this->showModal = true;
+    }
+
+    public function store()
+    {
+        $this->validate();
+
+        if ($this->isEdit) {
+            if(Auth::user()->role === 'operator') return; 
+
+            $data = AccountReceivable::findOrFail($this->ar_id);
+            $data->update([
+                'no_invoice' => $this->no_invoice,
+                'tgl_penjualan' => $this->tgl_penjualan,
+                'cabang' => $this->cabang,
+                'sales_name' => $this->sales_name,
+                'nama_pelanggan' => $this->nama_pelanggan,
+                'nilai' => $this->nilai,
+            ]);
+            session()->flash('message', 'Data Piutang (AR) berhasil diperbarui!');
+        } else {
+            AccountReceivable::create([
+                'no_invoice' => $this->no_invoice, 
+                'tgl_penjualan' => $this->tgl_penjualan,
+                'cabang' => $this->cabang,
+                'sales_name' => $this->sales_name,
+                'nama_pelanggan' => $this->nama_pelanggan,
+                'nilai' => $this->nilai,
+                'status' => 'Belum Lunas' // Status default piutang baru
+            ]);
+            session()->flash('message', 'Data Piutang (AR) baru berhasil ditambahkan secara manual!');
+        }
+
+        $this->showModal = false;
+    }
+
+    public function delete($id)
+    {
+        if(Auth::user()->role === 'operator') {
+            session()->flash('error', 'Akses ditolak! Operator tidak diizinkan menghapus data secara langsung.');
+            return;
+        }
+
+        AccountReceivable::findOrFail($id)->delete();
+        session()->flash('message', 'Satu baris data piutang berhasil dihapus secara permanen!');
     }
 
     public function render()
     {
         $query = AccountReceivable::query();
-        
-        if ($this->search) {
+
+        if (!empty($this->search)) {
             $query->where(function($q) {
-                $q->where('no_penjualan', 'like', '%'.$this->search.'%')
-                  ->orWhere('pelanggan_name', 'like', '%'.$this->search.'%');
+                $q->where('no_invoice', 'like', '%'.$this->search.'%')
+                  ->orWhere('nama_pelanggan', 'like', '%'.$this->search.'%')
+                  ->orWhere('sales_name', 'like', '%'.$this->search.'%');
             });
         }
-        
-        if (!empty($this->filterCabang)) {
-            $query->whereIn('cabang', $this->filterCabang);
+
+        if (!empty($this->filter_cabang)) {
+            $query->where('cabang', $this->filter_cabang);
         }
-        
-        if ($this->filterUmur == 'lancar') $query->where('umur_piutang', '<=', 30);
-        if ($this->filterUmur == 'macet') $query->where('umur_piutang', '>', 30);
 
-        $summary = [
-            'total_piutang' => (clone $query)->sum('nilai'),
-            'total_macet'   => (clone $query)->where('umur_piutang', '>', 30)->sum('nilai'),
-            'total_faktur'  => (clone $query)->count(),
-        ];
-
-        $ars = $query->orderBy('umur_piutang', 'desc')->paginate(50);
-        
-        $optCabang = Cache::remember('opt_cabang_ar', 3600, fn() => 
-            AccountReceivable::select('cabang')->distinct()->pluck('cabang')
-        );
-
-        return view('livewire.transaksi.ar-index', compact('ars', 'optCabang', 'summary'))
-            ->layout('layouts.app', ['header' => 'Piutang (AR)']);
-    }
-
-    // Import Handlers
-    public function openImportModal() { $this->resetErrorBag(); $this->isImportOpen = true; }
-    public function closeImportModal() { $this->isImportOpen = false; $this->file = null; }
-    
-    public function import() {
-        $this->validate(['file' => 'required|file|mimes:xlsx,xls,csv|max:153600']);
-        
-        $path = $this->file->getRealPath();
-        try {
-            $stats = (new ArImportService)->handle($path, $this->resetData);
-            Cache::forget('opt_cabang_ar');
-            $this->closeImportModal();
-            $this->dispatch('show-toast', ['type' => 'success', 'message' => "Sukses import " . number_format($stats['processed']) . " data."]);
-        } catch (\Exception $e) {
-            $this->dispatch('show-toast', ['type' => 'error', 'message' => $e->getMessage()]);
+        if (!empty($this->start_date) && !empty($this->end_date)) {
+            $query->whereBetween('tgl_penjualan', [$this->start_date, $this->end_date]);
+        } elseif (!empty($this->start_date)) {
+            $query->whereDate('tgl_penjualan', '>=', $this->start_date);
+        } elseif (!empty($this->end_date)) {
+            $query->whereDate('tgl_penjualan', '<=', $this->end_date);
         }
+
+        $ar = $query->orderBy('tgl_penjualan', 'desc')->paginate(15);
+
+        return view('livewire.transaksi.ar-index', compact('ar'))
+            ->layout('layouts.app', ['header' => 'Operasional - Data Piutang']);
     }
 }

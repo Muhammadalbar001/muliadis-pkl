@@ -4,139 +4,150 @@ namespace App\Livewire\Transaksi;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use Livewire\WithFileUploads;
 use App\Models\Keuangan\Collection;
-use App\Models\DeletionRequest;
-use App\Services\Import\CollectionImportService;
+use Illuminate\Support\Facades\Auth;
 
 class CollectionIndex extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithPagination;
 
     public $search = '';
-    public $filterCabang = [];
-    public $filterPenagih = '';
+    public $filter_cabang = '';
+    public $start_date = '';
+    public $end_date = '';
     
-    // Properti Import
-    public $isImportOpen = false;
-    public $file;
-    public $resetData = false;
+    public $showModal = false;
+    public $isEdit = false;
+    public $collection_id;
 
-    // --- PROPERTI PENGAJUAN HAPUS ---
-    public $isDeletePeriodModalOpen = false;
-    public $deleteStartDate;
-    public $deleteEndDate;
-    public $deleteReason;
-
-    protected $queryString = ['search', 'filterPenagih'];
+    public $sing_no; 
+    public $tanggal;
+    public $cabang;
+    public $sales_name;
+    public $nama_pelanggan;
+    public $receive_amount;
 
     public function updatingSearch() { $this->resetPage(); }
-    public function resetFilter() { $this->reset(['search', 'filterCabang', 'filterPenagih']); }
+    public function updatingFilterCabang() { $this->resetPage(); }
+    public function updatingStartDate() { $this->resetPage(); }
+    public function updatingEndDate() { $this->resetPage(); }
 
-    // --- FUNGSI PENGAJUAN HAPUS ---
-    public function openDeletePeriodModal()
+    public function resetFilters()
     {
-        $this->resetValidation();
-        $this->reset(['deleteStartDate', 'deleteEndDate', 'deleteReason']);
-        $this->isDeletePeriodModalOpen = true;
+        $this->reset(['search', 'filter_cabang', 'start_date', 'end_date']);
+        $this->resetPage();
     }
 
-    public function closeDeletePeriodModal()
+    protected function rules()
     {
-        $this->isDeletePeriodModalOpen = false;
+        return [
+            'sing_no' => 'required|string|max:255',
+            'tanggal' => 'required|date',
+            'cabang' => 'required|string',
+            'sales_name' => 'required|string|max:255',
+            'nama_pelanggan' => 'required|string|max:255',
+            'receive_amount' => 'required|numeric|min:0',
+        ];
     }
 
-    public function submitDeletionRequest()
+    public function create()
     {
-        $this->validate([
-            'deleteStartDate' => 'required|date',
-            'deleteEndDate'   => 'required|date|after_or_equal:deleteStartDate',
-            'deleteReason'    => 'required|string|min:10',
-        ], [
-            'deleteEndDate.after_or_equal' => 'Tanggal akhir tidak boleh lebih kecil dari tanggal awal.',
-            'deleteReason.min' => 'Berikan alasan minimal 10 karakter.',
-        ]);
-
-        DeletionRequest::create([
-            'tipe_modul'      => 'collection',
-            'tanggal_mulai'   => $this->deleteStartDate,
-            'tanggal_selesai' => $this->deleteEndDate,
-            'alasan'          => $this->deleteReason,
-            'status'          => 'pending',
-            'requested_by'    => auth()->id(),
-        ]);
-
-        $this->closeDeletePeriodModal();
-        
-        $this->dispatch('show-toast', [
-            'type' => 'success', 
-            'message' => 'Pengajuan hapus periode Pelunasan berhasil dikirim ke Supervisor!'
-        ]);
+        $this->reset(['sing_no', 'tanggal', 'cabang', 'sales_name', 'nama_pelanggan', 'receive_amount', 'collection_id']);
+        $this->tanggal = date('Y-m-d');
+        $this->isEdit = false;
+        $this->showModal = true;
     }
 
-    // Import Handlers
-    public function openImportModal() { $this->isImportOpen = true; }
-    public function closeImportModal() { $this->isImportOpen = false; $this->file = null; }
-
-    public function import(CollectionImportService $importService)
+    public function edit($id)
     {
-        $this->validate(['file' => 'required|mimes:xlsx,xls,csv|max:51200']);
-        
-        try {
-            if ($this->resetData) {
-                Collection::truncate();
-            }
-
-            $importService->handle($this->file->getRealPath());
-            
-            $this->isImportOpen = false;
-            $this->file = null;
-            $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Data Collection berhasil diimport']);
-        } catch (\Exception $e) {
-            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'Gagal: ' . $e->getMessage()]);
+        if(Auth::user()->role === 'operator') {
+            session()->flash('error', 'Akses ditolak! Operator tidak diizinkan mengedit data secara langsung.');
+            return;
         }
+
+        $data = Collection::findOrFail($id);
+        $this->collection_id = $data->id;
+        $this->sing_no = $data->sing_no; 
+        $this->tanggal = $data->tanggal;
+        $this->cabang = $data->cabang;
+        $this->sales_name = $data->sales_name;
+        $this->nama_pelanggan = $data->nama_pelanggan;
+        $this->receive_amount = $data->receive_amount;
+        
+        $this->isEdit = true;
+        $this->showModal = true;
+    }
+
+    public function store()
+    {
+        $this->validate();
+
+        if ($this->isEdit) {
+            if(Auth::user()->role === 'operator') return; 
+
+            $data = Collection::findOrFail($this->collection_id);
+            $data->update([
+                'sing_no' => $this->sing_no,
+                'tanggal' => $this->tanggal,
+                'cabang' => $this->cabang,
+                'sales_name' => $this->sales_name,
+                'nama_pelanggan' => $this->nama_pelanggan,
+                'receive_amount' => $this->receive_amount,
+            ]);
+            session()->flash('message', 'Data Pelunasan (Collection) berhasil diperbarui!');
+        } else {
+            Collection::create([
+                'sing_no' => $this->sing_no, 
+                'tanggal' => $this->tanggal,
+                'cabang' => $this->cabang,
+                'sales_name' => $this->sales_name,
+                'nama_pelanggan' => $this->nama_pelanggan,
+                'receive_amount' => $this->receive_amount,
+            ]);
+            session()->flash('message', 'Data Pelunasan baru berhasil ditambahkan secara manual!');
+        }
+
+        $this->showModal = false;
+    }
+
+    public function delete($id)
+    {
+        if(Auth::user()->role === 'operator') {
+            session()->flash('error', 'Akses ditolak! Operator tidak diizinkan menghapus data secara langsung.');
+            return;
+        }
+
+        Collection::findOrFail($id)->delete();
+        session()->flash('message', 'Satu baris data pelunasan berhasil dihapus secara permanen!');
     }
 
     public function render()
     {
         $query = Collection::query();
 
-        // Fitur Search
-        if ($this->search) {
+        if (!empty($this->search)) {
             $query->where(function($q) {
-                $q->where('receive_no', 'like', '%'.$this->search.'%')
-                  ->orWhere('outlet_name', 'like', '%'.$this->search.'%')
-                  ->orWhere('invoice_no', 'like', '%'.$this->search.'%');
+                $q->where('sing_no', 'like', '%'.$this->search.'%')
+                  ->orWhere('nama_pelanggan', 'like', '%'.$this->search.'%')
+                  ->orWhere('sales_name', 'like', '%'.$this->search.'%');
             });
         }
 
-        // Fitur Filter
-        if (!empty($this->filterCabang)) {
-            $query->whereIn('cabang', $this->filterCabang);
+        if (!empty($this->filter_cabang)) {
+            $query->where('cabang', $this->filter_cabang);
         }
 
-        if ($this->filterPenagih) {
-            $query->where('penagih', $this->filterPenagih);
+        if (!empty($this->start_date) && !empty($this->end_date)) {
+            $query->whereBetween('tanggal', [$this->start_date, $this->end_date]);
+        } elseif (!empty($this->start_date)) {
+            $query->whereDate('tanggal', '>=', $this->start_date);
+        } elseif (!empty($this->end_date)) {
+            $query->whereDate('tanggal', '<=', $this->end_date);
         }
 
-        $collections = $query->latest('tanggal')->paginate(15);
+        $collection = $query->orderBy('tanggal', 'desc')->paginate(15);
 
-        // Summary Data
-        $summary = [
-            'total_cair' => (clone $query)->sum('receive_amount'),
-            'total_bukti' => (clone $query)->distinct('receive_no')->count(),
-            'total_faktur' => (clone $query)->distinct('invoice_no')->count(),
-        ];
-
-        // Opsi Dropdown
-        $optCabang = Collection::distinct()->pluck('cabang')->filter()->toArray();
-        $optPenagih = Collection::distinct()->whereNotNull('penagih')->pluck('penagih')->toArray();
-
-        return view('livewire.transaksi.collection-index', [
-            'collections' => $collections,
-            'summary' => $summary,
-            'optCabang' => $optCabang,
-            'optPenagih' => $optPenagih
-        ])->layout('layouts.app');
+        return view('livewire.transaksi.collection-index', compact('collection'))
+            ->layout('layouts.app', ['header' => 'Operasional - Data Pelunasan']);
     }
 }

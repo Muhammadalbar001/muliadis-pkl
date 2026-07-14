@@ -4,132 +4,150 @@ namespace App\Livewire\Transaksi;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use Livewire\WithFileUploads;
 use App\Models\Transaksi\Retur;
-use App\Models\DeletionRequest;
-use App\Services\Import\ReturImportService;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Auth;
 
 class ReturIndex extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithPagination;
 
     public $search = '';
-    public $startDate;
-    public $endDate;
-    public $filterCabang = []; 
-
-    // Properti Import
-    public $isImportOpen = false;
-    public $file;
-    public $resetData = false;
-
-    // --- PROPERTI PENGAJUAN HAPUS ---
-    public $isDeletePeriodModalOpen = false;
-    public $deleteStartDate;
-    public $deleteEndDate;
-    public $deleteReason;
-
-    public function updatedSearch() { $this->resetPage(); }
-    public function updatedFilterCabang() { $this->resetPage(); }
+    public $filter_cabang = '';
+    public $start_date = '';
+    public $end_date = '';
     
-    public function resetFilter() 
-    { 
-        $this->reset(['search', 'startDate', 'endDate', 'filterCabang']); 
-        $this->resetPage(); 
+    public $showModal = false;
+    public $isEdit = false;
+    public $retur_id;
+
+    public $no_retur; 
+    public $tgl_retur;
+    public $cabang;
+    public $sales_name;
+    public $nama_pelanggan;
+    public $total_grand;
+
+    public function updatingSearch() { $this->resetPage(); }
+    public function updatingFilterCabang() { $this->resetPage(); }
+    public function updatingStartDate() { $this->resetPage(); }
+    public function updatingEndDate() { $this->resetPage(); }
+
+    public function resetFilters()
+    {
+        $this->reset(['search', 'filter_cabang', 'start_date', 'end_date']);
+        $this->resetPage();
     }
 
-    // --- FUNGSI PENGAJUAN HAPUS ---
-    public function openDeletePeriodModal()
+    protected function rules()
     {
-        $this->resetValidation();
-        $this->reset(['deleteStartDate', 'deleteEndDate', 'deleteReason']);
-        $this->isDeletePeriodModalOpen = true;
+        return [
+            'no_retur' => 'required|string|max:255',
+            'tgl_retur' => 'required|date',
+            'cabang' => 'required|string',
+            'sales_name' => 'required|string|max:255',
+            'nama_pelanggan' => 'required|string|max:255',
+            'total_grand' => 'required|numeric|min:0',
+        ];
     }
 
-    public function closeDeletePeriodModal()
+    public function create()
     {
-        $this->isDeletePeriodModalOpen = false;
+        $this->reset(['no_retur', 'tgl_retur', 'cabang', 'sales_name', 'nama_pelanggan', 'total_grand', 'retur_id']);
+        $this->tgl_retur = date('Y-m-d');
+        $this->isEdit = false;
+        $this->showModal = true;
     }
 
-    public function submitDeletionRequest()
+    public function edit($id)
     {
-        $this->validate([
-            'deleteStartDate' => 'required|date',
-            'deleteEndDate'   => 'required|date|after_or_equal:deleteStartDate',
-            'deleteReason'    => 'required|string|min:10',
-        ], [
-            'deleteEndDate.after_or_equal' => 'Tanggal akhir tidak boleh lebih kecil dari tanggal awal.',
-            'deleteReason.min' => 'Berikan alasan minimal 10 karakter.',
-        ]);
+        if(Auth::user()->role === 'operator') {
+            session()->flash('error', 'Akses ditolak! Operator tidak diizinkan mengedit data secara langsung.');
+            return;
+        }
 
-        DeletionRequest::create([
-            'tipe_modul'      => 'retur',
-            'tanggal_mulai'   => $this->deleteStartDate,
-            'tanggal_selesai' => $this->deleteEndDate,
-            'alasan'          => $this->deleteReason,
-            'status'          => 'pending',
-            'requested_by'    => auth()->id(),
-        ]);
-
-        $this->closeDeletePeriodModal();
+        $data = Retur::findOrFail($id);
+        $this->retur_id = $data->id;
+        $this->no_retur = $data->no_retur; 
+        $this->tgl_retur = $data->tgl_retur;
+        $this->cabang = $data->cabang;
+        $this->sales_name = $data->sales_name;
+        $this->nama_pelanggan = $data->nama_pelanggan;
+        $this->total_grand = $data->total_grand;
         
-        $this->dispatch('show-toast', [
-            'type' => 'success', 
-            'message' => 'Pengajuan hapus periode Retur berhasil dikirim ke Supervisor!'
-        ]);
+        $this->isEdit = true;
+        $this->showModal = true;
+    }
+
+    public function store()
+    {
+        $this->validate();
+
+        if ($this->isEdit) {
+            if(Auth::user()->role === 'operator') return; 
+
+            $data = Retur::findOrFail($this->retur_id);
+            $data->update([
+                'no_retur' => $this->no_retur,
+                'tgl_retur' => $this->tgl_retur,
+                'cabang' => $this->cabang,
+                'sales_name' => $this->sales_name,
+                'nama_pelanggan' => $this->nama_pelanggan,
+                'total_grand' => $this->total_grand,
+            ]);
+            session()->flash('message', 'Data Retur berhasil diperbarui!');
+        } else {
+            Retur::create([
+                'no_retur' => $this->no_retur, 
+                'tgl_retur' => $this->tgl_retur,
+                'cabang' => $this->cabang,
+                'sales_name' => $this->sales_name,
+                'nama_pelanggan' => $this->nama_pelanggan,
+                'total_grand' => $this->total_grand,
+            ]);
+            session()->flash('message', 'Data Retur baru berhasil ditambahkan secara manual!');
+        }
+
+        $this->showModal = false;
+    }
+
+    public function delete($id)
+    {
+        if(Auth::user()->role === 'operator') {
+            session()->flash('error', 'Akses ditolak! Operator tidak diizinkan menghapus data secara langsung.');
+            return;
+        }
+
+        Retur::findOrFail($id)->delete();
+        session()->flash('message', 'Satu baris data retur berhasil dihapus secara permanen!');
     }
 
     public function render()
     {
         $query = Retur::query();
-        
-        if ($this->search) {
+
+        if (!empty($this->search)) {
             $query->where(function($q) {
                 $q->where('no_retur', 'like', '%'.$this->search.'%')
-                  ->orWhere('nama_pelanggan', 'like', '%'.$this->search.'%');
+                  ->orWhere('nama_pelanggan', 'like', '%'.$this->search.'%')
+                  ->orWhere('sales_name', 'like', '%'.$this->search.'%');
             });
         }
-        
-        if ($this->startDate && $this->endDate) {
-            $query->whereBetween('tgl_retur', [$this->startDate, $this->endDate]);
-        }
-        
-        if (!empty($this->filterCabang)) {
-            $query->whereIn('cabang', $this->filterCabang);
+
+        if (!empty($this->filter_cabang)) {
+            $query->where('cabang', $this->filter_cabang);
         }
 
-        $summary = [
-            'total_nilai'  => (clone $query)->sum('total_grand'),
-            'total_faktur' => (clone $query)->distinct('no_retur')->count('no_retur'),
-            'total_items'  => (clone $query)->count(),
-        ];
-
-        $returs = $query->orderBy('tgl_retur', 'desc')->paginate(50);
-        
-        $optCabang = Cache::remember('opt_cabang_retur', 3600, fn() => 
-            Retur::select('cabang')->distinct()->whereNotNull('cabang')->pluck('cabang')
-        );
-
-        return view('livewire.transaksi.retur-index', compact('returs', 'optCabang', 'summary'))
-            ->layout('layouts.app', ['header' => 'Retur Penjualan']);
-    }
-
-    // Import Handlers
-    public function openImportModal() { $this->resetErrorBag(); $this->isImportOpen = true; }
-    public function closeImportModal() { $this->isImportOpen = false; $this->file = null; }
-    
-    public function import() {
-        $this->validate(['file' => 'required|file|mimes:xlsx,xls,csv|max:153600']);
-        
-        $path = $this->file->getRealPath(); 
-        try {
-            $stats = (new ReturImportService)->handle($path, $this->resetData);
-            Cache::forget('opt_cabang_retur');
-            $this->closeImportModal();
-            $this->dispatch('show-toast', ['type' => 'success', 'message' => "Sukses import " . number_format($stats['processed']) . " data."]);
-        } catch (\Exception $e) {
-            $this->dispatch('show-toast', ['type' => 'error', 'message' => $e->getMessage()]);
+        if (!empty($this->start_date) && !empty($this->end_date)) {
+            $query->whereBetween('tgl_retur', [$this->start_date, $this->end_date]);
+        } elseif (!empty($this->start_date)) {
+            $query->whereDate('tgl_retur', '>=', $this->start_date);
+        } elseif (!empty($this->end_date)) {
+            $query->whereDate('tgl_retur', '<=', $this->end_date);
         }
+
+        $retur = $query->orderBy('tgl_retur', 'desc')->paginate(15);
+
+        return view('livewire.transaksi.retur-index', compact('retur'))
+            ->layout('layouts.app', ['header' => 'Operasional - Data Retur']);
     }
 }
